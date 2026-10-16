@@ -1,10 +1,10 @@
 {#- Nice - timers on the Google speakers and displays (the Google Home integration, polled
-    every minute). One that's gone off is act-now with a Stop button, and pushes if it's still
-    ringing after two minutes: nobody's near the speaker. While it runs, the tile is just the
+    every 3 minutes, its default). One that's gone off is act-now with a Stop button, and pushes if it's still
+    ringing after four minutes (longer than a poll, so a timer stopped at the speaker never pushes): nobody's near the speaker. While it runs, the tile is just the
     time left, ticking in the browser (say '{left}' with ends). "Ringing" is worked out from the fire
     time too, so the tile doesn't wait for the next poll. -#}
 {#- Tier 0, both running and ringing: a timer is the most time-bound thing in the house. Tier 0
-    pushes by default, so each says when it pushes: running never; ringing after two minutes. -#}
+    pushes by default, so each says when it pushes: running never; ringing after four minutes. -#}
 
 {#- "0:10:00" or "1 day, 0:10:00" in seconds -#}
 {%- macro secs(d) -%}
@@ -34,7 +34,7 @@
     {%- set ns.t = ns.t + [dict(id=id, tier=0, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='hazard',
         say="Time's up!", sub='', viz=none, entity=t.entity, tap=none,
         act=dict(label='Stop', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id)),
-        push=(dict(level='time-sensitive', key=t.id, title=what ~ ' is going off', message="It's been ringing in the " ~ t.room | lower ~ ' for a couple of minutes.') if rang >= 2 else false))] -%}
+        push=(dict(level='time-sensitive', key=t.id, title=what ~ ' is going off', message="It's been ringing in the " ~ t.room | lower ~ ' for a few minutes.') if rang >= 4 else false))] -%}
   {%- else -%}
     {#- The say is the time left, counting down in the browser ({left}) -#}
     {%- set ns.t = ns.t + [dict(id=id, tier=0, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='timer', push=false,
