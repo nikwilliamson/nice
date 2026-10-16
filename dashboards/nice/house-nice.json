@@ -519,8 +519,9 @@
        "area": "living_room",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.dining_table_lights"
@@ -569,7 +570,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_common_bright",
@@ -610,7 +612,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "climate.living_room_thermostat"
@@ -627,7 +630,8 @@
           }
          ]
         },
-        "Playing": {
+        {
+         "title": "Playing",
          "entities": [
           {
            "entity": "media_player.living_room_living_room_apple_tv"
@@ -637,7 +641,8 @@
           }
          ]
         },
-        "Doors & windows": {
+        {
+         "title": "Doors & windows",
          "entities": [
           {
            "entity": "lock.aqara_smart_lock_u100"
@@ -653,7 +658,8 @@
           }
          ]
         },
-        "Motion": {
+        {
+         "title": "Motion",
          "entities": [
           {
            "entity": "binary_sensor.living_room_occupancy",
@@ -661,7 +667,8 @@
           }
          ]
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -683,11 +690,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Plugs & more": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -713,8 +717,9 @@
        "area": "kitchen",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "_0": {
+       "sections": [
+        {
+         "title": "",
          "entities": [
           {
            "board": "sensor.vestaboard_note_current_message",
@@ -722,11 +727,10 @@
            "shape": "F"
           }
          ],
-         "title": "",
-         "before": "Lights",
          "room_tone": null
         },
-        "Lights": {
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.kitchen_lights"
@@ -751,7 +755,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_common_bright",
@@ -792,21 +797,24 @@
          ],
          "all": false
         },
-        "Playing": {
+        {
+         "title": "Playing",
          "entities": [
           {
            "entity": "media_player.kitchen_display"
           }
          ]
         },
-        "Doors & windows": {
+        {
+         "title": "Doors & windows",
          "entities": [
           {
            "entity": "binary_sensor.kitchen_window"
           }
          ]
         },
-        "Vestaboard": {
+        {
+         "title": "Vestaboard",
          "entities": [
           {
            "entity": "switch.vestaboard_note_rotation",
@@ -844,10 +852,10 @@
            "entity": "text.kitchen_vestaboard_note_message",
            "name": "Message"
           }
-         ],
-         "after": "Doors & windows"
+         ]
         },
-        "Safety": {
+        {
+         "title": "Safety",
          "entities": [
           {
            "entity": "binary_sensor.oven_left_on",
@@ -858,10 +866,10 @@
            "name": "Range left on"
           }
          ],
-         "all": false,
-         "after": "Vestaboard"
+         "all": false
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -907,17 +915,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Climate": {
-         "hide": true
-        },
-        "Motion": {
-         "hide": true
-        },
-        "Plugs & more": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -943,8 +942,9 @@
        "area": "bedroom",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.bedroom_front_light"
@@ -984,7 +984,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_bedroom_bright",
@@ -1025,7 +1026,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "climate.bedroom"
@@ -1054,7 +1056,8 @@
           }
          ]
         },
-        "Playing": {
+        {
+         "title": "Playing",
          "entities": [
           {
            "entity": "media_player.bedroom_bedroom_apple_tv"
@@ -1064,7 +1067,8 @@
           }
          ]
         },
-        "Doors & windows": {
+        {
+         "title": "Doors & windows",
          "entities": [
           {
            "entity": "lock.aqara_smart_lock_u50"
@@ -1074,14 +1078,16 @@
           }
          ]
         },
-        "Plugs & more": {
+        {
+         "title": "Plugs & more",
          "entities": [
           {
            "entity": "switch.bedroom_freezing_point"
           }
          ]
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -1095,11 +1101,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Motion": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -1125,8 +1128,9 @@
        "area": "game_room",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.game_room_spotlights"
@@ -1168,7 +1172,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_game_room_bright",
@@ -1193,7 +1198,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "sensor.game_room_temp_sensor_temperature"
@@ -1203,14 +1209,16 @@
           }
          ]
         },
-        "Playing": {
+        {
+         "title": "Playing",
          "entities": [
           {
            "entity": "media_player.game_room_speaker"
           }
          ]
         },
-        "Doors & windows": {
+        {
+         "title": "Doors & windows",
          "entities": [
           {
            "entity": "lock.aqara_smart_lock_u100_2"
@@ -1223,7 +1231,8 @@
           }
          ]
         },
-        "Motion": {
+        {
+         "title": "Motion",
          "entities": [
           {
            "entity": "binary_sensor.game_room_game_room_motion",
@@ -1231,7 +1240,7 @@
           },
           {
            "entity": "binary_sensor.game_room_motion_motion",
-           "name": "Motion \u00b7 sensor 2"
+           "name": "Motion · sensor 2"
           },
           {
            "entity": "sensor.game_room_game_room_illuminance",
@@ -1239,7 +1248,8 @@
           }
          ]
         },
-        "Litter box": {
+        {
+         "title": "Litter box",
          "tone": "cats",
          "all": false,
          "entities": [
@@ -1297,13 +1307,13 @@
            "name": "Globe light"
           }
          ],
-         "after": "Motion",
          "strip": [
           "Litter Robot"
          ],
          "room_tone": null
         },
-        "Plugs & more": {
+        {
+         "title": "Plugs & more",
          "entities": [
           {
            "entity": "switch.game_room_game_room_power_strip_litter_box"
@@ -1333,7 +1343,8 @@
           }
          ]
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -1364,7 +1375,7 @@
          ],
          "room_tone": null
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -1390,8 +1401,9 @@
        "area": "guest_room",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.guest_room_lights"
@@ -1413,7 +1425,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_guest_room_bright",
@@ -1454,7 +1467,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "sensor.guest_room_temp_sensor_temperature"
@@ -1464,7 +1478,8 @@
           }
          ]
         },
-        "Playing": {
+        {
+         "title": "Playing",
          "entities": [
           {
            "entity": "media_player.guest_room_guest_room_apple_tv"
@@ -1474,7 +1489,8 @@
           }
          ]
         },
-        "Plugs & more": {
+        {
+         "title": "Plugs & more",
          "entities": [
           {
            "entity": "switch.guest_room_guest_room_power_strip_guest_room_tv"
@@ -1503,7 +1519,8 @@
           }
          ]
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -1517,14 +1534,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Motion": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -1550,8 +1561,9 @@
        "area": "race_room",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "strip": "light.dig2go",
@@ -1599,7 +1611,8 @@
           }
          ]
         },
-        "Stream lights": {
+        {
+         "title": "Stream lights",
          "entities": [
           {
            "entity": "light.race_room_key_light_air"
@@ -1617,10 +1630,10 @@
            "min": 2900,
            "max": 5500
           }
-         ],
-         "after": "Lights"
+         ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_race_room_bright",
@@ -1653,7 +1666,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "sensor.race_room_temp_sensor_temperature"
@@ -1663,7 +1677,8 @@
           }
          ]
         },
-        "Plugs & more": {
+        {
+         "title": "Plugs & more",
          "entities": [
           {
            "entity": "switch.race_room_race_room_power_strip_racing_sim"
@@ -1679,7 +1694,8 @@
           }
          ]
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -1701,17 +1717,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Playing": {
-         "hide": true
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Motion": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -1737,8 +1744,9 @@
        "area": "bathroom",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.bathroom_light"
@@ -1754,7 +1762,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_bathroom_bright",
@@ -1775,7 +1784,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "sensor.bathroom_temp_sensor_temperature"
@@ -1785,7 +1795,8 @@
           }
          ]
         },
-        "Motion": {
+        {
+         "title": "Motion",
          "entities": [
           {
            "entity": "binary_sensor.bathroom_motion_motion",
@@ -1797,7 +1808,8 @@
           }
          ]
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -1811,17 +1823,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Playing": {
-         "hide": true
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Plugs & more": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -1847,8 +1850,9 @@
        "area": "laundry_room",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.laundry_room_lights"
@@ -1865,7 +1869,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_laundry_bright",
@@ -1886,7 +1891,8 @@
          ],
          "all": false
         },
-        "Washer & dryer": {
+        {
+         "title": "Washer & dryer",
          "entities": [
           {
            "entity": "sensor.laundry_room_washer_current_status",
@@ -1933,10 +1939,10 @@
            "name": "Dryer power"
           }
          ],
-         "all": false,
-         "after": "Scenes"
+         "all": false
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -1954,23 +1960,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Climate": {
-         "hide": true
-        },
-        "Playing": {
-         "hide": true
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Motion": {
-         "hide": true
-        },
-        "Plugs & more": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -1996,15 +1987,17 @@
        "area": "outside",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.front_door_lights"
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "scene.outside_blood_moon",
@@ -2013,7 +2006,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "sensor.outside_nik_s_weather_station_temperature_1"
@@ -2036,7 +2030,8 @@
           }
          ]
         },
-        "Sprinklers": {
+        {
+         "title": "Sprinklers",
          "entities": [
           {
            "entity": "switch.outside_sprinklers_left_front"
@@ -2050,10 +2045,10 @@
           {
            "entity": "switch.outside_sprinklers_right_driveway"
           }
-         ],
-         "after": "Climate"
+         ]
         },
-        "Sprinkler schedule": {
+        {
+         "title": "Sprinkler schedule",
          "entities": [
           {
            "entity": "switch.outside_sprinklers_standard_schedule",
@@ -2064,10 +2059,10 @@
            "name": "Standby"
           }
          ],
-         "all": false,
-         "after": "Sprinklers"
+         "all": false
         },
-        "Power": {
+        {
+         "title": "Power",
          "entities": [
           {
            "name": "Circuits",
@@ -2109,20 +2104,8 @@
           }
          ],
          "room_tone": null
-        },
-        "Playing": {
-         "hide": true
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Motion": {
-         "hide": true
-        },
-        "Plugs & more": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -2148,15 +2131,17 @@
        "area": "guest_bathroom",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.guest_bathroom_light"
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_guest_bathroom_bright",
@@ -2177,17 +2162,18 @@
          ],
          "all": false
         },
-        "Fan": {
+        {
+         "title": "Fan",
          "entities": [
           {
            "entity": "light.guest_bathroom_fan",
            "name": "Fan"
           }
          ],
-         "all": false,
-         "after": "Scenes"
+         "all": false
         },
-        "Plugs & more": {
+        {
+         "title": "Plugs & more",
          "entities": [
           {
            "entity": "switch.guest_bathroom_plug"
@@ -2197,23 +2183,8 @@
            "name": "Plug power"
           }
          ]
-        },
-        "Climate": {
-         "hide": true
-        },
-        "Playing": {
-         "hide": true
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Motion": {
-         "hide": true
-        },
-        "Power": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }
@@ -2239,8 +2210,9 @@
        "area": "pantry",
        "base_path": "/house-nice",
        "back": "home",
-       "sections": {
-        "Lights": {
+       "sections": [
+        {
+         "title": "Lights",
          "entities": [
           {
            "entity": "light.pantry_lights"
@@ -2260,7 +2232,8 @@
           }
          ]
         },
-        "Scenes": {
+        {
+         "title": "Scenes",
          "entities": [
           {
            "entity": "script.room_pantry_bright",
@@ -2281,7 +2254,8 @@
          ],
          "all": false
         },
-        "Climate": {
+        {
+         "title": "Climate",
          "entities": [
           {
            "entity": "sensor.pantry_temp_sensor_temperature"
@@ -2291,7 +2265,8 @@
           }
          ]
         },
-        "Motion": {
+        {
+         "title": "Motion",
          "entities": [
           {
            "entity": "binary_sensor.pantry_motion_motion",
@@ -2302,20 +2277,8 @@
            "name": "Light level"
           }
          ]
-        },
-        "Playing": {
-         "hide": true
-        },
-        "Doors & windows": {
-         "hide": true
-        },
-        "Plugs & more": {
-         "hide": true
-        },
-        "Power": {
-         "hide": true
         }
-       },
+       ],
        "grid_options": {
         "columns": "full"
        }

@@ -29,6 +29,8 @@ import "../adapters/forms.js";
 export class NiceControls extends NiceCard {
   static required = ["entities"];
   static defaults = { title: "", tone: null, room_tone: null, strip: null, all: null, spark_hours: 24 };
+  static getConfigElement() { return document.createElement("nice-controls-editor"); }
+  static getStubConfig() { return { entities: [] }; }
   constructor() { super(); this.columns = new Columns(this, twoThreeFour(420)); this.data = new ChartData(this); }
 
   configChanged() {

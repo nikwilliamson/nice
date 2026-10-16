@@ -17,6 +17,8 @@ import "./cards/litter.js";
 import "./cards/feeder.js";
 import "./cards/footer.js";
 import "./cards/library.js";
+import "./editors/room-page.js";
+import "./editors/controls.js";
 
 // The fonts every card uses
 if (!document.getElementById("nice-fonts")) {

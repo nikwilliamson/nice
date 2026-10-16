@@ -49,6 +49,18 @@ Files go into the `homeassistant` container with `docker cp`. Put a long-lived a
 `.env` as `HA_TOKEN=…` and the deploy also checks the config, reloads, points the dashboard
 resource at the new build, and can push `dashboards/nice/*.json`. Without it, it says what's left.
 
+Room pages and nice-controls cards have visual editors (Edit dashboard → the card). Room pages
+are curated: nothing appears on its own; "Suggest from this room" lists what's in the area and not
+on the page, and you tick what you want.
+
+Phone pushes come from the same rules as the tiles: a tier-0 tile pushes, and any other tile pushes
+if its rule gives it `push=dict(…)` (level, repeat, hours, key, clear; see
+`custom_templates/nice/attention.jinja`). `input_boolean.nice_push_enabled` mutes them all. The
+house alert automations still raise and clear House alerts; they no longer push.
+
+`scripts/shots.sh` screenshots every page in a real browser; `scripts/shot-editor.mjs` opens a
+card's editor.
+
 To add a rule: put it in the domain's `.jinja` file and redeploy `rules`. To add a kind of device to
 nice-controls: `registerTile(domain, { shape, build })` in `src/adapters/`. To add a chart: one
 object in `src/charts/`, registered in `charts/index.js`.
@@ -65,4 +77,3 @@ Still to do, once house-nice has been looked over:
    unique_ids; drop `sensor.bento_tiles`.
 5. Remove the bento resources and files, `custom_templates/bento*.jinja`, the bento
    themes, and the house-bento and bento-library dashboards.
-6. Trim the room pages' overrides where nice-room-page finds the same things by itself.
