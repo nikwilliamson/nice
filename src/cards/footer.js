@@ -1,7 +1,11 @@
 // nice-footer: Menu and Edit at the bottom of the page. While it's on the page, Home
 // Assistant's own top bar is hidden on this dashboard only (the style lives inside this
 // dashboard's hui-root); the bar comes back in edit mode, where it carries Done and the
-// view tabs. Put one nice-footer last on every view of the dashboard.
+// view tabs. The sidebar is hidden too (Menu opens it over the page), and put back the way
+// this device had it on leaving the dashboard. Put one nice-footer last on every view.
+//
+//   type: custom:nice-footer
+//   hide_sidebar: true      false leaves the sidebar alone
 //
 // This reaches into Home Assistant's frontend (hui-root, hui-sections-view), so it's the
 // piece most likely to need a fix after a frontend update. It polls edit mode every 500 ms.
@@ -21,6 +25,23 @@ function ancestor(el, tag) {
 const CHROME = `.header, .toolbar { display: none !important; } #view { padding-top: env(safe-area-inset-top) !important; }`;
 // With the bar gone, the sections view's own top padding reads as a gap
 const TOP = `.container { padding-top: clamp(8px, 2vw, 16px) !important; }`;
+// Home Assistant keeps the sidebar's docking per device. What it was before Nice hid it is
+// remembered in localStorage, so a reload on a Nice page doesn't lose it.
+const BEFORE = "nice-sidebar-before";
+const app = () => document.querySelector("home-assistant");
+const dock = (mode) => app()?.dispatchEvent(new CustomEvent("hass-dock-sidebar", { detail: { dock: mode }, bubbles: true, composed: true }));
+function hideSidebar() {
+  const now = app()?.hass?.dockedSidebar;
+  if (!now || now === "always_hidden") return;
+  try { if (localStorage.getItem(BEFORE) == null) localStorage.setItem(BEFORE, now); } catch (e) { /* storage blocked */ }
+  dock("always_hidden");
+}
+function restoreSidebar() {
+  let before = null;
+  try { before = localStorage.getItem(BEFORE); localStorage.removeItem(BEFORE); } catch (e) { /* storage blocked */ }
+  if (before && before !== "always_hidden") dock(before);
+}
+
 function styleIn(root, id, text, on) {
   if (!root) return;
   let s = root.getElementById(id);
@@ -29,7 +50,7 @@ function styleIn(root, id, text, on) {
 }
 
 export class NiceFooter extends NiceCard {
-  static defaults = { menu: true, edit: true };
+  static defaults = { menu: true, edit: true, hide_sidebar: true };
   watch() { return []; }
 
   connectedCallback() {
@@ -45,7 +66,7 @@ export class NiceFooter extends NiceCard {
     if (!root) return;
     root.__niceFooters = Math.max(0, (root.__niceFooters || 1) - 1);
     // Moving between views swaps one footer for the next; only bring the bar back if none came back
-    setTimeout(() => { if (!root.__niceFooters) this._bar(root, true); }, 300);
+    setTimeout(() => { if (!root.__niceFooters) { this._bar(root, true); if (this.config.hide_sidebar) restoreSidebar(); } }, 300);
   }
   _claim() {
     if (this._root || !this.isConnected) return;
@@ -59,6 +80,7 @@ export class NiceFooter extends NiceCard {
     if (!this._root) return this._claim();
     const editing = !!this._root.lovelace?.editMode;
     this._bar(this._root, editing);
+    if (this.config.hide_sidebar && !editing) hideSidebar();
     styleIn(ancestor(this, "HUI-SECTIONS-VIEW")?.shadowRoot, "nice-top", TOP, !editing);
   }
   _bar(root, visible) {
