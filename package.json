@@ -5,7 +5,7 @@
   "description": "Nice: the house dashboard for Home Assistant. Cards, rules and theme.",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/"
+    "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {
     "esbuild": "0.24.0",
