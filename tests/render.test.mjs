@@ -86,6 +86,11 @@ test("the grid draws every rule tile it has room for, in order", async () => {
   await el.updateComplete;
   const ids = [...el.shadowRoot.querySelectorAll("nice-tile")].map((t) => t.tile.id);
   assert.equal(ids[0], "stove_demo", "a hazard comes first");
+  // Alerts draw no chart; calm tiles keep theirs
+  const tileOf = (id) => [...el.shadowRoot.querySelectorAll("nice-tile")].find((t) => t.tile.id === id);
+  assert.equal(tileOf("stove_demo").tile.viz, null);
+  assert.equal(tileOf("drawer").tile.viz, null);
+  assert.equal(tileOf("power")?.tile.viz?.type ?? "spark", "spark");
   assert.equal(ids.at(-1), "health", "health packs last");
   assert.ok(ids.includes("more") || ids.length > 10);
   // A tile's action goes through Home Assistant

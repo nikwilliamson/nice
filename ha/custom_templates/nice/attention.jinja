@@ -1,0 +1,34 @@
+{#- Nice - what needs attention, for the phone. The same tiles as the dashboard: every tile
+    that should push, from every rules sensor. sensor.nice_attention renders this, and
+    "Nice - Push what needs attention" sends, repeats and clears from it, so the phone and the
+    dashboard can't disagree.
+
+    A tier-0 tile (a hazard) pushes unless its rule says push=false. Anything else pushes
+    only if its rule gives it a push:
+      push=dict(
+        level   critical | time-sensitive (default) | active | passive
+        repeat  minutes between reminders while the tile is up (0: once)
+        awake   true: no reminders while the house is in night mode
+        key     a change of key pushes again (an escalation: the drawer going from filling to full)
+        clear   what to say when the tile goes away (nothing: the push just disappears)
+        title, message   default: the tile's label, and its say and sub)
+    A tile's service action becomes a button on the push, unless it asks for two taps (an
+    unlock never goes on a lock screen). -#}
+{%- from 'nice/config.jinja' import tile_sensors -%}
+{%- macro items() -%}
+{%- set ns = namespace(i=[]) -%}
+{%- for s in tile_sensors() | from_json -%}
+  {%- for t in state_attr(s, 'tiles') or [] -%}
+    {%- set p = t.push if t.push is mapping else (dict(level='time-sensitive') if t.tier == 0 and t.push is not false else none) -%}
+    {%- if p -%}
+      {%- set act = t.act if t.act is mapping and t.act.type == 'service' and not t.act.confirm else none -%}
+      {#- .get(), not p.clear: that would be the dict's own clear() -#}
+      {%- set ns.i = ns.i + [dict(id=t.id, key=t.id ~ ':' ~ p.get('key', t.tier),
+          level=p.get('level', 'time-sensitive'), repeat=p.get('repeat', 0) | int, awake=p.get('awake', false),
+          clear=p.get('clear', ''), title=p.get('title', t.label),
+          message=p.get('message', [t.say, t.sub] | select | join(' ')), act=act)] -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+{{ ns.i | to_json }}
+{%- endmacro -%}

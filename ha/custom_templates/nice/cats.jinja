@@ -13,7 +13,9 @@
   {%- set ns.t = ns.t + [dict(id='drawer', tier=(0 if code == 'dfs' else 1), order=2, shape='W', label='Litter drawer', tone='act',
       say=("The box has stopped. Zig and Donut need you." if code == 'dfs' else "One cycle left before the box stops." if code == 'df2' else "Two cycles left before the box stops." if code == 'df1' else "Litter drawer's nearly full. About a day left."),
       sub='Zig and Donut are counting on you',
-      viz=dict(type='tbar', value=drawer | round(0), line=80, line_label='alert'), act=none, tap='cats')] -%}
+      viz=dict(type='tbar', value=drawer | round(0), line=80, line_label='alert'), act=none, tap='cats',
+      push=dict(level=('time-sensitive' if code in ['df1', 'df2', 'dfs'] else 'active'), key=(code if code in ['df1', 'df2', 'dfs'] else 'filling'),
+          repeat=(180 if code in ['df1', 'df2', 'dfs'] else 0), awake=true, clear='Litter drawer emptied.'))] -%}
 {%- endif -%}
 
 {%- set hopper = states('sensor.litter_robot_hopper_status') -%}
@@ -24,7 +26,7 @@
   {%- set ns.t = ns.t + [dict(id='hopper', tier=(1 if hopper.startswith('motor') else 2), order=2, shape='S', label='Litter hopper', tone='today',
       say=("Hopper's jammed." if hopper.startswith('motor') else "Hopper's empty." if hopper == 'empty' else 'Globe is down to ' ~ globe | round(0) | int ~ '%.'),
       sub=('Grab a screwdriver, not a bag.' if hopper.startswith('motor') else "Litter's on the list." if listed else 'Add litter to the list?'),
-      viz=none, act=none, tap='cats')] -%}
+      viz=none, act=none, tap='cats', push=dict(level='active', key=('motor' if hopper.startswith('motor') else 'empty'), repeat=1440))] -%}
 {%- endif -%}
 
 {#- While you're away the away tile covers the cats -#}

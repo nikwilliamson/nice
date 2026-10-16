@@ -29,7 +29,7 @@ if [[ $WHAT == all || $WHAT == web ]]; then
 fi
 
 if [[ $WHAT == all || $WHAT == rules ]]; then
-  for f in ha/custom_templates/nice*.jinja; do [[ -e $f ]] && put "$f" custom_templates/; done
+  put ha/custom_templates/nice/. custom_templates/nice/
   for f in ha/packages/nice*.yaml; do [[ -e $f ]] && put "$f" packages/; done
   if token; then scripts/node.sh scripts/ha.mjs reload rules; else echo "→ check config, then reload custom templates, templates, automations, scripts, rest"; fi
 fi

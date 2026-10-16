@@ -76,7 +76,8 @@
             say=there | join(' and ') ~ (' is' if there | count == 1 else ' are') ~ ' at the ' ~ s[2] ~ ' game', sub='', viz=none, act=none, tap=none)] -%}
       {%- elif 0 < to_leave <= 30 -%}
         {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=1, order=7, shape='W', label=s[2], tone='plan', color=color,
-            say='Head out in ' ~ to_leave ~ ' min for ' ~ s[5] ~ '.', sub=s[1] ~ vs, viz=none, act=none, tap=none)] -%}
+            say='Head out in ' ~ to_leave ~ ' min for ' ~ s[5] ~ '.', sub=s[1] ~ vs ~ ' at ' ~ at_clock(start), viz=none, act=none, tap=none,
+            push=dict(level='time-sensitive', key='headout'))] -%}
       {%- elif -60 < to_leave <= 0 and nik_home -%}
         {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=1, order=7, shape='W', label=s[2], tone='plan', color=color,
             say='Time to go.', sub=s[1] ~ vs, viz=none, act=none, tap=none)] -%}

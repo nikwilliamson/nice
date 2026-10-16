@@ -3,3 +3,4 @@ build/
 .npm/
 .env
 *.log
+shots/

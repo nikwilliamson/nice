@@ -6,6 +6,11 @@
     Tesla account but is left out on purpose. -#}
 {%- macro cars() -%}{{ [['nik', "Nik's"], ['kat', "Kat's"]] | to_json }}{%- endmacro -%}
 
+{#- Every rules sensor, for the attention sensor that gathers what to push -#}
+{%- macro tile_sensors() -%}
+{{ ['safety', 'security', 'cats', 'chores', 'cars', 'weather', 'energy', 'home', 'away', 'plan', 'health', 'sports'] | map('regex_replace', '^', 'sensor.nice_tiles_') | list | to_json }}
+{%- endmacro -%}
+
 {#- Players whose "playing" shows on the Home tab -#}
 {%- macro players() -%}
 {{ ['media_player.living_room_living_room_apple_tv', 'media_player.bedroom_bedroom_apple_tv', 'media_player.guest_room_guest_room_apple_tv',

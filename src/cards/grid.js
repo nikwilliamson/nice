@@ -6,6 +6,8 @@
 //   base_path: /house-nice
 //   routes: { kitchen: room-kitchen, cats: tab:cats }   tile tap → view path or tab:<id>
 //   todo: todo.house_alerts                              where chores are ticked and added
+//   alert_charts: false                                  hazard and act-now tiles (tier 0 and 1)
+//                                                        show their words and buttons, no chart
 import { html, css } from "lit";
 import { repeat } from "lit/directives/repeat.js";
 import { NiceCard } from "../core/base.js";
@@ -18,7 +20,7 @@ import { place } from "../tile/tile.js";
 const PREFIX = "sensor.nice_tiles_";
 
 export class NiceGrid extends NiceCard {
-  static defaults = { entities: null, base_path: null, routes: null, todo: "todo.house_alerts", budget: 20 };
+  static defaults = { entities: null, base_path: null, routes: null, todo: "todo.house_alerts", budget: 20, alert_charts: false };
   static styles = [tokens, css`
     :host { container-type: inline-size; }
     .grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-auto-rows: minmax(var(--n-row), auto); gap: var(--n-gap); }
@@ -51,6 +53,9 @@ export class NiceGrid extends NiceCard {
   describe(t) {
     const c = this.config, call = (svc, entity, data) => this.callEntity(svc, entity, data);
     const d = { ...t, tap: t.tap ? () => go(this, c.routes, c.base_path, t.tap) : null, hold: t.entity ? () => moreInfo(this, t.entity) : null };
+    // An alert says what's wrong and what to do; a chart only gets in the way. Buttons and
+    // lists are things to do, so they stay.
+    if (!c.alert_charts && (t.tier ?? 3) <= 1 && t.viz && !["list", "buttons"].includes(t.viz.type)) d.viz = null;
     if (t.act?.type === "navigate") d.act = { ...t.act, run: () => go(this, c.routes, c.base_path, t.act.path) };
     else if (t.act?.type === "service") d.act = { ...t.act, run: () => call(t.act.service, t.act.entity_id, t.act.data || {}) };
     else if (t.act?.type === "todo_add") d.act = { ...t.act, add: (text) => this.call("todo", "add_item", { item: text.toUpperCase() }, { entity_id: t.act.entity_id || c.todo }) };

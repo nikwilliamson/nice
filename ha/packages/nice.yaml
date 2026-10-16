@@ -98,3 +98,153 @@ template:
     state: nice
     attributes:
       tiles: "{% from 'nice/sports.jinja' import tiles %}{{ tiles() | from_json }}"
+
+# What needs attention, for the phone: every tile that should push (custom_templates/nice/
+# attention.jinja says which), and since when. Trigger-based so it can remember when each
+# one appeared across a restart; the reminders count from that.
+- triggers:
+  - trigger: state
+    entity_id:
+    - sensor.nice_tiles_safety
+    - sensor.nice_tiles_security
+    - sensor.nice_tiles_cats
+    - sensor.nice_tiles_chores
+    - sensor.nice_tiles_cars
+    - sensor.nice_tiles_weather
+    - sensor.nice_tiles_energy
+    - sensor.nice_tiles_home
+    - sensor.nice_tiles_away
+    - sensor.nice_tiles_plan
+    - sensor.nice_tiles_health
+    - sensor.nice_tiles_sports
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: event_template_reloaded
+  sensor:
+  - name: Nice attention
+    unique_id: nice_attention
+    icon: mdi:bell-ring-outline
+    state: "{% from 'nice/attention.jinja' import items %}{{ items() | from_json | count }}"
+    attributes:
+      items: "{% from 'nice/attention.jinja' import items %}{{ items() | from_json }}"
+      since: >-
+        {%- from 'nice/attention.jinja' import items -%}
+        {%- set was = this.attributes.get('since') if this is defined and this.attributes is defined else none -%}
+        {%- set was = was if was is mapping else {} -%}
+        {%- set ns = namespace(s={}) -%}
+        {%- for i in items() | from_json -%}{%- set ns.s = dict(ns.s, **{i.id: was.get(i.id, now().isoformat())}) -%}{%- endfor -%}
+        {{ ns.s }}
+
+automation:
+# The one place the house pushes what needs attention. Sends a tile's push when it appears
+# (or escalates), repeats it on the tile's schedule, and clears it from the phone when the
+# tile goes away, with the tile's all-clear if it has one. The phone and the dashboard read
+# the same rules, so they can't disagree. Gated like every other automation here.
+- id: nice_push_attention
+  alias: Nice - Push what needs attention
+  description: >-
+    Pushes the tiles in sensor.nice_attention to the phone: once when one appears or
+    escalates, again on its repeat schedule (not overnight for the ones that ask), and clears
+    it when the tile goes away. Which tiles push, how loudly and how often is set in the rules
+    (custom_templates/nice/attention.jinja explains the push fields).
+  mode: queued
+  max: 10
+  triggers:
+  - trigger: state
+    entity_id: sensor.nice_attention
+    attribute: items
+    id: changed
+  - trigger: time_pattern
+    minutes: /1
+    id: tick
+  conditions:
+  - condition: state
+    entity_id: input_boolean.nice_push_enabled
+    state: "on"
+  - "{{ trigger.id == 'changed' or (state_attr('sensor.nice_attention', 'items') or []) | selectattr('repeat') | list | count > 0 }}"
+  actions:
+  - variables:
+      # Who gets pushed. Add a phone here to include it.
+      targets:
+      - notify.mobile_app_niks_iphone_17
+      now_items: "{{ state_attr('sensor.nice_attention', 'items') or [] }}"
+      # Coming back from a restart or a reload is not news: nothing is sent for it
+      prev_items: >-
+        {{ trigger.from_state.attributes.get('items') or []
+           if trigger.id == 'changed' and trigger.from_state is not none and trigger.from_state.state not in ['unknown', 'unavailable']
+           else now_items }}
+      since: "{{ state_attr('sensor.nice_attention', 'since') or {} }}"
+      night: "{{ is_state('sensor.house_mode', 'night') }}"
+      send: >-
+        {%- if trigger.id == 'changed' -%}
+          {{ now_items | rejectattr('key', 'in', prev_items | map(attribute='key') | list) | list }}
+        {%- else -%}
+          {%- set ns = namespace(s=[]) -%}
+          {%- for i in now_items if i.repeat and not (i.awake and night) -%}
+            {%- set mins = ((now() - as_datetime(since.get(i.id, now().isoformat()))).total_seconds() / 60) | int -%}
+            {%- if mins > 0 and mins % i.repeat == 0 -%}{%- set ns.s = ns.s + [i] -%}{%- endif -%}
+          {%- endfor -%}
+          {{ ns.s }}
+        {%- endif -%}
+      gone: >-
+        {{ prev_items | rejectattr('id', 'in', now_items | map(attribute='id') | list) | list if trigger.id == 'changed' else [] }}
+  - repeat:
+      for_each: "{{ send }}"
+      sequence:
+      - variables:
+          it: "{{ repeat.item }}"
+          payload: >-
+            {{ {'tag': 'nice_' ~ it.id, 'url': '/house-nice/home',
+                'push': ({'interruption-level': 'critical', 'sound': {'name': 'default', 'critical': 1, 'volume': 1.0}} if it.level == 'critical' else {'interruption-level': it.level}),
+                'actions': ([{'action': 'NICE_' ~ it.id, 'title': it.act.label}] if it.act else [])} }}
+      - repeat:
+          for_each: "{{ targets }}"
+          sequence:
+          - action: "{{ repeat.item }}"
+            data:
+              title: "{{ it.title }}"
+              message: "{{ it.message }}"
+              data: "{{ payload }}"
+  - repeat:
+      for_each: "{{ gone }}"
+      sequence:
+      - variables:
+          it: "{{ repeat.item }}"
+      - repeat:
+          for_each: "{{ targets }}"
+          sequence:
+          - action: "{{ repeat.item }}"
+            data:
+              message: clear_notification
+              data:
+                tag: "nice_{{ it.id }}"
+          - if: "{{ it['clear'] | length > 0 }}"
+            then:
+            - action: "{{ repeat.item }}"
+              data:
+                title: "{{ it.title }}"
+                message: "{{ it['clear'] }}"
+                data:
+                  tag: "nice_{{ it.id }}"
+
+# A tap on a push's button runs that tile's action, if the tile is still up (so a stale
+# button does nothing). Only service actions that don't ask for two taps get a button.
+- id: nice_push_action
+  alias: Nice - Do what a push offered
+  description: Runs the tile's own action when its button is tapped on the phone.
+  mode: queued
+  max: 5
+  triggers:
+  - trigger: event
+    event_type: mobile_app_notification_action
+  conditions:
+  - "{{ (trigger.event.data.action | default('')).startswith('NICE_') }}"
+  actions:
+  - variables:
+      it: >-
+        {{ (state_attr('sensor.nice_attention', 'items') or []) | selectattr('id', 'eq', trigger.event.data.action[5:]) | first | default(none) }}
+  - condition: "{{ it is not none and it.act is mapping }}"
+  - action: "{{ it.act.service }}"
+    target: "{{ {'entity_id': it.act.entity_id} if it.act.entity_id is defined and it.act.entity_id else {} }}"
+    data: "{{ it.act.data if it.act.data is mapping else {} }}"
