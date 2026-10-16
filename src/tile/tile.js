@@ -125,10 +125,24 @@ export class NiceTile extends LitElement {
       <button class="tick ${this._ticked[i.uid] ? "done" : ""}" aria-label="Done: ${sentence(i.summary)}" @click=${(e) => tick(e, i)}></button>${sentence(i.summary)}</li>`)}</ul>`;
   }
 
+  // Funky lights: big swatches, each shimmering through its scene's colours. A tap throws
+  // confetti in those colours and runs the scene.
+  _funky(v) {
+    const grad = (c) => `linear-gradient(120deg, ${[...c, c[0]].join(", ")})`;
+    const go = (e, b) => { e.stopPropagation(); celebrate(e.currentTarget, true, b.colors); b.run?.(); };
+    return html`<div class="funky">${(v.items || []).map((b, i) => html`<button class="swatch ${b.primary ? "on" : ""}" style="--g:${grad(b.colors)};--d:${i * -1.7}s"
+      aria-pressed=${b.primary ? "true" : "false"} @click=${(e) => go(e, b)}><span>${b.label}</span></button>`)}</div>`;
+  }
+  _funkyBackdrop(v) {
+    const c = (v.items || []).flatMap((b) => b.colors.slice(0, 2)).slice(0, 6);
+    return html`<div class="funkybg" aria-hidden="true">${c.map((col, i) => html`<i style="--c:${col};--dl:${i * -2.3}s;left:${(i * 37) % 80 - 10}%;top:${(i * 53) % 70 - 20}%"></i>`)}</div>`;
+  }
+
   _viz(t) {
     const v = t.viz;
     if (!v?.type) return nothing;
     if (v.type === "list") return this._list(v);
+    if (v.type === "funky") return this._funky(v);
     if (v.type === "buttons") return html`<div class="row">${(v.items || []).map((b) => html`<button class="pill ${b.primary ? "sel" : ""}" @click=${(e) => { e.stopPropagation(); b.run?.(); }}>${b.label}</button>`)}</div>`;
     const c = chart(v.type);
     if (!c) return nothing;
@@ -158,7 +172,8 @@ export class NiceTile extends LitElement {
       case "picture": body = html`<div class="picture">${t.picture}</div>${words}${act}`; break;
       default: body = words;
     }
-    return html`${t.backdrop || nothing}${label}${body}${controls}`;
+    const backdrop = t.backdrop || (t.viz?.type === "funky" ? this._funkyBackdrop(t.viz) : nothing);
+    return html`${backdrop}${label}${body}${controls}`;
   }
 }
 customElements.define("nice-tile", NiceTile);

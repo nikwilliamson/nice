@@ -63,4 +63,27 @@ export const extraStyles = css`
   @keyframes fxblink { 50% { opacity: .1; } }
   @keyframes fxflicker { 0% { opacity: 1; } 14% { opacity: .8; } 29% { opacity: .96; } 47% { opacity: .72; } 63% { opacity: 1; } 81% { opacity: .86; } }
   @keyframes fxbeat { 0%, 100% { opacity: .62; } 20% { opacity: 1; } 45% { opacity: .78; } 60% { opacity: .98; } 80% { opacity: .7; } }
+
+  /* Funky lights: colour drifting behind, swatches that shimmer */
+  :host(.funky-tile) .lbl, :host(.funky-tile) .txt, :host(.funky-tile) .vz, :host(.funky-tile) .foot { position: relative; z-index: 1; }
+  :host(.funky-tile) .say { text-shadow: 0 2px 12px rgba(0,0,0,.4); }
+  .funkybg { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; z-index: 0; pointer-events: none; }
+  .funkybg i { position: absolute; width: 75%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, var(--c) 0%, transparent 65%);
+    opacity: .5; filter: blur(12px); mix-blend-mode: screen; animation: funkyblob 16s ease-in-out var(--dl) infinite alternate; }
+  :host(.funky-tile) { grid-template-rows: auto auto 1fr; }
+  :host(.funky-tile) .vz { align-self: stretch; display: grid; }
+  .funky { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(68px, 1fr); gap: var(--n-s-sm); }
+  .swatch { position: relative; border: 0; border-radius: var(--n-r-sm); min-height: 68px; padding: var(--n-s-sm) var(--n-s-md); cursor: pointer;
+    background: var(--g); background-size: 300% 300%; animation: funkyshimmer 7s ease-in-out var(--d) infinite alternate;
+    color: #fff; font: inherit; font-weight: 800; font-size: 1.02em; letter-spacing: -0.01em; text-align: left; display: flex; align-items: flex-end;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); transition: transform .45s var(--n-spring), box-shadow .3s ease; }
+  .swatch:hover { transform: scale(1.04) rotate(-1.5deg); }
+  .swatch:active { transform: scale(.94); }
+  .swatch:focus-visible { outline: var(--n-ring) solid var(--n-focus); outline-offset: 2px; }
+  .swatch.on { box-shadow: 0 0 0 3px #fff, 0 0 22px 4px rgba(255,255,255,.45); }
+  .swatch.on::after { content: "On"; position: absolute; top: 8px; right: 10px; font-size: .68em; font-weight: 800; border-radius: var(--n-r-full);
+    padding: 2px 8px; background: #fff; color: #1c2233; text-shadow: none; }
+  @keyframes funkyshimmer { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+  @keyframes funkyblob { 0% { transform: translate(-15%, -10%) scale(1); } 50% { transform: translate(25%, 20%) scale(1.3); } 100% { transform: translate(-5%, 30%) scale(.9); } }
+  @media (prefers-reduced-motion: reduce) { .swatch, .funkybg i { animation: none; } }
 `;

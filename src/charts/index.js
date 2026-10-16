@@ -10,7 +10,7 @@ export const CHARTS = { spark, dayline, dbars, rain, tbar, tube, ring, countdown
 // Where a chart sits on its tile: bleed (full width along the bottom), side (beside the
 // words), after (below them), foot (on the bottom edge), stack (above them). Lists and
 // buttons are the tile's own, not charts.
-const OWN_LAYOUT = { list: "after", buttons: "foot" };
+const OWN_LAYOUT = { list: "after", buttons: "foot", funky: "after" };
 export const layoutOf = (viz) => (!viz?.type ? "text" : OWN_LAYOUT[viz.type] || CHARTS[viz.type]?.layout || "stack");
 
 export const chartStyles = Object.values(CHARTS).map((c) => c.styles).filter(Boolean);

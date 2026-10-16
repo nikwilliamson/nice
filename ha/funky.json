@@ -1,0 +1,25 @@
+{
+  "_": "Funky scenes: colourful, whole house. scripts/funky.py turns this into scenes (packages/nice_funky.yaml) and the card's list (custom_templates/nice/funky_list.jinja). Colour lights take the scene's colours in turn, room by room; white-only lights go off; the WLED strip runs the effect and palette. Brightness 0-255.",
+  "scenes": [
+    { "id": "neon_tokyo",    "name": "Neon Tokyo",    "colors": ["#ff2bd6", "#00e5ff", "#7a3cff"],            "brightness": 210, "fx": "Colorwaves",   "palette": "Party" },
+    { "id": "sunset_lounge", "name": "Sunset Lounge", "colors": ["#ff7a1a", "#ff2e63", "#ffb000", "#c2185b"], "brightness": 190, "fx": "Flow",         "palette": "Sunset" },
+    { "id": "deep_ocean",    "name": "Deep Ocean",    "colors": ["#0057ff", "#00c2c7", "#00ffd5", "#2a2aff"], "brightness": 180, "fx": "Pacifica",     "palette": "Ocean" },
+    { "id": "aurora",        "name": "Aurora",        "colors": ["#00ff88", "#00c2ff", "#8a2be2", "#39ff14"], "brightness": 190, "fx": "Aurora",       "palette": "Aurora" },
+    { "id": "disco",         "name": "Disco",         "colors": ["#ff0040", "#ffe600", "#00ff6a", "#0080ff", "#b400ff"], "brightness": 230, "fx": "Rainbow", "palette": "Rainbow" },
+    { "id": "galaxy",        "name": "Galaxy",        "colors": ["#3a0ca3", "#7209b7", "#f72585", "#4361ee"], "brightness": 170, "fx": "Twinklefox",   "palette": "Magenta" },
+    { "id": "tropical",      "name": "Tropical",      "colors": ["#b6ff00", "#ff6f61", "#00e0c6", "#ffd400"], "brightness": 210, "fx": "Blends",       "palette": "Beach" },
+    { "id": "candy",         "name": "Candy",         "colors": ["#ff8ad8", "#b388ff", "#7dffcc", "#8ad8ff"], "brightness": 200, "fx": "Fairytwinkle", "palette": "Pink Candy" }
+  ],
+  "color_lights": {
+    "Bathroom": ["light.bathroom_light"],
+    "Bedroom": ["light.bedroom_front_light_1", "light.bedroom_front_light_2", "light.bedroom_front_light_3", "light.bedroom_front_light_4", "light.bedroom_front_light_5", "light.bedroom_front_light_6", "light.bedroom_reading_light"],
+    "Game Room": ["light.game_room_circle_light", "light.game_room_console", "light.game_room_console_light", "light.game_room_lounge_light", "light.game_room_overhead_light", "light.game_room_pool_table", "light.game_room_spotlight_1", "light.game_room_spotlight_2", "light.game_room_spotlight_3"],
+    "Guest Room": ["light.guest_room_light_1", "light.guest_room_light_2", "light.guest_room_light_3", "light.guest_room_mirror"],
+    "Kitchen": ["light.kitchen_1", "light.kitchen_2", "light.kitchen_3", "light.kitchen_4", "light.kitchen_5", "light.kitchen_6", "light.kitchen_light"],
+    "Laundry Room": ["light.laundry_room_light_1", "light.laundry_room_light_2"],
+    "Living Room": ["light.living_room_ceiling_light", "light.living_room_couch_light", "light.living_room_credenza_light", "light.living_room_dining_table_1", "light.living_room_dining_table_2", "light.living_room_dining_table_3", "light.living_room_dining_table_4", "light.living_room_dining_table_5", "light.living_room_dining_table_6", "light.living_room_floor_light_1", "light.living_room_floor_light_2", "light.living_room_hallway_downlight", "light.living_room_kitchen_counter"],
+    "Race Room": ["light.race_room_corner_light", "light.race_room_desk_light", "light.race_room_desk_lightstrip", "light.race_room_hue_go", "light.race_room_light", "light.race_room_rig_light", "light.race_room_side_light"]
+  },
+  "white_lights_off": ["light.bedroom_back_left_downlight", "light.bedroom_back_middle_downlight", "light.bedroom_back_right_downlight", "light.bedroom_front_left_downlight", "light.bedroom_front_middle_downlight", "light.bedroom_front_right_downlight", "light.bedroom_fireplace", "light.guest_bathroom_light", "light.living_room_circle_light", "light.pantry_pantry_light_1", "light.pantry_light_2", "light.pantry_light_3", "light.pantry_light_4", "light.pantry_light_5", "light.race_room_key_light", "light.race_room_key_light_air"],
+  "strip": { "light": "light.dig2go", "palette": "select.dig2go_color_palette" }
+}

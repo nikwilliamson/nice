@@ -48,8 +48,8 @@ try {
     if (what === "rules" || what === "all") {
       await checkConfig();
       await service(ha, "homeassistant", "reload_custom_templates");
-      for (const d of ["template", "automation", "script", "rest"]) await service(ha, d, "reload");
-      console.log("reloaded templates, automations, scripts and rest");
+      for (const d of ["template", "automation", "script", "scene", "rest"]) await service(ha, d, "reload");
+      console.log("reloaded templates, automations, scripts, scenes and rest");
     }
     if (what === "theme" || what === "all") { await service(ha, "frontend", "reload_themes"); console.log("reloaded themes"); }
   } else if (cmd === "resource") {

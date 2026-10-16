@@ -64,7 +64,7 @@ export class NiceGrid extends NiceCard {
     else if (t.act?.type === "service") d.act = { ...t.act, run: () => call(t.act.service, t.act.entity_id, t.act.data || {}) };
     else if (t.act?.type === "todo_add") d.act = { ...t.act, add: (text) => this.call("todo", "add_item", { item: text.toUpperCase() }, { entity_id: t.act.entity_id || c.todo }) };
     if (t.viz?.type === "list") d.viz = { ...t.viz, tick: (uid) => this.call("todo", "update_item", { item: uid, status: "completed" }, { entity_id: c.todo }) };
-    if (t.viz?.type === "buttons") d.viz = { ...t.viz, items: (t.viz.items || []).map((b) => ({ ...b, run: () => call(b.service, b.entity_id, b.data || {}) })) };
+    if (t.viz?.type === "buttons" || t.viz?.type === "funky") d.viz = { ...t.viz, items: (t.viz.items || []).map((b) => ({ ...b, run: () => call(b.service, b.entity_id, b.data || {}) })) };
     return d;
   }
 

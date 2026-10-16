@@ -64,6 +64,10 @@ house alert automations still raise and clear House alerts; they no longer push.
 `scripts/shots.sh` screenshots every page in a real browser; `scripts/shot-editor.mjs` opens a
 card's editor.
 
+Funky scenes live in `ha/funky.json` (colours, brightness, the strip's effect and palette, which
+lights are colour and which white-only). `python3 scripts/funky.py` writes the scenes
+(`ha/packages/nice_funky.yaml`) and the card's list; then redeploy `rules`.
+
 To add a rule: put it in the domain's `.jinja` file and redeploy `rules`. To add a kind of device to
 nice-controls: `registerTile(domain, { shape, build })` in `src/adapters/`. To add a chart: one
 object in `src/charts/`, registered in `charts/index.js`.

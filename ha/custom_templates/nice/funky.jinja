@@ -1,0 +1,39 @@
+{#- Nice - funky lights. Once the sun is down, four of the funky scenes (funky_list.jinja,
+    from ha/funky.json) as big colour swatches; a different four each night. Tier 2.
+    A swatch runs script.activate_lighting_scene, so Adaptive Lighting leaves the colours
+    alone. The scene turned on last is "on" until the house goes back to adaptive or evening
+    lighting; then Back to normal goes away. -#}
+{%- from 'nice/funky_list.jinja' import funky_scenes -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], on=none, at=0) -%}
+{%- if is_state('sun.sun', 'below_horizon') -%}
+  {%- set all = funky_scenes() | from_json -%}
+  {%- set n = all | count -%}
+  {#- Tonight's four: where the list starts moves on each night, and the picks spread out -#}
+  {%- set day = (now() - timedelta(hours=12)).timetuple().tm_yday -%}
+  {%- set start = (day * 3) % n -%}
+  {%- set pick = namespace(i=[]) -%}
+  {%- for o in [0, 1, 3, 5] -%}{%- set pick.i = pick.i + [(start + o) % n] -%}{%- endfor -%}
+  {#- Which one is on: the last funky scene turned on, if nothing has put the lights back since -#}
+  {%- set back = [state_attr('script.whole_house_adaptive', 'last_triggered'), state_attr('script.lighting_evening', 'last_triggered'),
+      state_attr('script.lighting_bedtime', 'last_triggered')] | select | map('as_timestamp') | list -%}
+  {%- set back = back | max if back else 0 -%}
+  {%- for s in all -%}
+    {%- set at = as_timestamp(states(s.id), 0) -%}
+    {%- if at > ns.at and at > back and as_timestamp(now()) - at < 6 * 3600 -%}{%- set ns.on = s -%}{%- set ns.at = at -%}{%- endif -%}
+  {%- endfor -%}
+  {#- The one that's on always shows, in place of tonight's last pick -#}
+  {%- set idx = pick.i if not ns.on or all.index(ns.on) in pick.i else pick.i[:3] + [all.index(ns.on)] -%}
+  {%- set items = namespace(l=[]) -%}
+  {%- for i in idx -%}
+    {%- set s = all[i] -%}
+    {%- set items.l = items.l + [dict(label=s.name, colors=s.colors, primary=(ns.on is not none and ns.on.id == s.id),
+        service='script.activate_lighting_scene', data=dict(scenes=[s.id], transition=3))] -%}
+  {%- endfor -%}
+  {%- set lines = ["Make it weird tonight?", "Paint the house.", "Lights, but louder.", "Feeling colourful?", "Turn it up a notch?"] -%}
+  {%- set ns.t = ns.t + [dict(id='funky', tier=2, order=6, shape='L', label='Funky lights', tone='night', cls=['funky-tile', 'dark'],
+      say=(ns.on.name ~ ', everywhere.' if ns.on else lines[day % lines | count]), sub='', viz=dict(type='funky', items=items.l),
+      act=(dict(label='Back to normal', type='service', service='script.lighting_evening') if ns.on else none), tap=none)] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

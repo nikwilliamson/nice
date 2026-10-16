@@ -64,13 +64,13 @@ export function wiggle(el) {
 
 const CONFETTI = ["#ff6b4a", "#a78bfa", "#5ab8ff", "#ffc933", "#2fc98a", "#ff9cc4"];
 // On the page body, so nothing in the card can cut it short
-export function celebrate(fromEl, big = false) {
+export function celebrate(fromEl, big = false, colors = CONFETTI) {
   if (calm() || !fromEl) return;
   const r = fromEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
   for (let i = 0; i < (big ? 30 : 12); i++) {
     const p = document.createElement("i");
     p.setAttribute("aria-hidden", "true");
-    p.style.cssText = `position:fixed;left:0;top:0;z-index:9999;width:7px;height:10px;border-radius:2px;pointer-events:none;background:${CONFETTI[i % CONFETTI.length]}`;
+    p.style.cssText = `position:fixed;left:0;top:0;z-index:9999;width:7px;height:10px;border-radius:2px;pointer-events:none;background:${colors[i % colors.length]}`;
     document.body.appendChild(p);
     const a = Math.random() * Math.PI * 2, d = 36 + Math.random() * (big ? 120 : 56);
     const dx = Math.cos(a) * d, dy = Math.sin(a) * d - 30, rot = (Math.random() - 0.5) * 720;
