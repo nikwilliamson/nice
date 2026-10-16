@@ -1,5 +1,5 @@
 {#- Nice - timers on the Google speakers and displays (the Google Home integration, polled
-    every 3 minutes, its default). One tile per timer, tier 0. While it runs, the tile is just
+    every 3 minutes, its default). One tile per timer, tier 1 (act now). While it runs, the tile is just
     the time left, ticking in the browser (say '{left}' with ends), and never pushes. Once it
     goes off ("ringing" is worked out from the fire time too, so the tile doesn't wait for a
     poll) it's Time's up! with a Stop button, and pushes if it's still ringing after four
@@ -30,13 +30,13 @@
   {%- set id = 'timer-' ~ t.id.split('/')[-1][:8] -%}
   {%- if t.ringing -%}
     {%- set rang = ((ts - t.fire) / 60) if t.fire else 0 -%}
-    {%- set ns.t = ns.t + [dict(id=id, tier=0, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='hazard',
+    {%- set ns.t = ns.t + [dict(id=id, tier=1, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='hazard',
         say="Time's up!", sub='', viz=none, entity=t.entity, tap=none,
         act=dict(label='Stop', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id)),
         push=(dict(level='time-sensitive', key=t.id, title=what ~ ' is going off', message="It's been ringing in the " ~ t.room | lower ~ ' for a few minutes.') if rang >= 4 else false))] -%}
   {%- else -%}
     {#- The say is the time left, counting down in the browser ({left}) -#}
-    {%- set ns.t = ns.t + [dict(id=id, tier=0, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='timer', push=false,
+    {%- set ns.t = ns.t + [dict(id=id, tier=1, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='timer', push=false,
         say=('Paused' if t.paused else '{left}'), sub='', big=true,
         ends=((t.fire * 1000) | int if t.fire and not t.paused else none), viz=none, entity=t.entity, tap=none,
         act=dict(label='Cancel', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id), confirm=true))] -%}
