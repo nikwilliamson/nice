@@ -57,12 +57,12 @@ object in `src/charts/`, registered in `charts/index.js`.
 
 Still to do, once house-nice has been looked over:
 
-1. Make house-nice the default dashboard; keep house-hub hidden for a week.
+1. ~~Make house-nice the default dashboard~~ (done 2026-10-16; titled House). ~~Remove hearth~~ (done: dashboards, resources, files, theme).
 2. `Theme - Follow the sun`: Bento Day/Night → Nice Day/Night.
 3. `Sports - Ask on phone`: import `at_clock` and `day_word` from `nice/format.jinja`.
 4. Move the shared sensors and automations in `packages/bento.yaml` (house chores, next event, rain
    outlook, last door opened, away since, dishwasher, launch) into `packages/nice_house.yaml`, same
    unique_ids; drop `sensor.bento_tiles`.
-5. Remove the bento and hearth resources and files, `custom_templates/bento*.jinja`, the bento
-   themes, and the house-bento, bento-library, house-hub and house-hub-backup dashboards.
+5. Remove the bento resources and files, `custom_templates/bento*.jinja`, the bento
+   themes, and the house-bento and bento-library dashboards.
 6. Trim the room pages' overrides where nice-room-page finds the same things by itself.
