@@ -21,8 +21,11 @@ import { place } from "../tile/tile.js";
 import { ChartData } from "../tile/data.js";
 import { lrRobot, LR_STATUS, LR_DRAWER_SOON } from "../illus/litter.js";
 import { statusTag, headStyles } from "./head.js";
+import { formEditor } from "../editors/form.js";
+import { LITTER } from "../editors/specs.js";
 
 export class NiceLitter extends NiceCard {
+  static getConfigElement() { return formEditor(LITTER); }
   static defaults = { robot: "litter_robot", name: "Litter-Robot", place: null, cats: [], part: "all" };
   constructor() { super(); this.columns = new Columns(this); this.data = new ChartData(this); }
   connectedCallback() { super.connectedCallback(); this.every(30000); }

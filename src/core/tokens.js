@@ -2,7 +2,7 @@
 // src/tokens.json, the same file the theme is built from. Type is in em off the host, so
 // font_scale scales a whole card.
 import { css, unsafeCSS } from "lit";
-import T from "../tokens.json";
+import T from "../tokens.json" with { type: "json" };
 
 export { T as TOKENS };
 

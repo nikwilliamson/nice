@@ -22,8 +22,11 @@ import { pack, Columns } from "../layout/pack.js";
 import { place } from "../tile/tile.js";
 import { carOverhead, DOORS } from "../illus/car.js";
 import { statusTag, headStyles } from "./head.js";
+import { formEditor } from "../editors/form.js";
+import { CAR } from "../editors/specs.js";
 
 export class NiceCar extends NiceCard {
+  static getConfigElement() { return formEditor(CAR); }
   static required = ["car"];
   static defaults = { name: null, model: null };
   constructor() { super(); this.columns = new Columns(this); }

@@ -19,6 +19,7 @@ import "./cards/footer.js";
 import "./cards/library.js";
 import "./editors/room-page.js";
 import "./editors/controls.js";
+import "./editors/tabs.js";
 
 // The fonts every card uses
 if (!document.getElementById("nice-fonts")) {

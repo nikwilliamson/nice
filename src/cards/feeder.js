@@ -27,10 +27,13 @@ import { pack, Columns } from "../layout/pack.js";
 import { place } from "../tile/tile.js";
 import { fdFeeder, fdClock } from "../illus/feeder.js";
 import { headStyles } from "./head.js";
+import { formEditor } from "../editors/form.js";
+import { FEEDER, SNACK } from "../editors/specs.js";
 
 const gridStyles = css`.grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-auto-rows: minmax(var(--n-row), auto); gap: var(--n-gap); }`;
 
 export class NiceFeeder extends NiceCard {
+  static getConfigElement() { return formEditor(FEEDER); }
   static required = ["feeders"];
   static defaults = { schedule: null, meals: [], heading: null };
   constructor() { super(); this.columns = new Columns(this, (w) => (w && w < 560 ? 2 : 4)); this._feeds = {}; }
@@ -117,6 +120,7 @@ export class NiceFeeder extends NiceCard {
 customElements.define("nice-feeder", NiceFeeder);
 
 export class NiceSnack extends NiceCard {
+  static getConfigElement() { return formEditor(SNACK); }
   static required = ["script"];
   static defaults = { title: "Snack time!", portions: 1, names: [], feeders: [], heading: null };
   watch() { return [this.config.script, ...this.config.feeders.map((p) => `button.${p}_feed`)]; }

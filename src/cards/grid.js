@@ -17,10 +17,13 @@ import { go, moreInfo } from "../core/nav.js";
 import { choose, bestPack, ordered, Columns } from "../layout/pack.js";
 import { chart } from "../charts/index.js";
 import { place } from "../tile/tile.js";
+import { formEditor } from "../editors/form.js";
+import { GRID } from "../editors/specs.js";
 
 const PREFIX = "sensor.nice_tiles_";
 
 export class NiceGrid extends NiceCard {
+  static getConfigElement() { return formEditor(GRID); }
   static defaults = { entities: null, base_path: null, routes: null, todo: "todo.house_alerts", budget: 20, min_tiles: 11, alert_charts: false };
   static styles = [tokens, css`
     :host { container-type: inline-size; }

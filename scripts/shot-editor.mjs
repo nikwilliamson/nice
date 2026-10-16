@@ -1,5 +1,5 @@
 // Screenshot a card's visual editor: open a view in edit mode and open the first card's editor.
-//   docker … node scripts/shot-editor.mjs <path> <out.png> [suggest]
+//   docker … node scripts/shot-editor.mjs <path> <out.png> [suggest|expand|options|tab:<label>[:<card>]] [card index]
 import { chromium } from "playwright";
 const [path, out, suggest, index = "0"] = process.argv.slice(2);
 const URL_ = "http://localhost:8123", TOKEN = process.env.HA_TOKEN;
@@ -15,6 +15,13 @@ await page.waitForTimeout(2500);
 await page.locator("hui-card-edit-mode").nth(Number(index)).click();
 await page.waitForTimeout(3000);
 if (suggest === "suggest") { await page.getByText("Suggest from this room").click(); await page.waitForTimeout(800); }
+if (suggest === "expand") { await page.locator("nice-sections-editor li button.left").first().click(); await page.waitForTimeout(1200); }
+if (suggest === "options") { await page.locator('nice-sections-editor button[title="Options"]').first().click(); await page.waitForTimeout(1200); }
+if (suggest?.startsWith("tab:")) {
+  const [, label, card] = suggest.split(":");
+  await page.locator("nice-tabs-editor button.chip", { hasText: new RegExp(`^${label}$`) }).click(); await page.waitForTimeout(2500);
+  if (card) { await page.locator("nice-tabs-editor .box button.chip").nth(Number(card)).click(); await page.waitForTimeout(2500); }
+}
 await page.screenshot({ path: out });
 console.log(errors.length ? errors.join("\n") : "no errors");
 await browser.close();

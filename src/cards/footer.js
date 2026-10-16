@@ -13,6 +13,8 @@ import { html, css, nothing } from "lit";
 import { NiceCard } from "../core/base.js";
 import { tokens } from "../core/tokens.js";
 import { controlStyles } from "../controls/index.js";
+import { formEditor } from "../editors/form.js";
+import { FOOTER } from "../editors/specs.js";
 
 function ancestor(el, tag) {
   let n = el;
@@ -50,6 +52,7 @@ function styleIn(root, id, text, on) {
 }
 
 export class NiceFooter extends NiceCard {
+  static getConfigElement() { return formEditor(FOOTER); }
   static defaults = { menu: true, edit: true, hide_sidebar: true };
   watch() { return []; }
 

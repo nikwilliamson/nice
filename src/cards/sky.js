@@ -10,6 +10,8 @@ import { NiceCard } from "../core/base.js";
 import { tokens } from "../core/tokens.js";
 import { mix } from "../core/tones.js";
 import { sentence } from "../core/format.js";
+import { formEditor } from "../editors/form.js";
+import { SKY as SKY_FIELDS } from "../editors/specs.js";
 
 // [elevation, top, middle, bottom]
 const SKY = [
@@ -59,6 +61,7 @@ function weather(state, up) {
 }
 
 export class NiceSky extends NiceCard {
+  static getConfigElement() { return formEditor(SKY_FIELDS); }
   static defaults = { weather: "weather.forecast_home", persons: [] };
   watch() { return [this.config.sun, this.config.weather, ...this.config.persons]; }
   connectedCallback() { super.connectedCallback(); this.every(60000); }

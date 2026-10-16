@@ -1,106 +1,134 @@
-// The visual editor's working part: a list of sections, each a title, an All on/off switch and
-// a list of entities. Shared by the room page editor (many sections) and the controls editor
-// (one). Entities are added with Home Assistant's own picker; the special entries (Adaptive
-// Lighting, power bars, the Vestaboard, LED strips) can be moved and removed here and edited
-// in the code editor.
+// The section editor: sections, each a title, options and a list of entries. Shared by the
+// room page editor (many sections) and the controls editor (one).
 //
-// Fires `sections-changed` with { sections } on every change.
+// - Entries: drag to reorder, within a section or into another; expand one for its options
+//   (name, tile size, chart, and the special kinds' own settings); a live state beside each.
+// - Sections: drag by the handle to reorder, collapse, duplicate, remove; Options for colour,
+//   room colour, name prefixes to strip and the All on/off button.
+// - Hovering an entry outlines its tile in the preview.
+//
+// Fires `sections-changed` with { sections }.
 import { LitElement, html, css, nothing } from "lit";
+import { haReady, fire, editorStyles, highlight, tidy } from "./shared.js";
+import { KINDS, kindOf, entryId, toObject, toEntry, fieldsFor, stateWords, TONE } from "./entries.js";
+import "./form.js";
 
-// ha-form (and the pickers it uses) load with Home Assistant's own card editors; borrow one
-// so they're defined before we draw
-let ready = null;
-export function haFormReady() {
-  if (!ready) ready = (async () => {
-    if (customElements.get("ha-form")) return;
-    const helpers = await window.loadCardHelpers?.();
-    const card = helpers?.createCardElement({ type: "entities", entities: [] });
-    await card?.constructor?.getConfigElement?.();
-    await customElements.whenDefined("ha-form");
-  })();
-  return ready;
-}
-
-export const entryId = (e) => (typeof e === "string" ? e : e.entity || e.strip || e.adaptive || e.board || null);
-const KIND = { adaptive: "Adaptive lighting", bars: "Power bars", board: "Vestaboard", strip: "LED strip" };
-const kindOf = (e) => (typeof e === "string" ? null : Object.keys(KIND).find((k) => e[k] != null));
+const SECTION_FIELDS = [
+  { name: "all", label: "All on/off button", selector: { boolean: {} }, from: (c) => c.all !== false, to: (v, c) => ({ ...c, all: v ? null : false }) },
+  TONE,
+  { name: "room_tone", label: "Room colour (its place in the room list)", selector: { number: { min: 0, max: 20, mode: "box" } } },
+  { name: "strip", label: "Take off the front of names (comma-separated)", selector: { text: {} },
+    from: (c) => [].concat(c.strip || []).join(", "), to: (v, c) => ({ ...c, strip: v ? v.split(",").map((x) => x.trim()).filter(Boolean) : null }) },
+  { name: "spark_hours", label: "Charts cover", selector: { number: { min: 1, max: 720, mode: "box", unit_of_measurement: "hours" } } },
+];
 
 export class NiceSectionsEditor extends LitElement {
-  static properties = { hass: { attribute: false }, sections: { attribute: false }, single: { type: Boolean }, _ready: { state: true } };
+  static properties = {
+    hass: { attribute: false }, sections: { attribute: false }, single: { type: Boolean },
+    _ready: { state: true }, _open: { state: true }, _shut: { state: true }, _opts: { state: true }, _over: { state: true },
+  };
+  constructor() { super(); this._open = {}; this._shut = {}; this._opts = {}; }
+  connectedCallback() { super.connectedCallback(); haReady().then(() => { this._ready = true; }); }
+  disconnectedCallback() { super.disconnectedCallback(); highlight(null); }
 
-  connectedCallback() { super.connectedCallback(); haFormReady().then(() => { this._ready = true; }); }
-
-  _set(sections) {
-    this.sections = sections;
-    this.dispatchEvent(new CustomEvent("sections-changed", { detail: { sections }, bubbles: true, composed: true }));
-  }
+  _set(sections) { this.sections = sections; fire(this, "sections-changed", { sections }); }
   _edit(i, change) { this._set(this.sections.map((s, j) => (j === i ? change(s) : s))); }
-  _move(list, i, by) { const out = [...list], j = i + by; if (j < 0 || j >= out.length) return out; [out[i], out[j]] = [out[j], out[i]]; return out; }
+  _entries(i, change) { this._edit(i, (s) => ({ ...s, entities: change([...(s.entities || [])]) })); }
 
-  _entityRow(s, si, e, ei) {
-    const id = entryId(e), kind = kindOf(e), st = id && this.hass?.states?.[id];
-    const name = typeof e === "string" ? "" : e.name || "";
-    const setName = (v) => this._edit(si, (x) => ({ ...x, entities: x.entities.map((y, k) => {
-      if (k !== ei) return y;
-      const o = typeof y === "string" ? { entity: y } : { ...y };
-      if (v) o.name = v; else delete o.name;
-      return Object.keys(o).length === 1 && o.entity ? o.entity : o;
-    }) }));
-    return html`<li>
-      <div class="who"><b>${kind ? KIND[kind] : st?.attributes?.friendly_name || id}</b><small>${kind === "bars" ? `${e.bars.length} circuits` : id}${st ? "" : kind === "bars" ? "" : " · not found"}</small></div>
-      ${kind === "bars" ? nothing : html`<input class="name" placeholder="Name" .value=${name} @change=${(ev) => setName(ev.target.value.trim())}>`}
-      <span class="btns">
-        <button title="Move up" ?disabled=${ei === 0} @click=${() => this._edit(si, (x) => ({ ...x, entities: this._move(x.entities, ei, -1) }))}>↑</button>
-        <button title="Move down" ?disabled=${ei === s.entities.length - 1} @click=${() => this._edit(si, (x) => ({ ...x, entities: this._move(x.entities, ei, 1) }))}>↓</button>
-        <button title="Remove" @click=${() => this._edit(si, (x) => ({ ...x, entities: x.entities.filter((_, k) => k !== ei) }))}>✕</button>
-      </span></li>`;
+  // Drag: an entry (s, e) or a whole section (s)
+  _dragStart(ev, what) { this._drag = what; ev.dataTransfer.effectAllowed = "move"; ev.dataTransfer.setData("text/plain", JSON.stringify(what)); ev.stopPropagation(); }
+  _dropEntry(si, ei) {
+    const d = this._drag;
+    this._drag = null; this._over = null;
+    if (!d || d.e == null) return;
+    const secs = this.sections.map((s) => ({ ...s, entities: [...(s.entities || [])] }));
+    const [it] = secs[d.s].entities.splice(d.e, 1);
+    const at = d.s === si && d.e < ei ? ei - 1 : ei;
+    secs[si].entities.splice(at, 0, it);
+    this._set(secs);
+  }
+  _dropSection(si) {
+    const d = this._drag;
+    this._drag = null; this._over = null;
+    if (!d || d.e != null || d.s === si) return;
+    const secs = [...this.sections], [it] = secs.splice(d.s, 1);
+    secs.splice(d.s < si ? si - 1 : si, 0, it);
+    this._set(secs);
+  }
+
+  _entry(s, si, e, ei) {
+    const kind = kindOf(e), id = entryId(e), key = `${si}:${ei}`, open = this._open[key];
+    const st = id && this.hass?.states?.[id];
+    const title = (typeof e === "object" && e.name) || (kind === "entity" ? st?.attributes?.friendly_name || id || "Pick an entity" : KINDS[kind].label);
+    const over = this._over === `e${key}`;
+    return html`<li class="${over ? "drop-before" : ""}" @mouseenter=${() => highlight(id)} @mouseleave=${() => highlight(null)}
+        @dragover=${(ev) => { if (this._drag?.e != null) { ev.preventDefault(); this._over = `e${key}`; } }} @drop=${(ev) => { ev.preventDefault(); this._dropEntry(si, ei); }}>
+      <div class="row">
+        <span class="handle" draggable="true" title="Drag to move" @dragstart=${(ev) => this._dragStart(ev, { s: si, e: ei })}>⠿</span>
+        <button class="text grow left" @click=${() => { this._open = { ...this._open, [key]: !open }; }}>
+          <span class="who"><b>${open ? "▾" : "▸"} ${title}</b><small>${kind === "entity" ? id || "" : KINDS[kind].label + (id ? ` · ${id}` : "")}</small></span></button>
+        <small class="state">${stateWords(this.hass, e)}</small>
+        <button class="text" title="Remove" @click=${() => this._entries(si, (l) => l.filter((_, k) => k !== ei))}>✕</button>
+      </div>
+      ${open ? html`<nice-form .hass=${this.hass} .value=${toObject(e)} .fields=${fieldsFor(kind, e, this.hass)}
+          @form-changed=${(ev) => { ev.stopPropagation(); this._entries(si, (l) => l.map((x, k) => (k === ei ? toEntry(ev.detail.value) : x))); }}></nice-form>` : nothing}
+    </li>`;
   }
 
   _section(s, si) {
-    const add = (ev) => {
-      const id = ev.detail.value?.entity;
-      if (!id) return;
-      this._edit(si, (x) => ({ ...x, entities: [...(x.entities || []), id] }));
-      this.requestUpdate(); // the picker clears itself
+    const shut = this._shut[si], opts = this._opts[si], n = (s.entities || []).length;
+    const add = (entry, expand = false) => {
+      const ei = n;
+      this._entries(si, (l) => [...l, entry]);
+      if (expand) this._open = { ...this._open, [`${si}:${ei}`]: true };
     };
-    return html`<section>
-      <div class="head">
-        ${this.single ? nothing : html`<input class="title" placeholder="Section title" .value=${s.title || ""} @change=${(ev) => this._edit(si, (x) => ({ ...x, title: ev.target.value }))}>`}
-        <label class="check"><input type="checkbox" .checked=${s.all !== false} @change=${(ev) => this._edit(si, (x) => { const o = { ...x }; if (ev.target.checked) delete o.all; else o.all = false; return o; })}>All on/off</label>
-        ${this.single ? nothing : html`<span class="btns">
-          <button title="Move section up" ?disabled=${si === 0} @click=${() => this._set(this._move(this.sections, si, -1))}>↑</button>
-          <button title="Move section down" ?disabled=${si === this.sections.length - 1} @click=${() => this._set(this._move(this.sections, si, 1))}>↓</button>
-          <button title="Remove section" @click=${() => { if (confirm(`Remove “${s.title || "this section"}” and its ${(s.entities || []).length} entities?`)) this._set(this.sections.filter((_, j) => j !== si)); }}>✕</button></span>`}
+    return html`<section class="${this._over === `s${si}` ? "drop-before" : ""}"
+        @dragover=${(ev) => { if (this._drag && this._drag.e == null) { ev.preventDefault(); this._over = `s${si}`; } }} @drop=${(ev) => { if (this._drag?.e == null) { ev.preventDefault(); this._dropSection(si); } }}>
+      <div class="row head">
+        ${this.single ? nothing : html`<span class="handle" draggable="true" title="Drag to move the section" @dragstart=${(ev) => this._dragStart(ev, { s: si })}>⠿</span>
+          <button class="text" title=${shut ? "Expand" : "Collapse"} @click=${() => { this._shut = { ...this._shut, [si]: !shut }; }}>${shut ? "▸" : "▾"}</button>`}
+        <input class="plain grow title" placeholder=${this.single ? "Title (optional)" : "Section title"} .value=${s.title || ""}
+          @change=${(ev) => this._edit(si, (x) => tidy({ ...x, title: ev.target.value }))}>
+        <small>${n}</small>
+        <button class="text" title="Options" @click=${() => { this._opts = { ...this._opts, [si]: !opts }; }}>⚙</button>
+        ${this.single ? nothing : html`
+          <button class="text" title="Duplicate" @click=${() => { const secs = [...this.sections]; secs.splice(si + 1, 0, { ...structuredClone(s), title: `${s.title || "Section"} copy` }); this._set(secs); }}>⧉</button>
+          <button class="text" title="Remove section" @click=${() => { if (confirm(`Remove “${s.title || "this section"}” and its ${n} entries?`)) this._set(this.sections.filter((_, j) => j !== si)); }}>✕</button>`}
       </div>
-      <ul>${(s.entities || []).map((e, ei) => this._entityRow(s, si, e, ei))}</ul>
-      ${this._ready ? html`<ha-form .hass=${this.hass} .data=${{}} .schema=${[{ name: "entity", selector: { entity: {} } }]}
-          .computeLabel=${() => "Add an entity"} @value-changed=${add}></ha-form>` : nothing}
+      ${opts ? html`<div class="opts"><nice-form .hass=${this.hass} .value=${s} .fields=${SECTION_FIELDS}
+          @form-changed=${(ev) => { ev.stopPropagation(); this._edit(si, () => ({ ...ev.detail.value, title: s.title, entities: s.entities })); }}></nice-form></div>` : nothing}
+      ${shut ? nothing : html`
+        <ul>${(s.entities || []).map((e, ei) => this._entry(s, si, e, ei))}
+          <li class="end ${this._over === `e${si}:${n}` ? "drop-before" : ""}" @dragover=${(ev) => { if (this._drag?.e != null) { ev.preventDefault(); this._over = `e${si}:${n}`; } }}
+            @drop=${(ev) => { ev.preventDefault(); this._dropEntry(si, n); }}></li></ul>
+        ${this._ready ? html`<ha-form .hass=${this.hass} .data=${{}} .schema=${[{ name: "entity", selector: { entity: {} } }]} .computeLabel=${() => "Add an entity"}
+            @value-changed=${(ev) => { ev.stopPropagation(); const id = ev.detail.value?.entity; if (id) { add(id); this.requestUpdate(); } }}></ha-form>` : nothing}
+        <div class="row specials"><small>Add</small>${["adaptive", "bars", "board", "strip"].map((k) => html`<button @click=${() => add(structuredClone(KINDS[k].blank), true)}>${KINDS[k].label}</button>`)}</div>`}
     </section>`;
   }
 
   render() {
     const list = this.sections || [];
     return html`${list.map((s, i) => this._section(s, i))}
-      ${this.single ? nothing : html`<button class="add" @click=${() => this._set([...list, { title: "New section", entities: [] }])}>+ Add a section</button>`}`;
+      ${this.single ? nothing : html`<div class="row"><button class="primary" @click=${() => this._set([...list, { title: "New section", entities: [] }])}>+ Add a section</button></div>`}`;
   }
 
-  static styles = css`
-    :host { display: grid; gap: 12px; }
-    section { border: 1px solid var(--divider-color, rgba(0,0,0,.12)); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
-    .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .title { flex: 1; min-width: 140px; font: inherit; font-weight: 700; font-size: 1.05em; }
-    input[type="text"], input:not([type]), .name, .title { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--divider-color, rgba(0,0,0,.2)); background: var(--card-background-color, #fff); color: var(--primary-text-color); }
-    .check { display: inline-flex; gap: 6px; align-items: center; font-size: .9em; color: var(--secondary-text-color); }
-    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-    li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 10em) auto; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--divider-color, rgba(0,0,0,.08)); }
+  static styles = [editorStyles, css`
+    section { border: 1px solid var(--divider-color, rgba(0,0,0,.12)); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+    .title { font-weight: 700; font-size: 1.05em; }
+    .opts { border-left: 3px solid var(--primary-color); padding-left: 10px; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; }
+    li { padding: 4px 0; border-top: 1px solid var(--divider-color, rgba(0,0,0,.08)); display: grid; gap: 6px; }
     li:first-child { border-top: 0; }
-    .who { display: grid; min-width: 0; } .who b, .who small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .who small { color: var(--secondary-text-color); font-size: .8em; }
-    .name { min-width: 0; }
-    .btns { display: inline-flex; gap: 2px; }
-    button { font: inherit; border: 0; border-radius: 8px; padding: 4px 8px; cursor: pointer; background: var(--secondary-background-color, #eef0f5); color: var(--primary-text-color); }
-    button:disabled { opacity: .35; cursor: default; }
-    .add { justify-self: start; padding: 8px 14px; font-weight: 700; }
-  `;
+    li.end { min-height: 10px; border-top: 0; padding: 0; }
+    li > nice-form { padding: 4px 0 8px 28px; }
+    .left { text-align: left; }
+    .who { display: grid; min-width: 0; } .who b, .who small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .who small { font-weight: 400; font-size: .8em; }
+    .state { white-space: nowrap; max-width: 9em; overflow: hidden; text-overflow: ellipsis; }
+    .specials button { font-size: .85em; }
+  `];
 }
 customElements.define("nice-sections-editor", NiceSectionsEditor);
+
+export { entryId };

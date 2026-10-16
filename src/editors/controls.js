@@ -1,26 +1,24 @@
-// The visual editor for nice-controls: its title, the All on/off switch and its entities.
-import { LitElement, html, css, nothing } from "lit";
+// The visual editor for nice-controls: one section, its title, options and entries.
+import { LitElement, html, nothing } from "lit";
+import { fire, editorStyles, History } from "./shared.js";
 import "./sections.js";
 
 export class NiceControlsEditor extends LitElement {
   static properties = { hass: { attribute: false }, _config: { state: true } };
+  constructor() { super(); this.history = new History(this); }
   setConfig(config) { this._config = { ...config }; }
-  _change(config) { this._config = config; this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true })); }
+  _change(config) {
+    if (JSON.stringify(config) === JSON.stringify(this._config)) return;
+    this.history.push(this._config); this._config = config; fire(this, "config-changed", { config }); }
+  _undo() { this._config = this.history.pop(); fire(this, "config-changed", { config: this._config }); }
 
   render() {
     if (!this._config || !this.hass) return nothing;
-    const c = this._config;
-    const section = { title: c.title || "", entities: c.entities || [], ...(c.all === false ? { all: false } : {}) };
-    return html`<input class="title" placeholder="Title (optional)" .value=${c.title || ""} @change=${(ev) => { const o = { ...c, title: ev.target.value }; if (!o.title) delete o.title; this._change(o); }}>
-      <nice-sections-editor single .hass=${this.hass} .sections=${[section]} @sections-changed=${(ev) => {
-        const s = ev.detail.sections[0], o = { ...c, entities: s.entities };
-        if (s.all === false) o.all = false; else delete o.all;
-        this._change(o);
-      }}></nice-sections-editor>`;
+    const { type, entities = [], ...rest } = this._config;
+    return html`${this.history.can ? html`<div class="row"><span class="grow"></span><button @click=${() => this._undo()}>↶ Undo</button></div>` : nothing}
+      <nice-sections-editor single .hass=${this.hass} .sections=${[{ ...rest, entities }]}
+        @sections-changed=${(ev) => { const { entities: e, ...opts } = ev.detail.sections[0]; this._change({ type, ...opts, entities: e }); }}></nice-sections-editor>`;
   }
-  static styles = css`
-    :host { display: grid; gap: 12px; }
-    .title { font: inherit; font-weight: 700; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--divider-color, rgba(0,0,0,.2)); background: var(--card-background-color, #fff); color: var(--primary-text-color); }
-  `;
+  static styles = editorStyles;
 }
 customElements.define("nice-controls-editor", NiceControlsEditor);

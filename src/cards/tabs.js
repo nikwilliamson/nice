@@ -12,6 +12,8 @@ import { controlStyles } from "../controls/index.js";
 import { EASE_OUT, calm } from "../core/motion.js";
 
 export class NiceTabs extends NiceCard {
+  static getConfigElement() { return document.createElement("nice-tabs-editor"); }
+  static getStubConfig() { return { tabs: [{ id: "home", label: "Home", cards: [] }] }; }
   static required = ["tabs"];
   constructor() { super(); this._cards = {}; this._helpers = window.loadCardHelpers?.(); }
 
@@ -50,6 +52,10 @@ export class NiceTabs extends NiceCard {
       if (from !== to && !calm()) for (const c of this._cards[id] || []) c.animate([{ opacity: 0, transform: `translateX(${to > from ? 28 : -28}px)` }, { opacity: 1, transform: "none" }], { duration: 450, easing: EASE_OUT });
     });
   }
+
+  // While its editor is open, the preview shows the tab being edited
+  connectedCallback() { super.connectedCallback(); this._preview = (e) => this.select(e.detail.tab); window.addEventListener("nice-tab-preview", this._preview); }
+  disconnectedCallback() { super.disconnectedCallback(); window.removeEventListener("nice-tab-preview", this._preview); }
 
   firstUpdated() {
     this.renderRoot.addEventListener("nice-tab", (e) => { e.stopPropagation(); this.select(e.detail.tab); });

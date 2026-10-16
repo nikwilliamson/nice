@@ -18,6 +18,8 @@ import { navigate } from "../core/nav.js";
 import { readRoom, roomName, roomList, nameOf } from "../data/entities.js";
 import { pack, twoThreeFour, Columns } from "../layout/pack.js";
 import { place } from "../tile/tile.js";
+import { formEditor } from "../editors/form.js";
+import { ROOMS, ROOM } from "../editors/specs.js";
 
 const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
 const lightsWord = (r, of = "") => (r.lights.length ? (r.on.length ? (r.on.length === r.lights.length ? `${r.lights.length} light${r.lights.length === 1 ? "" : "s"} on` : `${r.on.length} of ${r.lights.length}${of} on`) : "Lights off") : "");
@@ -40,6 +42,7 @@ class RoomsMixin extends NiceCard {
 }
 
 export class NiceRooms extends RoomsMixin {
+  static getConfigElement() { return formEditor(ROOMS); }
   static defaults = { areas: null, adaptive: null, base_path: null };
   constructor() { super(); this.columns = new Columns(this, twoThreeFour(520)); }
 
@@ -95,6 +98,7 @@ export class NiceRooms extends RoomsMixin {
 customElements.define("nice-rooms", NiceRooms);
 
 export class NiceRoom extends RoomsMixin {
+  static getConfigElement() { return formEditor(ROOM); }
   static required = ["area"];
   static defaults = { areas: null, base_path: null, back: "home" };
 

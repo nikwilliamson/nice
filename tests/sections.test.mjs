@@ -26,3 +26,16 @@ test("entityIds sees every kind of entry", () => {
   const ids = entityIds([{ entities: ["light.a", { entity: "light.b" }, { strip: "light.c" }, { adaptive: "switch.d" }, { board: "sensor.e" }, { bars: ["sensor.f", { entity: "sensor.g" }] }] }]);
   assert.deepEqual([...ids].sort(), ["light.a", "light.b", "light.c", "sensor.e", "sensor.f", "sensor.g", "switch.d"]);
 });
+
+test("entry options round-trip to the shortest YAML", async () => {
+  const { toObject, toEntry, kindOf, stateWords } = await import("../src/editors/entries.js");
+  assert.equal(toEntry(toObject("light.a")), "light.a");
+  assert.deepEqual(toEntry({ entity: "sensor.x", shape: "W" }), { entity: "sensor.x", shape: "W" });
+  assert.equal(kindOf({ bars: [] }), "bars");
+  assert.equal(stateWords({ states: { "sensor.p": { state: "4621.310733", attributes: { unit_of_measurement: "W" } } } }, "sensor.p"), "4621.3 W");
+});
+
+test("tidy keeps what says what an entry is, drops empty settings", async () => {
+  const { tidy } = await import("../src/editors/shared.js");
+  assert.deepEqual(tidy({ bars: [], name: "", shape: null, top: 5 }), { bars: [], top: 5 });
+});

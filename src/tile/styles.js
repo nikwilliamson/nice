@@ -40,6 +40,8 @@ export const tileStyles = css`
   .sidebody { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--n-s-md); align-items: end; }
   @container (max-width: 560px) { :host([shape="T"]) .sidebody { grid-template-columns: 1fr; } }
 
+  /* The tile your pointer is over in the editor */
+  :host(.highlight) { outline: 3px solid var(--primary-color, #ff6b4a); outline-offset: 3px; }
   /* Alarm and goal */
   :host(.p0) { animation: alarm 1.6s ease-out infinite; }
   @keyframes alarm { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--n-alert) 55%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }

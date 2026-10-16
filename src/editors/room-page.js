@@ -1,10 +1,12 @@
-// The visual editor for nice-room-page: the room, then its sections. "Suggest from this room"
-// lists what's in the area and not on the page yet; nothing is added unless you tick it.
+// The visual editor for nice-room-page: the room and its page settings, then its sections.
+// "Suggest from this room" lists what's in the area and not on the page; nothing is added
+// unless you tick it.
 import { LitElement, html, css, nothing } from "lit";
 import { normalize, entityIds } from "../cards/room-sections.js";
 import { areaOf, domainOf } from "../data/entities.js";
-import { haFormReady } from "./sections.js";
+import { fire, editorStyles, History } from "./shared.js";
 import "./sections.js";
+import "./form.js";
 
 // Where a suggestion goes by default, by what it is
 const HOME = { light: "Lights", scene: "Scenes", script: "Scenes", climate: "Climate", media_player: "Playing", lock: "Doors & windows", fan: "Plugs & more", switch: "Plugs & more" };
@@ -14,19 +16,37 @@ function sectionFor(st) {
   if (d === "sensor") return ["temperature", "humidity"].includes(dc) ? "Climate" : dc === "illuminance" ? "Motion" : dc === "power" ? "Power" : null;
   return HOME[d] || null;
 }
-const fire = (el, config) => el.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+const PAGE = [
+  { name: "area", label: "Room", selector: { area: {} } },
+  { name: "back", label: "Back goes to (view path)", selector: { text: {} } },
+  { name: "base_path", label: "Dashboard path", selector: { text: {} }, help: "Where room links point, like /house-nice" },
+  { name: "footer", label: "Menu and Edit at the bottom", selector: { boolean: {} }, from: (c) => c.footer !== false, to: (v, c) => ({ ...c, footer: v ? null : false }) },
+];
 
 export class NiceRoomPageEditor extends LitElement {
-  static properties = { hass: { attribute: false }, _config: { state: true }, _suggest: { state: true }, _picked: { state: true }, _ready: { state: true } };
+  static properties = { hass: { attribute: false }, _config: { state: true }, _suggest: { state: true }, _picked: { state: true } };
+  constructor() { super(); this.history = new History(this); }
 
   setConfig(config) {
-    // Older room pages wrote sections as a map; the editor always writes the list
-    this._config = { ...config, sections: normalize(config.sections) };
+    // Older room pages wrote sections as a map; the editor always writes the list (and keeps
+    // the empty section you just added)
+    this._config = { ...config, sections: Array.isArray(config.sections) ? config.sections : normalize(config.sections) };
   }
-  connectedCallback() { super.connectedCallback(); haFormReady().then(() => { this._ready = true; }); }
-  _change(patch) { this._config = { ...this._config, ...patch }; fire(this, this._config); }
+  _change(patch) {
+    if (Object.entries(patch).every(([k, v]) => JSON.stringify(v) === JSON.stringify(this._config[k]))) return;
+    this.history.push(this._config);
+    this._config = { ...this._config, ...patch };
+    fire(this, "config-changed", { config: this._config });
+  }
+  // The page form hands back the whole config, with cleared settings gone
+  _replace(config) {
+    if (JSON.stringify(config) === JSON.stringify(this._config)) return;
+    this.history.push(this._config);
+    this._config = config;
+    fire(this, "config-changed", { config: this._config });
+  }
+  _undo() { this._config = this.history.pop(); fire(this, "config-changed", { config: this._config }); }
 
-  // What's in the room that isn't on the page: not hidden, not a setting, not offline
   _candidates() {
     const h = this.hass, area = this._config.area, have = entityIds(this._config.sections || []);
     return Object.keys(h.states).filter((id) => {
@@ -61,25 +81,18 @@ export class NiceRoomPageEditor extends LitElement {
   render() {
     if (!this._config || !this.hass) return nothing;
     return html`
-      ${this._ready ? html`<ha-form .hass=${this.hass} .data=${{ area: this._config.area }} .schema=${[{ name: "area", selector: { area: {} } }]}
-        .computeLabel=${() => "Room"} @value-changed=${(ev) => this._change({ area: ev.detail.value.area })}></ha-form>` : nothing}
+      <div class="row"><span class="grow"></span>${this.history.can ? html`<button @click=${() => this._undo()}>↶ Undo</button>` : nothing}</div>
+      <nice-form .hass=${this.hass} .value=${this._config} .fields=${PAGE} @form-changed=${(ev) => { ev.stopPropagation(); this._replace({ ...ev.detail.value, sections: this._config.sections }); }}></nice-form>
       <div class="row"><button @click=${() => { this._suggest = !this._suggest; }}>${this._suggest ? "Hide suggestions" : "Suggest from this room"}</button></div>
       ${this._suggest ? this._suggestions() : nothing}
-      <nice-sections-editor .hass=${this.hass} .sections=${this._config.sections || []} @sections-changed=${(ev) => this._change({ sections: ev.detail.sections })}></nice-sections-editor>
-      <p class="note">Adaptive Lighting, power bars, the Vestaboard and LED strips can be moved and removed here; edit their details in the code editor.</p>`;
+      <nice-sections-editor .hass=${this.hass} .sections=${this._config.sections || []} @sections-changed=${(ev) => this._change({ sections: ev.detail.sections })}></nice-sections-editor>`;
   }
 
-  static styles = css`
-    :host { display: grid; gap: 12px; }
-    .row { display: flex; gap: 8px; }
-    button { font: inherit; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; background: var(--secondary-background-color, #eef0f5); color: var(--primary-text-color); font-weight: 700; }
-    button.primary { background: var(--primary-color); color: var(--text-primary-color, #fff); }
-    button:disabled { opacity: .4; cursor: default; }
-    .note { margin: 0; color: var(--secondary-text-color); font-size: .9em; }
+  static styles = [editorStyles, css`
     .suggest { border: 1px dashed var(--primary-color); border-radius: 12px; padding: 12px; display: grid; gap: 6px; }
     h4 { margin: 8px 0 0; font-size: .85em; text-transform: uppercase; letter-spacing: .06em; color: var(--secondary-text-color); }
     .pick { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; }
-    .pick small { color: var(--secondary-text-color); font-size: .8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 16em; }
-  `;
+    .pick small { font-size: .8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 16em; }
+  `];
 }
 customElements.define("nice-room-page-editor", NiceRoomPageEditor);

@@ -13,8 +13,11 @@ import { tone } from "../core/tones.js";
 import { sentence } from "../core/format.js";
 import { controlStyles } from "../controls/index.js";
 import { textStyles } from "../tile/styles.js";
+import { formEditor } from "../editors/form.js";
+import { LISTS } from "../editors/specs.js";
 
 export class NiceLists extends NiceCard {
+  static getConfigElement() { return formEditor(LISTS); }
   static required = ["lists"];
   constructor() { super(); this._items = {}; this._open = {}; }
   watch() { return this.config.lists.map((l) => l.entity); }

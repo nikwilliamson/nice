@@ -34,6 +34,7 @@ export class NiceTile extends LitElement {
     this._ticked = {};
     this._tap = null;
     bindPress(this, () => ({ tap: this.tile?.tap, hold: this.tile?.hold }));
+    this._hl = (ev) => this.classList.toggle("highlight", !!ev.detail.id && ev.detail.id === this.tile?.id);
     this.addEventListener("pointerdown", (ev) => { const r = this.getBoundingClientRect(); this._tap = { x: ev.clientX - r.left, y: ev.clientY - r.top, t: performance.now() }; });
   }
 
@@ -46,7 +47,8 @@ export class NiceTile extends LitElement {
     this.style.setProperty("--ink", c.ink);
     this.style.setProperty("--accent", c.accent || c.ink);
     this.setAttribute("shape", t.shape || "S");
-    this.className = [t.tier === 0 ? "p0" : "", this.night ? "night" : "", ...(t.cls || [])].filter(Boolean).join(" ");
+    const lit = this.classList.contains("highlight");
+    this.className = [t.tier === 0 ? "p0" : "", this.night ? "night" : "", lit ? "highlight" : "", ...(t.cls || [])].filter(Boolean).join(" ");
     pressable(this, t.tap || t.hold);
     // A goal: our side's score went up since the last draw. The tile pulses for a minute
     if (typeof t.score === "number") {
@@ -62,6 +64,8 @@ export class NiceTile extends LitElement {
     this._say = changed.has("tile") ? changed.get("tile")?.say : undefined;
   }
 
+  connectedCallback() { super.connectedCallback(); window.addEventListener("nice-highlight", this._hl); }
+  disconnectedCallback() { super.disconnectedCallback(); window.removeEventListener("nice-highlight", this._hl); }
   firstUpdated() { if (!this.tile?.still) arrive(this); }
 
   updated() {

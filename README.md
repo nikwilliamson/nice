@@ -49,7 +49,10 @@ Files go into the `homeassistant` container with `docker cp`. Put a long-lived a
 `.env` as `HA_TOKEN=…` and the deploy also checks the config, reloads, points the dashboard
 resource at the new build, and can push `dashboards/nice/*.json`. Without it, it says what's left.
 
-Room pages and nice-controls cards have visual editors (Edit dashboard → the card). Room pages
+Every Nice card has a visual editor (Edit dashboard → the card). Room pages and nice-controls:
+sections and entries, dragged to reorder, each expanding to its options (size, chart, name; the
+Adaptive Lighting, power bars, Vestaboard and LED strip settings). nice-tabs: tabs, and each tab's
+cards through Home Assistant's own card editors. The rest are forms (src/editors/specs.js). Room pages
 are curated: nothing appears on its own; "Suggest from this room" lists what's in the area and not
 on the page, and you tick what you want.
 
