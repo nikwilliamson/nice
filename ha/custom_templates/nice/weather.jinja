@@ -1,0 +1,43 @@
+{#- Nice - rain, from the hourly forecast (sensor.rain_outlook), not the weather
+    station. Act now when rain is under two hours out, the forecast puts a real amount
+    on it, and something is open to it: a car window at home or a house window.
+    Otherwise an ambient heads-up for rain in the next six hours. Car windows only count
+    while the car's lock knows its state (a sleeping car reports covers wrongly). -#}
+{%- from 'nice/format.jinja' import at_clock, name -%}
+{%- from 'nice/config.jinja' import cars -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], cars=[], covers=[], wins=[]) -%}
+{%- set rain_min = states('sensor.rain_outlook') | int(-1) -%}
+{%- if 0 <= rain_min <= 6 * 60 -%}
+  {%- set r_start = as_datetime(state_attr('sensor.rain_outlook', 'starts')) | as_local -%}
+  {%- set r_stop_at = state_attr('sensor.rain_outlook', 'stops') -%}
+  {%- set r_stop = as_datetime(r_stop_at) | as_local if r_stop_at else none -%}
+  {%- set r_sure = state_attr('sensor.rain_outlook', 'sure') == true -%}
+  {%- for car in cars() | from_json -%}
+    {%- if is_state('device_tracker.' ~ car[0] ~ '_s_car_location', 'home') and is_state('cover.' ~ car[0] ~ '_s_car_windows', 'open')
+        and states('lock.' ~ car[0] ~ '_s_car_lock') not in ['unknown', 'unavailable'] -%}
+      {%- set ns.cars = ns.cars + [car[1]] -%}{%- set ns.covers = ns.covers + ['cover.' ~ car[0] ~ '_s_car_windows'] -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- for e in state_attr('sensor.nice_context', 'opened') or [] -%}
+    {%- if 'window' in e -%}{%- set ns.wins = ns.wins + [name(e) | lower] -%}{%- endif -%}
+  {%- endfor -%}
+  {%- set bits = (['both cars have the windows down'] if ns.cars | count > 1 else [ns.cars[0] ~ ' car has the windows down'] if ns.cars else [])
+      + (['the ' ~ ns.wins[0] ~ ' is open'] if ns.wins | count == 1 else [(ns.wins | count) ~ ' windows are open'] if ns.wins else []) -%}
+  {%- set when = 'Raining now' if rain_min == 0 else 'Rain within the hour' if rain_min < 60 else 'Rain around ' ~ at_clock(r_start) -%}
+  {%- set clears = ('Should clear by ' ~ at_clock(r_stop) if r_stop else 'Settling in for a while') -%}
+  {%- set urgent = bits and r_sure and rain_min <= 120 -%}
+  {%- set inches = state_attr('sensor.rain_outlook', 'inches') | float(0) -%}
+  {%- set ns.t = ns.t + [dict(id='rain', tier=(1 if urgent else 3), order=(6 if urgent else 0), shape='W', label=('Rain coming' if urgent else 'Rain'), tone='water',
+      say=(when ~ ', and ' ~ bits | join(' and ') ~ '.' if urgent
+          else ('Raining now.' if rain_min == 0 else (('Rain' if r_sure else 'Maybe a shower') ~ ' around ' ~ at_clock(r_start) ~ '.'))),
+      sub=(clears if urgent
+          else (bits | join(' and ') | capitalize) if bits
+          else 'Sprinklers are skipping today' if is_state('switch.outside_sprinklers_rain_delay', 'on')
+          else clears if rain_min == 0
+          else ('About ' ~ inches | round(1) ~ ' in' if inches >= 0.1 else 'Just a passing shower')),
+      viz=dict(type='rain', hours=state_attr('sensor.rain_outlook', 'hours') or []),
+      act=(dict(label='Close windows', type='service', service='cover.close_cover', entity_id=ns.covers) if urgent and ns.covers else none), tap=none)] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

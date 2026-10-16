@@ -1,0 +1,62 @@
+{#- Nice - power now, the month's bill, the pool pump, and the day's recap at night
+    (the power tile steps aside then, so the large slot is free). -#}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[]) -%}
+{%- set night = state_attr('sensor.nice_context', 'night') == true -%}
+
+{%- if not night -%}
+  {%- set kw = states('sensor.main_breaker_power_minute_average') | float(0) / 1000 -%}
+  {%- set big = state_attr('sensor.biggest_load', 'max_entity_id') -%}
+  {%- set big_name = (state_attr(big, 'friendly_name') or '') | replace(' Power Minute Average', '') if big else '' -%}
+  {%- set ns.t = ns.t + [dict(id='power', tier=3, order=2, shape='L', label='Power', tone='energy',
+      say=kw | round(1) ~ ' kW now', sub=('Mostly the ' ~ big_name | lower ~ '. ' if big_name else '') ~ '$' ~ '%.2f' | format(states('sensor.electricity_cost_today') | float(0)) ~ ' so far today.',
+      viz=dict(type='spark', entity='sensor.main_breaker_power_minute_average', since='midnight', peak=true, unit='kW', scale=0.001), act=none, tap='energy')] -%}
+{%- endif -%}
+
+{%- set kwh = states('sensor.main_breaker_grid_monthly_energy') | float(0) -%}
+{%- if kwh > 0 -%}
+  {%- set price = states('sensor.grid_energy_price') | float(0) -%}
+  {%- set cost = kwh * price -%}
+  {%- set dim = ((now().replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)).day -%}
+  {%- set pace = cost / now().day * dim -%}
+  {%- set ev = states('sensor.tesla_charger_energy_this_month') | float(0) -%}
+  {%- set ac = states('sensor.air_conditioner_energy_this_month') | float(0) + states('sensor.air_handler_energy_this_month') | float(0) -%}
+  {%- set pool = states('sensor.pool_pump_energy_this_month') | float(0) -%}
+  {%- set other = [kwh - ev - ac - pool, 0] | max -%}
+  {%- set ns.t = ns.t + [dict(id='month', tier=3, order=7, shape='W', label='This month', tone='money',
+      say='About $' ~ cost | round(0) | int ~ ' so far in ' ~ now().strftime('%B'), sub='On pace for about $' ~ (pace / 10) | round(0) | int * 10,
+      viz=dict(type='stack', segments=[dict(name='EV ' ~ (ev / kwh * 100) | round(0) | int ~ '%', value=ev | round(0), tone='car', show=true),
+          dict(name='AC ' ~ (ac / kwh * 100) | round(0) | int ~ '%', value=ac | round(0), tone='climate', show=true),
+          dict(name='Pool', value=pool | round(0), tone='plan', show=false),
+          dict(name='Everything else', value=other | round(0), tone='muted', show=true)]),
+      act=none, tap='energy')] -%}
+{%- endif -%}
+
+{%- if states('sensor.pool_pump_power_minute_average') | float(0) > 100 -%}
+  {%- set ns.t = ns.t + [dict(id='pool', tier=3, order=10, shape='S', label='Pool', tone='water',
+      say="Pool pump's running", sub=states('sensor.pool_pump_energy_today') | float(0) | round(0) | int ~ ' kWh so far today', viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- The day in numbers. Power is judged against this month's usual day, scaled to how
+    much of today has gone by. -#}
+{%- if night -%}
+  {%- set kwh_today = states('sensor.main_breaker_energy_today') | float(0) -%}
+  {%- set usual = ((kwh - kwh_today) / (now().day - 1)) if now().day > 1 else 0 -%}
+  {%- set frac = ((now() - today_at('00:00')).total_seconds() / 86400) -%}
+  {%- set vs = ((kwh_today / (usual * frac) - 1) * 100) | round(0) | int if usual > 0 and frac > 0 else none -%}
+  {%- set doors = states('sensor.living_room_front_door_opens_today') | int(0) -%}
+  {%- set visits = states('sensor.zig_visits_today') | int(0) + states('sensor.donut_visits_today') | int(0) -%}
+  {%- set washed = states('sensor.laundry_room_washer_energy_today') | float(0) > 0.1 -%}
+  {%- set dried = states('sensor.dryer_energy_today') | float(0) > 0.3 -%}
+  {%- set rows = [['Power', kwh_today | round(0) | int ~ ' kWh · $' ~ '%.2f' | format(states('sensor.electricity_cost_today') | float(0))],
+      ['Front door', doors ~ (' open' if doors == 1 else ' opens')],
+      ['Litter visits', visits | string]]
+      + ([['Dishwasher', 'ran']] if states('sensor.dishwasher_energy_today') | float(0) > 0.3 else [])
+      + ([['Laundry', 'washed and dried' if dried else 'washed']] if washed else ([['Laundry', 'dried']] if dried else [])) -%}
+  {%- set ns.t = ns.t + [dict(id='recap', tier=3, order=0, shape='L', label='Today', tone='night',
+      say=('A quiet day.' if doors < 8 else 'A busy day.' if doors >= 20 else 'A regular day.'),
+      sub=('' if vs is none else 'Power ran about usual' if -10 < vs < 10 else 'Power ran ' ~ vs | abs ~ '% ' ~ ('under' if vs < 0 else 'over') ~ ' usual'),
+      viz=dict(type='receipt', rows=rows), act=none, tap='energy')] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

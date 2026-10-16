@@ -1,0 +1,43 @@
+{#- Nice - hazards: the stove, the oven and the AC. Tier 0 (hazard).
+    Tile fields are documented in nice/README in the repo. -#}
+{%- from 'nice/format.jinja' import dur -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[]) -%}
+{%- set range_w = states('sensor.range_power_15m_average') | float(0) -%}
+{%- set range_late = range_w > 40 and now().hour < 5 -%}
+{%- if is_state('binary_sensor.range_left_on', 'on') or range_late -%}
+  {%- set on_for = ((now() - states.binary_sensor.range_left_on.last_changed).total_seconds() / 60 + 90) if is_state('binary_sensor.range_left_on', 'on') else 0 -%}
+  {%- set ns.t = ns.t + [dict(id='stove', tier=0, order=1, shape='F', label='Stove left on', tone='hazard',
+      say=("It's past midnight and a burner's still on." if range_late and on_for == 0 else "The stove's been on " ~ dur(on_for) ~ ". Go check it."),
+      sub=(range_w | round(0) | int) ~ ' W averaged over 15 min',
+      viz=dict(type='spark', entity='sensor.range_power_minute_average', hours=2),
+      act=dict(label='Kitchen', type='navigate', path='kitchen'), tap='kitchen')] -%}
+{%- endif -%}
+{%- set oven_w = states('sensor.oven_power_15m_average') | float(0) -%}
+{%- set oven_late = oven_w > 40 and now().hour < 5 -%}
+{%- if is_state('binary_sensor.oven_left_on', 'on') or oven_late -%}
+  {%- set on_for = ((now() - states.binary_sensor.oven_left_on.last_changed).total_seconds() / 60 + 180) if is_state('binary_sensor.oven_left_on', 'on') else 0 -%}
+  {%- set ns.t = ns.t + [dict(id='oven', tier=0, order=2, shape='F', label='Oven left on', tone='hazard',
+      say=("The oven's still on after midnight." if oven_late and on_for == 0 else "The oven's been on for " ~ dur(on_for) ~ ". Still cooking?"),
+      sub=(oven_w | round(0) | int) ~ ' W averaged over 15 min',
+      viz=none, act=dict(label='Kitchen', type='navigate', path='kitchen'), tap='kitchen')] -%}
+{%- endif -%}
+{%- set condenser = is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
+{%- if condenser or is_state('binary_sensor.ac_running_not_cooling', 'on') -%}
+  {%- set sp = state_attr('climate.living_room_thermostat', 'temperature') | float(0) -%}
+  {%- set ins = states('sensor.living_room_thermostat_temperature') | float(0) -%}
+  {%- set ns.t = ns.t + [dict(id='ac', tier=0, order=3, shape='F', label='AC fault', tone='hazard',
+      say=("Blower's on but the outdoor unit didn't start." if condenser else "The AC's running but the house isn't cooling."),
+      sub='Set to ' ~ (sp | round(0) | int) ~ '°, ' ~ ins | round(1) ~ '° inside',
+      viz=dict(type='spark', entity='sensor.living_room_thermostat_temperature', hours=2, ref=sp, ref_label='set ' ~ (sp | round(0) | int) ~ '°'),
+      act=dict(label='Climate', type='navigate', path='climate'), tap='climate')] -%}
+{%- endif -%}
+{#- A practice hazard, so the alarm look can be checked without leaving the stove on -#}
+{%- if is_state('input_boolean.nice_demo_hazards', 'on') -%}
+  {%- set ns.t = ns.t + [dict(id='stove_demo', tier=0, order=1, shape='F', label='Stove left on · demo', tone='hazard',
+      say="The stove's been on 1 h 40 m. Go check it.", sub='Demo tile from Nice demo hazards. Nothing is actually on.',
+      viz=dict(type='spark', entity='sensor.range_power_minute_average', hours=2),
+      act=dict(label='Turn off demo', type='service', service='input_boolean.turn_off', entity_id='input_boolean.nice_demo_hazards'), tap='kitchen')] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

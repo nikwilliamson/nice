@@ -1,0 +1,39 @@
+{#- Nice - while you're out: one large tile that answers "is the house OK?" at a glance.
+    Each line is a check; anything not OK sorts to the top and changes the sentence.
+    "Since you left" and "last opened" come from sensor.away_since and
+    sensor.last_door_opened, which keep their value across a restart. -#}
+{%- from 'nice/format.jinja' import at_clock, name -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], c=[], ln=[], on=[]) -%}
+{%- if state_attr('sensor.nice_context', 'away') == true -%}
+  {%- set unlocked = state_attr('sensor.nice_context', 'unlocked') or [] -%}
+  {%- set opened = state_attr('sensor.nice_context', 'opened') or [] -%}
+  {%- set left_at = (as_datetime(states('sensor.away_since'), none) or states.sensor.house_mode.last_changed) | as_local -%}
+  {%- for e in unlocked -%}{%- set ns.ln = ns.ln + [name(e)] -%}{%- endfor -%}
+  {%- for e in opened -%}{%- set ns.on = ns.on + [name(e)] -%}{%- endfor -%}
+  {%- set ns.c = ns.c + [dict(label=(ns.ln[0] ~ ' is unlocked' if ns.ln | count == 1 else (ns.ln | count) ~ ' doors unlocked' if ns.ln else 'Locked up'), ok=not ns.ln)] -%}
+  {%- set ns.c = ns.c + [dict(label=(ns.on[0] ~ ' is open' if ns.on | count == 1 else (ns.on | count) ~ ' doors and windows open' if ns.on else 'Doors and windows shut'), ok=not ns.on)] -%}
+  {%- set lo = as_datetime(states('sensor.last_door_opened'), none) -%}
+  {%- set last_open = lo if lo and lo > left_at else none -%}
+  {%- set lo_id = state_attr('sensor.last_door_opened', 'entity_id') -%}
+  {%- set lo_name = name(lo_id) if lo_id else 'A door' -%}
+  {%- set ns.c = ns.c + [dict(label=(lo_name ~ ' opened at ' ~ at_clock(last_open | as_local) if last_open else 'No doors opened since you left'), ok=not last_open)] -%}
+  {%- set range_w = states('sensor.range_power_15m_average') | float(0) -%}
+  {%- set oven_w = states('sensor.oven_power_15m_average') | float(0) -%}
+  {%- set cooking = is_state('binary_sensor.range_left_on', 'on') or is_state('binary_sensor.oven_left_on', 'on') or range_w > 40 or oven_w > 40 -%}
+  {%- set ns.c = ns.c + [dict(label=('The stove or oven is on' if cooking else 'Stove and oven off'), ok=not cooking)] -%}
+  {%- set hvac = states('climate.living_room_thermostat') -%}
+  {%- set ins = states('sensor.living_room_thermostat_temperature') | float(0) -%}
+  {%- set sp = state_attr('climate.living_room_thermostat', 'temperature') -%}
+  {%- set ns.c = ns.c + [dict(label=('AC is off, ' if hvac == 'off' else 'AC set to ' ~ sp | float(0) | round(0) | int ~ '°, ') ~ ins | round(0) | int ~ '° inside', ok=(hvac != 'off' or ins < 82))] -%}
+  {%- set fed = states('sensor.zigs_food_portions_dispensed_today') | int(0) + states('sensor.donuts_food_portions_dispensed_today') | int(0) -%}
+  {%- set visits = states('sensor.zig_visits_today') | int(0) + states('sensor.donut_visits_today') | int(0) -%}
+  {%- set ns.c = ns.c + [dict(label=('Cats fed, ' ~ visits ~ (' litter visit' if visits == 1 else ' litter visits') ~ ' today' if fed > 0 else 'Cats not fed yet today'), ok=(fed > 0 or now().hour < 9))] -%}
+  {%- set bad = ns.c | rejectattr('ok') | list -%}
+  {%- set ns.t = ns.t + [dict(id='away', tier=2, order=0, shape='L', label="While you're out", tone='scenes',
+      say=('All quiet.' if not bad else 'One thing to look at.' if bad | count == 1 else (bad | count) ~ ' things to look at.'),
+      sub='Since you left at ' ~ at_clock(left_at) ~ ('' if left_at.date() == now().date() else ' ' ~ left_at.strftime('%A')),
+      viz=dict(type='checks', items=bad + (ns.c | selectattr('ok') | list)), act=none, tap=none)] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

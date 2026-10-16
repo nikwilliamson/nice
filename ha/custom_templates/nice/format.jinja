@@ -1,0 +1,49 @@
+{#- Nice - words and numbers, shared by every rules file (and by the sports phone
+    notification). Nothing here reads a state on its own except name(), which only
+    looks up the entity it is given. -#}
+
+{#- "1 h 40 m", "25 min" -#}
+{%- macro dur(minutes) -%}
+{%- set m = minutes | int(0) -%}
+{%- if m >= 60 -%}{{ m // 60 }} h{% if m % 60 %} {{ m % 60 }} m{% endif %}{%- else -%}{{ m }} min{%- endif -%}
+{%- endmacro -%}
+
+{#- "once", "twice", "3 times" -#}
+{%- macro times(n) -%}
+{%- set n = n | int(0) -%}{{ 'once' if n == 1 else 'twice' if n == 2 else n ~ ' times' }}
+{%- endmacro -%}
+
+{#- "UNLOAD THE DISHWASHER." reads "Unload the dishwasher" -#}
+{%- macro sentence(text) -%}
+{%- set t = text | trim | lower | regex_replace('[.!]+$', '') -%}{{ t[:1] | upper }}{{ t[1:] }}
+{%- endmacro -%}
+
+{#- "4 pm", "noon", "9:30 am" -#}
+{%- macro at_clock(dt) -%}
+{%- if dt.hour == 12 and dt.minute == 0 -%}noon{%- elif dt.minute -%}{{ dt.strftime('%-I:%M') }} {{ dt.strftime('%p') | lower }}{%- else -%}{{ dt.strftime('%-I') }} {{ dt.strftime('%p') | lower }}{%- endif -%}
+{%- endmacro -%}
+
+{#- "tonight", "today", "tomorrow night", "Saturday" -#}
+{%- macro day_word(start) -%}
+{%- set d = (start.date() - now().date()).days -%}
+{%- set eve = start.hour >= 17 -%}
+{{ ('tonight' if eve else 'today') if d == 0 else ('tomorrow night' if eve else 'tomorrow') if d == 1 else start.strftime('%A') }}
+{%- endmacro -%}
+
+{#- "7", "7:30": the time with no am/pm -#}
+{%- macro short_time(dt) -%}
+{{ dt.strftime('%-I') if dt.minute == 0 else dt.strftime('%-I:%M') }}
+{%- endmacro -%}
+
+{#- What to call a thing in a sentence, in sentence case: "Game room door". Many sensors
+    are just "Contact" or "Lock"; for those, the device's own name, else the entity id in
+    words ("Living room window 1"). -#}
+{%- macro name(entity_id) -%}
+{%- set n = state_attr(entity_id, 'friendly_name') or entity_id -%}
+{%- if n | regex_match('(?i)^(contact|door|window|motion|occupancy|sensor|lock|switch|plug)(\\s+\\d+)?$') -%}
+  {%- set dev = device_id(entity_id) -%}
+  {%- set dn = (device_attr(dev, 'name_by_user') or device_attr(dev, 'name')) if dev else none -%}
+  {%- set n = dn if dn and not dn | regex_match('(?i)^(contact|door|window|lock)(\\s+\\d+)?$') else entity_id.split('.')[1] | replace('_', ' ') | capitalize -%}
+{%- endif -%}
+{{ n[:1] | upper }}{{ n[1:] | lower }}
+{%- endmacro -%}

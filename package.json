@@ -1,0 +1,14 @@
+{
+  "name": "nice",
+  "private": true,
+  "type": "module",
+  "description": "Nice: the house dashboard for Home Assistant. Cards, rules and theme.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0",
+    "lit": "3.2.1"
+  }
+}

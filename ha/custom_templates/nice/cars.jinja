@@ -1,0 +1,129 @@
+{#- Nice - the cars: left open in the driveway, charge tonight, on the way, where they
+    are, and a filler while one charges. Entities are <domain>.<car>_s_car_<key>
+    (tesla_fleet). -#}
+{%- from 'nice/format.jinja' import at_clock -%}
+{%- from 'nice/config.jinja' import cars -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[]) -%}
+{%- set c = 'sensor.nice_context' -%}
+{%- set mode = state_attr(c, 'mode') -%}
+{%- set night = state_attr(c, 'night') == true -%}
+{%- set CARS = cars() | from_json -%}
+
+{#- Left open. A sleeping car can come back from a refresh with no body data: the lock
+    and doors go unknown and Tesla reports the frunk and trunk as open. Trust the covers
+    only while the lock still knows its own state. -#}
+{%- for car in CARS -%}
+  {%- set home = is_state('device_tracker.' ~ car[0] ~ '_s_car_location', 'home') -%}
+  {%- set prefix = car[1] ~ ' Car ' -%}
+  {%- set fresh = states('lock.' ~ car[0] ~ '_s_car_lock') not in ['unknown', 'unavailable'] -%}
+  {#- Only this car's own entities, not every binary sensor and cover in the house -#}
+  {%- set dev = device_id('lock.' ~ car[0] ~ '_s_car_lock') -%}
+  {%- set mine = device_entities(dev) if dev else [] -%}
+  {%- set doors = mine | select('match', 'binary_sensor\\.' ~ car[0] ~ '_s_car_.*_(door|window)$') | select('is_state', 'on') | list -%}
+  {%- set lids = mine | select('match', 'cover\\.' ~ car[0] ~ '_s_car_(frunk|trunk|windows)$') | select('is_state', 'open') | list if fresh else [] -%}
+  {%- set parts = (doors + lids) | map('state_attr', 'friendly_name') | list -%}
+  {%- set unlocked_car = is_state('lock.' ~ car[0] ~ '_s_car_lock', 'unlocked') -%}
+  {%- if home and (parts or unlocked_car) -%}
+    {%- set part = parts[0] | replace(prefix, '') | lower if parts else '' -%}
+    {%- set ns.t = ns.t + [dict(id='caropen_' ~ car[0], tier=(0 if night else 1), order=5, shape='W', label='Car left open', tone='act',
+        say=(car[1] ~ ' car has the ' ~ part ~ ' open.' if parts else car[1] ~ ' car is unlocked in the driveway.'),
+        sub='Parked at home', viz=none,
+        act=(dict(label='Lock it', type='service', service='lock.lock', entity_id='lock.' ~ car[0] ~ '_s_car_lock') if unlocked_car else none), tap='garage')] -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{#- Charge tonight: the lowest car at home under half and not plugged in, in the evening -#}
+{%- set ns2 = namespace(low=[], out=[]) -%}
+{%- for car in CARS -%}
+  {%- set pct = states('sensor.' ~ car[0] ~ '_s_car_battery_level') | int(-1) -%}
+  {%- set home = is_state('device_tracker.' ~ car[0] ~ '_s_car_location', 'home') -%}
+  {%- if not home -%}{%- set ns2.out = ns2.out + [car[1]] -%}{%- endif -%}
+  {%- if home and 0 <= pct < 50 and is_state('binary_sensor.' ~ car[0] ~ '_s_car_charge_cable', 'off') -%}
+    {%- set ns2.low = ns2.low + [dict(id=car[0], name=car[1], pct=pct, range=states('sensor.' ~ car[0] ~ '_s_car_battery_range') | float(0) | round(0) | int,
+        limit=states('number.' ~ car[0] ~ '_s_car_charge_limit') | int(80))] -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- set charge_up = ns2.low and (17 <= now().hour < 23 or mode in ['evening', 'night']) -%}
+{%- if charge_up -%}
+  {%- set low = (ns2.low | sort(attribute='pct'))[0] -%}
+  {%- set others = ns2.out | join(' and ') -%}
+  {%- set ns.t = ns.t + [dict(id='charge', tier=(1 if low.pct < 20 else 2), order=3, shape='T', label='Charge tonight', tone='car',
+      say=(low.name ~ ' car is at ' ~ low.pct ~ '%. ' ~ ('Plug it in.' if low.pct < 20 else 'Plug in tonight?')),
+      sub=(others ~ (' are' if ns2.out | count > 1 else ' is') ~ ' out.' if others else ''),
+      viz=dict(type='charge', value=low.pct, limit=low.limit, now_mi=low.range,
+          full_mi=((low.range / low.pct * low.limit) if low.pct > 0 else 0) | round(0) | int), act=none, tap='garage')] -%}
+{%- endif -%}
+
+{#- On the way. Tesla's arrival time is for whatever the navigation is set to. Home is
+    someone pulling in, a named zone is where they're headed, anywhere else isn't shown. -#}
+{%- for car in CARS -%}
+  {%- set eta = states('sensor.' ~ car[0] ~ '_s_car_time_to_arrival') -%}
+  {%- set dest = states('device_tracker.' ~ car[0] ~ '_s_car_route') -%}
+  {%- set who = car[1] | replace("'s", '') -%}
+  {%- if eta not in ['unknown', 'unavailable', ''] and dest not in ['home', 'not_home', 'unknown', 'unavailable']
+      and not is_state('device_tracker.' ~ car[0] ~ '_s_car_location', dest) -%}
+    {%- set eta_dt = as_datetime(eta, none) -%}
+    {%- set mins = ((eta_dt - now()).total_seconds() / 60) | int if eta_dt else eta | int(0) -%}
+    {%- if 0 < mins < 120 -%}
+      {%- set ns.t = ns.t + [dict(id='arrive_' ~ car[0], tier=3, order=6, shape='W', label='On the way', tone='plan',
+          say=who ~ "'s " ~ mins ~ (' minute' if mins == 1 else ' minutes') ~ ' from ' ~ dest | lower ~ '.',
+          sub='Driving to ' ~ dest | lower ~ ' in ' ~ who ~ "'s car", viz=none, act=none, tap='garage')] -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if eta not in ['unknown', 'unavailable', ''] and dest == 'home'
+      and not is_state('device_tracker.' ~ car[0] ~ '_s_car_location', 'home') -%}
+    {%- set eta_dt = as_datetime(eta, none) -%}
+    {%- set mins = ((eta_dt - now()).total_seconds() / 60) | int if eta_dt else eta | int(0) -%}
+    {%- if 0 < mins < 120 -%}
+      {%- set front_locked = is_state('lock.aqara_smart_lock_u100', 'locked') -%}
+      {#- Unlocking the front door takes two taps, like every other unlock -#}
+      {%- set ns.t = ns.t + [dict(id='arrive_' ~ car[0], tier=(1 if mins <= 3 else 2), order=6, shape='W', label='On the way', tone='plan',
+          say=(who ~ "'s pulling in." if mins <= 3 else who ~ "'s " ~ mins ~ ' minutes away.'),
+          sub=('Unlock the front door?' if mins <= 3 and front_locked else 'Driving home in ' ~ who ~ "'s car"),
+          viz=none, act=(dict(label='Unlock', type='service', service='lock.unlock', entity_id='lock.aqara_smart_lock_u100', confirm=true) if mins <= 3 and front_locked else none), tap='garage')] -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{#- Where they are, unless the charge tile is up -#}
+{%- if not ns2.low or not charge_up -%}
+  {%- set ns5 = namespace(home=[], out=[]) -%}
+  {%- for car in CARS -%}
+    {%- set at = states('device_tracker.' ~ car[0] ~ '_s_car_location') -%}
+    {%- if at == 'home' -%}{%- set ns5.home = ns5.home + [car] -%}{%- else -%}{%- set ns5.out = ns5.out + [car[1] ~ (' is at ' ~ at | lower if at not in ['not_home', 'unknown', 'unavailable'] else ' is out')] -%}{%- endif -%}
+  {%- endfor -%}
+  {%- set here = ns5.home[0] if ns5.home else none -%}
+  {%- set pct = states('sensor.' ~ here[0] ~ '_s_car_battery_level') | int(0) if here else 0 -%}
+  {%- set ns.t = ns.t + [dict(id='cars', tier=3, order=6, shape='W', label='Cars', tone='car',
+      say=(here[1] ~ ' car is home.' if here else 'Both cars are out.'),
+      sub=(ns5.out | join(', ') ~ '.' if ns5.out and here else ''),
+      viz=(dict(type='battery', value=pct, label=pct ~ '% · ' ~ states('sensor.' ~ here[0] ~ '_s_car_battery_range') | float(0) | round(0) | int ~ ' mi',
+          charging=is_state('sensor.' ~ here[0] ~ '_s_car_charging', 'charging')) if here else none), act=none, tap='garage')] -%}
+{%- endif -%}
+
+{#- Charging: a filler while a car charges, then for up to 12 h after it's full while it
+    stays plugged in -#}
+{%- for car in CARS -%}
+  {%- set chg = states('sensor.' ~ car[0] ~ '_s_car_charging') -%}
+  {%- set cables = expand('binary_sensor.' ~ car[0] ~ '_s_car_charge_cable') -%}
+  {%- set cable = cables[0] if cables else none -%}
+  {%- set plugged = cable is not none and cable.state == 'on' -%}
+  {%- if chg in ['starting', 'charging'] -%}
+    {%- set full = as_datetime(states('sensor.' ~ car[0] ~ '_s_car_time_to_full_charge'), none) -%}
+    {%- set hours = [[((now() - cable.last_changed).total_seconds() / 3600) if plugged else 2, 0.5] | max, 12] | min -%}
+    {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='today',
+        say=(states('sensor.' ~ car[0] ~ '_s_car_battery_level') | int(0)) ~ '%',
+        sub=('Full by ' ~ at_clock(full | as_local) if full else ''),
+        viz=dict(type='spark', entity='sensor.' ~ car[0] ~ '_s_car_battery_level', hours=hours | round(2)),
+        act=none, tap='garage')] -%}
+  {%- elif chg == 'complete' and plugged -%}
+    {%- set done = expand('sensor.' ~ car[0] ~ '_s_car_charging')[0].last_changed | as_local -%}
+    {%- if (now() - done).total_seconds() < 12 * 3600 -%}
+      {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='today',
+          say="Car's charged", sub='Finished at ' ~ at_clock(done), viz=none, act=none, tap='garage')] -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

@@ -1,0 +1,36 @@
+{#- Nice - doors and windows. Act now; a hazard while you're out or it's night.
+    A door with a lock and a contact is one door: "Front door's open and unlocked". -#}
+{%- from 'nice/format.jinja' import name -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], u=[], o=[], items=[], phrases=[]) -%}
+{%- set c = 'sensor.nice_context' -%}
+{%- set away = state_attr(c, 'away') == true -%}
+{%- set night = state_attr(c, 'night') == true -%}
+{%- set evening = state_attr(c, 'evening') == true -%}
+{%- set unlocked = state_attr(c, 'unlocked') or [] -%}
+{%- set opened = state_attr(c, 'opened') or [] -%}
+{%- if unlocked or opened -%}
+  {%- for e in unlocked -%}{%- set ns.u = ns.u + [name(e)] -%}{%- endfor -%}
+  {%- for e in opened -%}{%- set ns.o = ns.o + [name(e)] -%}{%- endfor -%}
+  {%- set items = (ns.u + ns.o) | unique | list -%}
+  {%- for i in items -%}
+    {%- set word = 'open and unlocked' if i in ns.u and i in ns.o else 'unlocked' if i in ns.u else 'open' -%}
+    {%- set ns.phrases = ns.phrases + [i ~ ' is ' ~ word] -%}
+  {%- endfor -%}
+  {%- set n = items | count -%}
+  {%- set what = (items[0] ~ "'s " ~ ns.phrases[0].split(' is ', 1)[1]) if n == 1
+      else (n ~ ' doors and windows are open') if not ns.u
+      else (n ~ ' doors are unlocked') if not ns.o
+      else (n ~ ' doors and windows need a look') -%}
+  {%- set lowered = ns.phrases | map('lower') | list -%}
+  {%- set say = "You're both out and the " ~ lowered | join(' and the ') ~ '.' if away
+      else 'Heading to bed? ' ~ what ~ '.' if night
+      else what ~ '. Lock up for the night?' if evening and unlocked
+      else what ~ '.' -%}
+  {%- set ns.t = ns.t + [dict(id='doors', tier=(0 if away or night else 1), order=1, shape='W', label='Doors & windows', tone='act',
+      say=say, sub=('Everything else is shut' if n == 1 else ns.phrases | join(', ')),
+      viz=none, act=(dict(label=('Lock it' if unlocked | count == 1 else 'Lock all'), type='service', service='lock.lock', entity_id=unlocked) if unlocked else none),
+      tap='doors')] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

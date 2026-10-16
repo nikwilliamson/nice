@@ -72,7 +72,7 @@
 {%- set away = mode == 'away' -%}
 {%- set evening = mode == 'evening' -%}
 {%- set morning = mode in ['morning', 'pickup_morning'] -%}
-{%- set demo = is_state('input_boolean.bento_demo_hazards', 'on') -%}
+{%- set demo = is_state('input_boolean.nice_demo_hazards', 'on') -%}
 {%- set alerts = state_attr('sensor.house_chores', 'alerts') or [] -%}
 {%- set alert_text = alerts | map(attribute='summary') | map('upper') | join('|') -%}
 {%- set ns = namespace(t=[]) -%}
@@ -111,9 +111,9 @@
 {%- endif -%}
 {%- if demo -%}
   {%- set ns.t = ns.t + [dict(id='stove', tier=0, order=1, shape='F', label='Stove left on · demo', tone='hazard',
-      say="The stove's been on 1 h 40 m. Go check it.", sub='Demo tile from Bento demo hazards. Nothing is actually on.',
+      say="The stove's been on 1 h 40 m. Go check it.", sub='Demo tile from Nice demo hazards. Nothing is actually on.',
       viz=dict(type='spark', entity='sensor.range_power_minute_average', hours=2),
-      act=dict(label='Turn off demo', type='service', service='input_boolean.turn_off', entity_id='input_boolean.bento_demo_hazards'), tap='kitchen')] -%}
+      act=dict(label='Turn off demo', type='service', service='input_boolean.turn_off', entity_id='input_boolean.nice_demo_hazards'), tap='kitchen')] -%}
 {%- endif -%}
 
 {#- ============================== P1 act now ============================== -#}

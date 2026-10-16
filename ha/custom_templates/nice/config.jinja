@@ -1,0 +1,44 @@
+{#- Nice - the house's own lists, in one place. Everything else is found through labels
+    (security, safety, battery) and areas. Each macro renders JSON; read it with
+    from_json. -#}
+
+{#- The cars that live here: [entity prefix, possessive]. Alex's car reports to this
+    Tesla account but is left out on purpose. -#}
+{%- macro cars() -%}{{ [['nik', "Nik's"], ['kat', "Kat's"]] | to_json }}{%- endmacro -%}
+
+{#- Players whose "playing" shows on the Home tab -#}
+{%- macro players() -%}
+{{ ['media_player.living_room_living_room_apple_tv', 'media_player.bedroom_bedroom_apple_tv', 'media_player.guest_room_guest_room_apple_tv',
+    'media_player.av_living_room_soundbar', 'media_player.kitchen_display', 'media_player.guest_room_display',
+    'media_player.speaker_group_main', 'media_player.speaker_group_everywhere', 'media_player.bedroom_speaker', 'media_player.game_room_speaker'] | to_json }}
+{%- endmacro -%}
+
+{#- Rooms on the climate tile: [name, temperature sensor] -#}
+{%- macro rooms() -%}
+{{ [['Living Room', 'sensor.living_room_temp_sensor_temperature'], ['Pantry', 'sensor.pantry_temp_sensor_temperature'], ['Bedroom', 'sensor.bedroom_temp_sensor_temperature'],
+    ['Bathroom', 'sensor.bathroom_temp_sensor_temperature'], ['Game Room', 'sensor.game_room_temp_sensor_temperature'], ['Race Room', 'sensor.race_room_temp_sensor_temperature'],
+    ['Guest Room', 'sensor.guest_room_temp_sensor_temperature']] | to_json }}
+{%- endmacro -%}
+
+{#- Sprinkler zones: [switch, words] -#}
+{%- macro zones() -%}
+{{ [['switch.outside_sprinklers_right_front', 'right front'], ['switch.outside_sprinklers_left_front', 'left front'],
+    ['switch.outside_sprinklers_right_driveway', 'right driveway'], ['switch.outside_sprinklers_left_driveway', 'left driveway']] | to_json }}
+{%- endmacro -%}
+
+{#- Alerts on todo.house_alerts that a tile already shows, matched on the start of the
+    summary, case-insensitive. Everything else on the list is a chore. -#}
+{%- macro owned_prefixes() -%}
+{{ ['STOVE LEFT ON', 'OVEN LEFT ON', 'AC NOT COOLING', 'AC IS ON BUT NOT COOLING', 'AC IS COOLING AGAIN',
+    'EMPTY THE LITTER DRAWER', 'REFILL THE LITTER HOPPER', 'CHECK THE LITTER HOPPER',
+    'TAKE THE RECYCLING OUT', 'TAKE THE TRASH OUT',
+    'PUT THE CLOTHES IN THE DRYER', 'WASHER DONE', 'DRYER IS DONE', 'LAUNDRY IS DONE',
+    'KAT! CHARGE YOUR CAR', 'UNLOAD THE DISHWASHER', 'UNLOAD DISHWASHER'] | to_json }}
+{%- endmacro -%}
+
+{%- macro is_owned(summary) -%}
+{%- set s = summary | upper | trim -%}
+{%- set ns = namespace(hit=false) -%}
+{%- for p in owned_prefixes() | from_json -%}{%- if s.startswith(p) -%}{%- set ns.hit = true -%}{%- endif -%}{%- endfor -%}
+{{ ns.hit }}
+{%- endmacro -%}

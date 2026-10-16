@@ -1,0 +1,31 @@
+{#- Nice - house health: low batteries, security and safety devices offline for an hour,
+    updates waiting, and no backup in three days. Packed last on the grid, whatever its
+    tier; something offline makes it act-now. -#}
+{%- from 'nice/format.jinja' import name -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], low=[], off=[]) -%}
+{%- for e in label_entities('battery') | select('is_state_attr', 'device_class', 'battery') -%}
+  {%- if states(e) | is_number and states(e) | float < 15 -%}{%- set ns.low = ns.low + [(state_attr(e, 'friendly_name') or e) | replace(' Battery', '')] -%}{%- endif -%}
+{%- endfor -%}
+{%- for e in label_entities('security') + label_entities('safety') -%}
+  {%- set found = expand(e) -%}
+  {%- if found and found[0].state == 'unavailable' and (now() - found[0].last_changed).total_seconds() > 3600 -%}
+    {%- set ns.off = ns.off + [name(e)] -%}
+  {%- endif -%}
+{%- endfor -%}
+{#- Updates are the one place a whole domain is read; there's no label for "has an update" -#}
+{%- set updates = states.update | selectattr('state', 'eq', 'on') | map(attribute='name') | list -%}
+{%- set bk = states('sensor.backup_last_successful_automatic_backup') -%}
+{%- set no_backup = bk in ['unknown', 'unavailable'] or (as_datetime(bk, none) is not none and (now() - as_datetime(bk)).days >= 3) -%}
+{%- set issues = (ns.low | count) + (ns.off | count) + (updates | count) + (1 if no_backup else 0) -%}
+{%- if issues > 0 -%}
+  {%- set bits = ([(ns.low | count) ~ (' battery' if ns.low | count == 1 else ' batteries')] if ns.low else [])
+      + ([ns.off[0] ~ ' offline'] if ns.off | count == 1 else [(ns.off | count) ~ ' offline'] if ns.off else [])
+      + ([(updates | count) ~ (' update' if updates | count == 1 else ' updates')] if updates else [])
+      + (['no recent backup'] if no_backup else []) -%}
+  {%- set ns.t = ns.t + [dict(id='health', tier=(1 if ns.off else 4), order=(9 if ns.off else 1), shape='S', label='House health', tone='health',
+      say=issues ~ (' little fix' if issues == 1 else ' little fixes'), sub=bits | join(', ') | capitalize,
+      viz=none, act=none, tap='health', detail=dict(batteries=ns.low, offline=ns.off, updates=updates, backup=not no_backup))] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

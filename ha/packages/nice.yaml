@@ -1,0 +1,100 @@
+# Nice - the rules behind the Home tab, as sensors.
+#
+# Each rules file in custom_templates/nice/ renders one sensor.nice_tiles_<domain>, whose
+# tiles attribute is that domain's tiles right now. The nice-grid card reads every
+# sensor.nice_tiles_* and lays them out; nothing in the card decides what to show.
+# Splitting by domain means a door opening re-renders the security rules, not all of
+# them. sensor.nice_context works out the moment once (mode, alerts, what's open) for
+# the domain files to read.
+#
+# None of these are recorded (see recorder: in configuration.yaml): they change many
+# times an hour and nothing reads their history.
+template:
+- sensor:
+  - name: Nice context
+    unique_id: nice_context
+    icon: mdi:compass-outline
+    state: "{{ states('sensor.house_mode') }}"
+    # mode and its flags; every House alert, upper case, joined with |; the locks and
+    # contacts labelled security that are unlocked or open
+    attributes:
+      mode: "{{ states('sensor.house_mode') }}"
+      night: "{{ is_state('sensor.house_mode', 'night') }}"
+      away: "{{ is_state('sensor.house_mode', 'away') }}"
+      evening: "{{ is_state('sensor.house_mode', 'evening') }}"
+      morning: "{{ states('sensor.house_mode') in ['morning', 'pickup_morning'] }}"
+      alert_text: "{{ (state_attr('sensor.house_chores', 'alerts') or []) | map(attribute='summary') | map('upper') | join('|') }}"
+      unlocked: "{{ label_entities('security') | select('match', 'lock\\.') | select('is_state', 'unlocked') | list }}"
+      opened: "{{ label_entities('security') | select('match', 'binary_sensor\\.') | select('is_state', 'on') | list }}"
+  - name: Nice tiles safety
+    unique_id: nice_tiles_safety
+    icon: mdi:fire-alert
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/safety.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles security
+    unique_id: nice_tiles_security
+    icon: mdi:door-closed-lock
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/security.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles cats
+    unique_id: nice_tiles_cats
+    icon: mdi:cat
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/cats.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles chores
+    unique_id: nice_tiles_chores
+    icon: mdi:broom
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/chores.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles cars
+    unique_id: nice_tiles_cars
+    icon: mdi:car-electric
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/cars.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles weather
+    unique_id: nice_tiles_weather
+    icon: mdi:weather-pouring
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/weather.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles energy
+    unique_id: nice_tiles_energy
+    icon: mdi:flash
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/energy.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles home
+    unique_id: nice_tiles_home
+    icon: mdi:sofa
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/home.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles away
+    unique_id: nice_tiles_away
+    icon: mdi:home-export-outline
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/away.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles plan
+    unique_id: nice_tiles_plan
+    icon: mdi:calendar-clock
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/plan.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles health
+    unique_id: nice_tiles_health
+    icon: mdi:heart-pulse
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/health.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles sports
+    unique_id: nice_tiles_sports
+    icon: mdi:hockey-puck
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/sports.jinja' import tiles %}{{ tiles() | from_json }}"

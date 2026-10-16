@@ -1,0 +1,50 @@
+{#- Nice - Zig and Donut: the litter drawer and hopper, the day's visits, and a snack
+    to fill a hole. -#}
+{%- from 'nice/format.jinja' import times -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[]) -%}
+{%- set c = 'sensor.nice_context' -%}
+{%- set night = state_attr(c, 'night') == true -%}
+{%- set away = state_attr(c, 'away') == true -%}
+
+{%- set drawer = states('sensor.litter_robot_waste_drawer') | float(0) -%}
+{%- set code = states('sensor.litter_robot_status_code') -%}
+{%- if drawer > 80 or code in ['df1', 'df2', 'dfs'] -%}
+  {%- set ns.t = ns.t + [dict(id='drawer', tier=(0 if code == 'dfs' else 1), order=2, shape='W', label='Litter drawer', tone='act',
+      say=("The box has stopped. Zig and Donut need you." if code == 'dfs' else "One cycle left before the box stops." if code == 'df2' else "Two cycles left before the box stops." if code == 'df1' else "Litter drawer's nearly full. About a day left."),
+      sub='Zig and Donut are counting on you',
+      viz=dict(type='tbar', value=drawer | round(0), line=80, line_label='alert'), act=none, tap='cats')] -%}
+{%- endif -%}
+
+{%- set hopper = states('sensor.litter_robot_hopper_status') -%}
+{%- set globe = states('sensor.litter_robot_litter_level') | float(100) -%}
+{%- if hopper == 'empty' or hopper.startswith('motor') or globe < 20 -%}
+  {%- set shopping = state_attr('sensor.house_chores', 'shopping') or [] -%}
+  {%- set listed = shopping | map(attribute='summary') | map('lower') | select('search', 'litter') | list | count > 0 -%}
+  {%- set ns.t = ns.t + [dict(id='hopper', tier=(1 if hopper.startswith('motor') else 2), order=2, shape='S', label='Litter hopper', tone='today',
+      say=("Hopper's jammed." if hopper.startswith('motor') else "Hopper's empty." if hopper == 'empty' else 'Globe is down to ' ~ globe | round(0) | int ~ '%.'),
+      sub=('Grab a screwdriver, not a bag.' if hopper.startswith('motor') else "Litter's on the list." if listed else 'Add litter to the list?'),
+      viz=none, act=none, tap='cats')] -%}
+{%- endif -%}
+
+{#- While you're away the away tile covers the cats -#}
+{%- if not night and not away -%}
+  {%- set z = states('sensor.zig_visits_today') | int(0) -%}
+  {%- set d = states('sensor.donut_visits_today') | int(0) -%}
+  {%- set ns.t = ns.t + [dict(id='cats', tier=3, order=4, shape='W', label='Cats', tone='cats',
+      say=('No visits yet today' if z + d == 0 else ("Donut's been in " ~ times(d) ~ ', Zig ' ~ times(z) if d >= z and z > 0 else "Zig's been in " ~ times(z) ~ ', Donut ' ~ times(d) if d > 0 else "Zig's been in " ~ times(z) if z > 0 else "Donut's been in " ~ times(d))),
+      sub='', viz=dict(type='dayline', series=[dict(entity='sensor.zig_visits_today', name='Zig'), dict(entity='sensor.donut_visits_today', name='Donut')]), act=none, tap='cats')] -%}
+{%- endif -%}
+
+{#- A snack, offered only to fill a hole: never at night or while you're away, never
+    within three hours of a meal, and not while a feeder reports a problem. Two taps. -#}
+{%- set fed_at = [states('button.zigs_food_feed'), states('button.donuts_food_feed')] | map('as_datetime', none) | reject('none') | list -%}
+{%- set fed_ago = ((now() - fed_at | max).total_seconds() / 3600) if fed_at else 99 -%}
+{%- if not night and not away and fed_ago >= 3 and 10 <= now().hour < 21
+    and not is_state('binary_sensor.zigs_food_problem', 'on') and not is_state('binary_sensor.donuts_food_problem', 'on') -%}
+  {%- set ns.t = ns.t + [dict(id='snack', tier=3, order=99, shape='S', filler=true, label='Zig & Donut', tone='cats',
+      say='Snack time?', sub=('Fed ' ~ fed_ago | int ~ ' h ago' if fed_ago < 24 else ''), viz=none,
+      act=dict(label='Give a snack', type='service', service='script.cats_feed', data=dict(portions=1), confirm=true), tap='cats')] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

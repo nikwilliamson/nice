@@ -1,0 +1,34 @@
+{#- Nice - what's next: the next calendar event, and the next launch from the Cape. -#}
+{%- from 'nice/format.jinja' import at_clock -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[]) -%}
+
+{%- set nxt_min = state_attr('sensor.next_event', 'minutes_until') -%}
+{%- if nxt_min is number and nxt_min <= 36 * 60 -%}
+  {%- set st = as_datetime(state_attr('sensor.next_event', 'start')) | as_local -%}
+  {%- set clock = st.strftime('%-I:%M') -%}
+  {%- set ns.t = ns.t + [dict(id='next', tier=(1 if nxt_min < 60 else 2), order=5, shape='S', label='Next up', tone='plan',
+      say=('Leaving in ' ~ nxt_min | int ~ ' min?' if nxt_min < 60 else (('Today' if st.date() == now().date() else st.strftime('%a')) ~ (' · all day' if state_attr('sensor.next_event', 'all_day') else ' ' ~ clock))),
+      sub=states('sensor.next_event'), big=(nxt_min >= 60), viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- The next launch (Launch Library). A filler, always there to fill a hole. Rich purple
+    once it's Go with a real time; light purple while the date is loose. Day and month
+    dates are read in UTC, which is how Launch Library pins them. -#}
+{%- set lw = as_datetime(states('sensor.next_florida_launch'), none) -%}
+{%- if lw and (now() - lw).total_seconds() < 3600 -%}
+  {%- set prec = (state_attr('sensor.next_florida_launch', 'net_precision') or {}).get('name', 'Day') -%}
+  {%- set l_go = (state_attr('sensor.next_florida_launch', 'status') or {}).get('abbrev') == 'Go' -%}
+  {%- set timed = prec in ['Second', 'Minute', 'Hour'] -%}
+  {%- set l_at = lw | as_local if timed else lw -%}
+  {%- set l_days = (l_at.date() - now().date()).days -%}
+  {%- set l_day = 'Today' if l_days == 0 else 'Tomorrow' if l_days == 1 else l_at.strftime('%a') if 0 < l_days < 7 else l_at.strftime('%b %-d') -%}
+  {%- set l_parts = (state_attr('sensor.next_florida_launch', 'name') or '').split(' | ') -%}
+  {%- set rocket = l_parts[0] | regex_replace('\\s+(Block\\s*\\d+|[A-Z]{2,}\\d+[A-Z]*)$', '') -%}
+  {%- set payload = (l_parts[1] if l_parts | count > 1 else '') | regex_replace('\\s*\\(.*\\)$', '') -%}
+  {%- set ns.t = ns.t + [dict(id='launch', tier=3, order=98, shape='S', filler=true, label='Launch', tone=('plan' if l_go and timed else 'climate'),
+      say=((l_day ~ (', ' if l_days >= 7 else ' ') ~ at_clock(l_at)) if timed else l_day if prec in ['Day', 'Morning', 'Afternoon'] else l_at.strftime('%B')),
+      sub=rocket ~ (' · ' ~ payload if payload else ''), viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

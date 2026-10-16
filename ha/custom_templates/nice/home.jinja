@@ -1,0 +1,86 @@
+{#- Nice - the house around you: what's playing, the rooms' temperatures, scenes, the
+    lights, the Vestaboard, audiobooks and the garland. While you're away the away tile
+    covers climate and scenes, and nothing playing is shown. -#}
+{%- from 'nice/config.jinja' import players, rooms -%}
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], r=[], b=[]) -%}
+{%- set c = 'sensor.nice_context' -%}
+{%- set night = state_attr(c, 'night') == true -%}
+{%- set away = state_attr(c, 'away') == true -%}
+{%- set evening = state_attr(c, 'evening') == true -%}
+{%- set morning = state_attr(c, 'morning') == true -%}
+{%- set alert_text = state_attr(c, 'alert_text') or '' -%}
+
+{%- set playing = players() | from_json | select('is_state', 'playing') | list -%}
+{%- if playing and not away -%}
+  {%- set p = playing[0] -%}
+  {%- set title = state_attr(p, 'media_title') or state_attr(p, 'app_name') or 'Something' -%}
+  {%- set ns.t = ns.t + [dict(id='playing', tier=3, order=1, shape='S', label='Now playing', tone='media',
+      say=title ~ (' + ' ~ (playing | count - 1) ~ ' more' if playing | count > 1 else ''), sub=state_attr(p, 'friendly_name'),
+      viz=dict(type='eq'), act=none, tap=none, entity=p)] -%}
+{%- endif -%}
+
+{%- if not away -%}
+  {%- for r in rooms() | from_json -%}{%- if states(r[1]) | is_number -%}{%- set ns.r = ns.r + [[r[0], states(r[1]) | float | round(1)]] -%}{%- endif -%}{%- endfor -%}
+  {%- if ns.r -%}
+    {%- set warm = (ns.r | sort(attribute='1'))[-1] -%}
+    {%- set set_t = state_attr('climate.living_room_thermostat', 'temperature') | float(74) -%}
+    {%- set recovering = 'AC IS COOLING AGAIN' in alert_text -%}
+    {%- set ns.t = ns.t + [dict(id='climate', tier=3, order=3, shape='W', label='Climate', tone='climate',
+        say=("AC's cooling again." if recovering else warm[0] ~ "'s running warm at " ~ warm[1] | round(0) | int ~ '°' if warm[1] > set_t + 3 else 'Cool and comfy'),
+        sub='', viz=dict(type='thermo', rooms=ns.r, set=set_t), act=none, tap='climate')] -%}
+  {%- endif -%}
+
+  {#- The suggested lighting script first, then the shared Whole House levels. Every
+      button runs a lighting script (not a raw scene), so Adaptive Lighting leaves the
+      result alone. -#}
+  {%- set suggested = states('sensor.suggested_scene') -%}
+  {%- set scene_q = {'script.lighting_movie': 'Movie night?', 'script.lighting_morning': 'Good morning?', 'script.lighting_evening': 'Settling in for the evening?',
+      'script.lighting_bedtime': 'Winding down?', 'script.whole_house_bright': ('Bright and early?' if morning else 'Brighten things up?')} -%}
+  {%- set shared = ['script.whole_house_adaptive', 'script.whole_house_bright', 'script.whole_house_relax', 'script.whole_house_dim', 'script.whole_house_night'] -%}
+  {%- set scene_list = ([suggested] if suggested.startswith('script.') else []) + (shared | reject('eq', suggested) | list) -%}
+  {%- for s in scene_list -%}
+    {%- set ns.b = ns.b + [dict(label=(state_attr(s, 'friendly_name') or s).split(' - ')[-1], service='script.turn_on', entity_id=s, primary=loop.first)] -%}
+  {%- endfor -%}
+  {%- set ns.t = ns.t + [dict(id='scenes', tier=3, order=5, shape='W', label='Scenes', tone='scenes',
+      say=scene_q.get(suggested, 'Set the mood?'),
+      sub=("The TV's on and it's getting dark" if suggested == 'script.lighting_movie' else ''),
+      viz=dict(type='buttons', items=ns.b + [dict(label='All off', service='light.turn_off', entity_id='light.zone_home', primary=false)]),
+      act=none, tap=none)] -%}
+{%- endif -%}
+
+{%- if states('sensor.audiobookshelf_open_sessions') | int(0) > 0 -%}
+  {%- set ns.t = ns.t + [dict(id='listen', tier=3, order=8, shape='S', label='Audiobooks', tone='plan',
+      say="Someone's listening", sub='Audiobookshelf', viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- In the evening, how many lights are on, and where Adaptive Lighting for the main
+    living spaces sits between warm and cool -#}
+{%- set lit = states('sensor.lights_on') | int(0) -%}
+{%- if lit > 0 and (evening or night) -%}
+  {%- set al = 'switch.adaptive_lighting_living_spaces' -%}
+  {%- set al_on = is_state(al, 'on') -%}
+  {%- set al_sleep = is_state(al ~ '_sleep_mode', 'on') -%}
+  {%- set k = state_attr(al, 'color_temp_kelvin') | int(0) -%}
+  {%- set warmth = 'Warm' if k < 2700 else 'Soft white' if k < 3600 else 'Neutral' if k < 4600 else 'Daylight' -%}
+  {%- set al_sub = 'Sleep mode is on' if al_on and al_sleep else (warmth ~ ', following the sun') if al_on and k else '' -%}
+  {%- set ns.t = ns.t + [dict(id='lights', tier=3, order=9, shape=('W' if al_on and k else 'S'), label='Lights', tone='night',
+      say=('Still ' ~ lit ~ ' on. All off?' if night else lit ~ ' lights on'), sub=al_sub,
+      viz=(dict(type='kelvin', value=k, min=2200, max=5000) if al_on and k and not al_sleep else none),
+      act=dict(label='All off', type='service', service='light.turn_off', entity_id='light.zone_home'), tap=none)] -%}
+{%- endif -%}
+
+{#- The board as it is: Vestassistant reads the wall back every minute -#}
+{%- set vb = state_attr('sensor.vestaboard_note_current_message', 'board') -%}
+{%- if vb is list and vb | select | list | count -%}
+  {%- set ns.t = ns.t + [dict(id='board', tier=3, order=11, shape='W', label='Vestaboard', tone='night',
+      say='', sub='', viz=dict(type='board', lines=vb), act=none, tap=none)] -%}
+{%- endif -%}
+
+{%- if is_state('switch.garland', 'on') -%}
+  {%- set ns.t = ns.t + [dict(id='garland', tier=3, order=12, shape='S', label='Seasonal', tone='festive',
+      say="Garland's twinkling", sub='', viz=dict(type='garland'),
+      act=dict(label='Turn off', type='service', service='switch.turn_off', entity_id='switch.garland'), tap=none)] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}
