@@ -6,6 +6,7 @@
 //   base_path: /house-nice
 //   routes: { kitchen: room-kitchen, cats: tab:cats }   tile tap → view path or tab:<id>
 //   todo: todo.house_alerts                              where chores are ticked and added
+//   min_tiles: 11                                        never fewer tiles than this
 //   alert_charts: false                                  hazard and act-now tiles (tier 0 and 1)
 //                                                        show their words and buttons, no chart
 import { html, css } from "lit";
@@ -20,7 +21,7 @@ import { place } from "../tile/tile.js";
 const PREFIX = "sensor.nice_tiles_";
 
 export class NiceGrid extends NiceCard {
-  static defaults = { entities: null, base_path: null, routes: null, todo: "todo.house_alerts", budget: 20, alert_charts: false };
+  static defaults = { entities: null, base_path: null, routes: null, todo: "todo.house_alerts", budget: 20, min_tiles: 11, alert_charts: false };
   static styles = [tokens, css`
     :host { container-type: inline-size; }
     .grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-auto-rows: minmax(var(--n-row), auto); gap: var(--n-gap); }
@@ -79,7 +80,7 @@ export class NiceGrid extends NiceCard {
 
   render() {
     const cols = this.columns.cols;
-    const shown = bestPack(choose(this.tiles(), this.config.budget), cols);
+    const shown = bestPack(choose(this.tiles(), this.config.budget, this.config.min_tiles), cols);
     this._load(shown);
     return html`<div class="grid" style="--cols:${cols}">${repeat(shown, (t) => t.id, (t) => html`<nice-tile style=${place(t)} .tile=${this.describe(t)} .series=${this.seriesOf(t)} ?night=${this.night}></nice-tile>`)}</div>`;
   }

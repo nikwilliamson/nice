@@ -54,3 +54,14 @@ test("ordered sorts by tier, then order, then id", () => {
   const out = ordered([t("b", "S", 3, { order: 1 }), t("a", "S", 3, { order: 1 }), t("z", "S", 0, { order: 9 })]);
   assert.deepEqual(out.map((x) => x.id), ["z", "a", "b"]);
 });
+
+test("choose shows at least min tiles, growing past the budget", () => {
+  const wide = Array.from({ length: 14 }, (_, i) => t(`w${i}`, "W"));   // 2 cells each: 10 fit in 20
+  assert.equal(choose(wide, 20).length, 10);
+  assert.equal(choose(wide, 20, 11).length, 11);
+});
+
+test("fillers become tiles when nothing else is left to reach min", () => {
+  const out = choose([t("a", "S"), t("f1", "S", 3, { filler: true }), t("f2", "S", 3, { filler: true })], 20, 3);
+  assert.equal(out.filter((x) => !x.filler).length, 3);
+});

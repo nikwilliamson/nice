@@ -71,10 +71,21 @@ export function bestPack(tiles, cols, { last = ["health"] } = {}) {
   return pack(strip(best.tiles), cols, true).tiles;
 }
 
-// Which landing tiles fit a 20-cell budget: hazards and act-now always; today folds into
+// Which landing tiles fit: see fit(). With min, never fewer than min tiles on the grid: the
+// budget grows a cell at a time (unfolding "N more" and adding ambient tiles), and if that
+// runs out, fillers count as tiles of their own.
+export function choose(tiles, budget = 20, min = 0) {
+  const real = (out) => out.filter((t) => !t.filler && t.id !== "more").length;
+  let b = budget, out = fit(tiles, b);
+  while (real(out) < min && b < budget + 60) { const next = fit(tiles, ++b); if (real(next) > real(out) || next.length !== out.length) out = next; }
+  if (real(out) < min) out = fit(tiles.map((t) => (t.filler ? { ...t, filler: false } : t)), b);
+  return out;
+}
+
+// Which landing tiles fit a cell budget: hazards and act-now always; today folds into
 // "N more"; ambient fills what's left, one large tile at a time; house health takes the
 // last slot even when it escalates. A tall list with one item gets a wide tile instead.
-export function choose(tiles, budget = 20) {
+function fit(tiles, budget) {
   tiles = tiles.map((t) => (t.shape === "T" && t.viz?.type === "list" && (t.viz.items || []).length <= 1 ? { ...t, shape: "W" } : t));
   const shown = [], folded = [];
   const health = tiles.find((x) => x.id === "health");
