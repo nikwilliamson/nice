@@ -33,7 +33,13 @@
       sub='Set to ' ~ (sp | round(0) | int) ~ '°, ' ~ ins | round(1) ~ '° inside',
       viz=dict(type='spark', entity='sensor.living_room_thermostat_temperature', hours=2, ref=sp, ref_label='set ' ~ (sp | round(0) | int) ~ '°'),
       act=dict(label='Climate', type='navigate', path='climate'), tap='climate',
-      push=dict(level='critical', repeat=30, clear="AC alert cleared. It's cooling again, or the thermostat stopped calling for cool."))] -%}
+      push=dict(level='critical', repeat=30, clear='AC alert cleared.',
+          title=('AC condenser is not starting' if condenser else 'AC is running but not cooling'),
+          message=(('Thermostat is calling for cool and the blower is pulling ' ~ states('sensor.air_handler_power_minute_average') | float(0) | round(0) | int
+                    ~ ' W, but the condenser is only drawing ' ~ states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) | int ~ ' W.') if condenser
+                   else ('Condenser has been drawing ' ~ states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) | int
+                    ~ ' W for 45 minutes and the house is not getting cooler. Trend ' ~ states('sensor.living_room_temperature_trend') ~ ' F/h.'))
+                  ~ ' Inside ' ~ ins | round(1) ~ 'F, set to ' ~ sp | round(0) | int ~ 'F.'))] -%}
 {%- endif -%}
 {#- A practice hazard, so the alarm look can be checked without leaving the stove on -#}
 {%- if is_state('input_boolean.nice_demo_hazards', 'on') -%}

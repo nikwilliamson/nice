@@ -15,7 +15,7 @@
       sub='Zig and Donut are counting on you',
       viz=dict(type='tbar', value=drawer | round(0), line=80, line_label='alert'), act=none, tap='cats',
       push=dict(level=('time-sensitive' if code in ['df1', 'df2', 'dfs'] else 'active'), key=(code if code in ['df1', 'df2', 'dfs'] else 'filling'),
-          repeat=(180 if code in ['df1', 'df2', 'dfs'] else 0), awake=true, clear='Litter drawer emptied.'))] -%}
+          repeat=(180 if code in ['df1', 'df2', 'dfs'] else 0), hours=[8, 21], clear='Litter drawer emptied.'))] -%}
 {%- endif -%}
 
 {%- set hopper = states('sensor.litter_robot_hopper_status') -%}

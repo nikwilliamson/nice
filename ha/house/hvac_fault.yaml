@@ -83,11 +83,7 @@ automation:
 - id: hvac_ac_fault_alert
   alias: HVAC - AC fault alert
   description: >-
-    Notifies the phone when either AC fault sensor latches, raises a house
-    alert, repeats the push every 30 minutes for as long as the fault stands,
-    and clears when it resolves. Detection, nagging and the all-clear are one
-    automation on purpose: they are three states of one incident, and splitting
-    them would need a helper to carry the fault between them.
+    Notifies the phone when either AC fault sensor latches, raises a house alert, repeats the push every 30 minutes for as long as the fault stands, and clears when it resolves. Detection, nagging and the all-clear are one automation on purpose: they are three states of one incident, and splitting them would need a helper to carry the fault between them. Its phone push comes from Nice (custom_templates/nice/), the same rules as the dashboard tile.
   mode: restart
   triggers:
   - trigger: state
@@ -120,40 +116,6 @@ automation:
       message: "{{ alert }}"
   - repeat:
       sequence:
-      - action: notify.mobile_app_niks_iphone_17
-        data:
-          title: >-
-            {% if is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
-            AC condenser is not starting
-            {%- else -%}
-            AC is running but not cooling
-            {%- endif %}
-          message: >-
-            {%- set ac = states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) -%}
-            {%- set ah = states('sensor.air_handler_power_minute_average') | float(0) | round(0) -%}
-            {%- set t = states('sensor.living_room_thermostat_temperature') | float(0) | round(1) -%}
-            {%- set sp = state_attr('climate.living_room_thermostat', 'temperature') | float(0) | round(0) -%}
-            {%- set tr = states('sensor.living_room_temperature_trend') -%}
-            {%- if is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
-            Thermostat is calling for cool and the blower is pulling {{ ah }} W,
-            but the condenser is only drawing {{ ac }} W. Inside {{ t }}F, set to {{ sp }}F.
-            {%- else -%}
-            Condenser has been drawing {{ ac }} W for 45 minutes and the house is
-            not getting cooler. Inside {{ t }}F, set to {{ sp }}F, trend {{ tr }} F/h.
-            {%- endif %}
-          data:
-            tag: hvac_fault
-            push:
-              interruption-level: critical
-              sound:
-                name: default
-                critical: 1
-                volume: 1.0
-        note: >-
-          Critical interruption level, so this breaks silent mode and Focus -
-          the 2am failure is the one worth catching. The shared tag means the
-          30-minute repeats replace the previous banner instead of stacking,
-          and the all-clear below replaces the last alert.
       - wait_for_trigger:
         - trigger: state
           entity_id:
@@ -190,17 +152,6 @@ automation:
         entity_id: sensor.air_conditioner_power_minute_average
         above: 500
       sequence:
-      - action: notify.mobile_app_niks_iphone_17
-        data:
-          title: AC is cooling again
-          message: >-
-            {%- set ac = states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) -%}
-            {%- set t = states('sensor.living_room_thermostat_temperature') | float(0) | round(1) -%}
-            Condenser is drawing {{ ac }} W. Inside {{ t }}F.
-          data:
-            tag: hvac_fault
-        note: >-
-          Deliberately not critical. The all-clear is information, not an alarm.
       - action: script.house_alert_raise
         data:
           message: AC IS COOLING AGAIN.
@@ -209,15 +160,6 @@ automation:
           and nothing clears it, so it carries a short life of its own - see
           the expiry automation below. Recovery is worth saying once; it is not
           worth saying all night.
-    default:
-    - action: notify.mobile_app_niks_iphone_17
-      data:
-        title: AC alert cleared
-        message: >-
-          The thermostat stopped calling for cool, so the fault no longer
-          applies - but the condenser never ran. Nothing has been proven fixed.
-        data:
-          tag: hvac_fault
     note: >-
       A fault sensor going off has two very different causes, and the condenser
       is the only thing that tells them apart. Drawing current means it finally

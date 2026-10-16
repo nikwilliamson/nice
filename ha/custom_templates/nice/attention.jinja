@@ -9,6 +9,7 @@
         level   critical | time-sensitive (default) | active | passive
         repeat  minutes between reminders while the tile is up (0: once)
         awake   true: no reminders while the house is in night mode
+        hours   [from, to]: reminders only between these hours ([8, 21])
         key     a change of key pushes again (an escalation: the drawer going from filling to full)
         clear   what to say when the tile goes away (nothing: the push just disappears)
         title, message   default: the tile's label, and its say and sub)
@@ -24,7 +25,7 @@
       {%- set act = t.act if t.act is mapping and t.act.type == 'service' and not t.act.confirm else none -%}
       {#- .get(), not p.clear: that would be the dict's own clear() -#}
       {%- set ns.i = ns.i + [dict(id=t.id, key=t.id ~ ':' ~ p.get('key', t.tier),
-          level=p.get('level', 'time-sensitive'), repeat=p.get('repeat', 0) | int, awake=p.get('awake', false),
+          level=p.get('level', 'time-sensitive'), repeat=p.get('repeat', 0) | int, awake=p.get('awake', false), hours=p.get('hours'),
           clear=p.get('clear', ''), title=p.get('title', t.label),
           message=p.get('message', [t.say, t.sub] | select | join(' ')), act=act)] -%}
     {%- endif -%}

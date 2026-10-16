@@ -37,9 +37,7 @@ automation:
 - id: litter_box_drawer_full_alert
   alias: Litter Box - Drawer full alert
   description: >-
-    Warns once when the waste drawer passes 80%, escalates when the Litter-Robot
-    itself reports the drawer full, and re-raises at 20:00 if it is still full at
-    bedtime. Repeats every three hours during waking hours until it is emptied.
+    Warns once when the waste drawer passes 80%, escalates when the Litter-Robot itself reports the drawer full, and re-raises at 20:00 if it is still full at bedtime. Repeats every three hours during waking hours until it is emptied. Its phone push comes from Nice (custom_templates/nice/), the same rules as the dashboard tile.
   mode: restart
   triggers:
   - trigger: numeric_state
@@ -97,14 +95,7 @@ automation:
           percentage crosses 80, skip the gentle tier and fall through to the
           deadline path - the early warning has been overtaken by events.
       sequence:
-      - action: notify.mobile_app_niks_iphone_17
-        data:
-          title: Litter drawer filling
-          message: >-
-            Waste drawer at {{ states('sensor.litter_robot_waste_drawer') | int(0) }}%.
-            With two cats that is about a day of headroom.
-          data:
-            tag: litter_box_drawer
+      - stop: Its push comes from Nice
       note: >-
         One push, no repeat, nothing on the board, default interruption level.
         This tier exists so you can empty it on your own schedule; nagging here
@@ -119,38 +110,6 @@ automation:
         has to repeat the push.
     - repeat:
         sequence:
-        - if:
-          - condition: time
-            after: "08:00:00"
-            before: "21:00:00"
-          then:
-          - action: notify.mobile_app_niks_iphone_17
-            data:
-              title: Empty the litter drawer
-              message: >-
-                {%- set code = states('sensor.litter_robot_status_code') -%}
-                {%- set pct = states('sensor.litter_robot_waste_drawer') | int(0) -%}
-                {% if code == 'dfs' %}The drawer is full and the box has stopped
-                cycling.{% elif code == 'df2' %}One cycle left before the box
-                stops.{% elif code == 'df1' %}Two cycles left before the box
-                stops.{% else %}Waste drawer at {{ pct }}%.{% endif %}
-              data:
-                tag: litter_box_drawer
-                push:
-                  interruption-level: time-sensitive
-            note: >-
-              time-sensitive, not critical. Two cats and nowhere to go is a real
-              problem, but it is not the stove: it should break through a Focus,
-              not override the ringer switch.
-          note: >-
-            NO else branch, and specifically no `stop:` - `stop` ends the entire
-            automation run, not the current iteration, so using it to skip the
-            overnight nag would kill the loop for good and the clear below would
-            never fire. Instead the loop keeps turning overnight and simply says
-            nothing until 08:00. Waking you at 03:00 for a chore you cannot
-            usefully do in the dark is how an alert earns itself a permanent
-            mute. The list item stays up either way - what it does overnight is
-            the integration's quiet-hours policy to decide, not this loop's.
         - wait_for_trigger:
           - trigger: numeric_state
             entity_id: sensor.litter_robot_waste_drawer
@@ -174,21 +133,10 @@ automation:
     - action: script.house_alert_clear
       data:
         message: EMPTY THE LITTER DRAWER.
-    - action: notify.mobile_app_niks_iphone_17
-      data:
-        title: Litter drawer emptied
-        message: >-
-          Waste drawer back to {{ states('sensor.litter_robot_waste_drawer') | int(0) }}%.
-        data:
-          tag: litter_box_drawer
-      note: Same tag, so the all-clear replaces the nag in Notification Centre.
-
 - id: litter_box_litter_refill_alert
   alias: Litter Box - Litter refill alert
   description: >-
-    Pushes and puts cat litter on the shopping list when the LitterHopper runs
-    empty or the globe drops below 20% on its own, and pushes without a list item
-    when the hopper motor faults. Re-raises once a day at 18:00 while unresolved.
+    Pushes and puts cat litter on the shopping list when the LitterHopper runs empty or the globe drops below 20% on its own, and pushes without a list item when the hopper motor faults. Re-raises once a day at 18:00 while unresolved. Its phone push comes from Nice (custom_templates/nice/), the same rules as the dashboard tile.
   mode: single
   max_exceeded: silent
   triggers:
@@ -238,22 +186,6 @@ automation:
   actions:
   - variables:
       hopper: "{{ states('sensor.litter_robot_hopper_status') }}"
-  - action: notify.mobile_app_niks_iphone_17
-    data:
-      title: >-
-        {{ 'Litter hopper fault' if hopper.startswith('motor') else 'Refill the litter hopper' }}
-      message: >-
-        {%- set level = states('sensor.litter_robot_litter_level') | int(0) -%}
-        {% if hopper == 'empty' %}The hopper is empty. The globe is at {{ level }}%
-        and will not be topped up until it is refilled.
-        {% elif hopper == 'motor_disconnected' %}The hopper motor reads
-        disconnected - check it is seated properly on the globe.
-        {% elif hopper.startswith('motor') %}The hopper motor faulted
-        ({{ hopper }}). It is not dispensing into the globe.
-        {% else %}Globe litter is down to {{ level }}% and the hopper is not
-        keeping up with it.{% endif %}
-      data:
-        tag: litter_box_litter
   - action: script.house_alert_raise
     data:
       message: >-

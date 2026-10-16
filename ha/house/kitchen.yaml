@@ -80,9 +80,7 @@ automation:
 - id: kitchen_range_left_on_alert
   alias: Kitchen - Range left on alert
   description: >-
-    Alerts when the cooktop has been drawing power for 90 minutes, or is still
-    drawing power at 00:30. Repeats the push every 30 minutes until it is
-    switched off, then clears the alert.
+    Alerts when the cooktop has been drawing power for 90 minutes, or is still drawing power at 00:30. Repeats the push every 30 minutes until it is switched off, then clears the alert. Its phone push comes from Nice (custom_templates/nice/), the same rules as the dashboard tile.
   mode: restart
   triggers:
   - trigger: state
@@ -117,27 +115,6 @@ automation:
       text, so a restart of this automation does not stack duplicates.
   - repeat:
       sequence:
-      - action: notify.mobile_app_niks_iphone_17
-        data:
-          title: Stove left on
-          message: >-
-            {%- set w = states('sensor.range_power_15m_average') | float(0) | round(0) -%}
-            {%- set since = relative_time(states.binary_sensor.range_left_on.last_changed) -%}
-            The cooktop is drawing {{ w }} W averaged over the last 15 minutes.
-            {% if is_state('binary_sensor.range_left_on', 'on') %}It has been on
-            for over 90 minutes ({{ since }}).{% else %}It is still on after
-            midnight.{% endif %}
-          data:
-            tag: kitchen_range_left_on
-            push:
-              interruption-level: critical
-              sound:
-                name: default
-                critical: 1
-                volume: 1.0
-        note: >-
-          Critical, and unapologetically so. This is the one alert in the house
-          where waking you up is the entire point.
       - wait_for_trigger:
         - trigger: numeric_state
           entity_id: sensor.range_power_15m_average
@@ -155,20 +132,10 @@ automation:
   - action: script.house_alert_clear
     data:
       message: STOVE LEFT ON. GO CHECK IT.
-  - action: notify.mobile_app_niks_iphone_17
-    data:
-      title: Stove is off
-      message: The cooktop circuit has dropped back to zero.
-      data:
-        tag: kitchen_range_left_on
-    note: Not critical. The all-clear is information, not an alarm.
-
 - id: kitchen_oven_left_on_alert
   alias: Kitchen - Oven left on alert
   description: >-
-    Alerts when the oven has been drawing power for 3 hours, or is still drawing
-    power at 00:30. Repeats the push every 30 minutes until it is switched off,
-    then clears the alert.
+    Alerts when the oven has been drawing power for 3 hours, or is still drawing power at 00:30. Repeats the push every 30 minutes until it is switched off, then clears the alert. Its phone push comes from Nice (custom_templates/nice/), the same rules as the dashboard tile.
   mode: restart
   triggers:
   - trigger: state
@@ -191,24 +158,6 @@ automation:
       message: OVEN LEFT ON. GO CHECK IT.
   - repeat:
       sequence:
-      - action: notify.mobile_app_niks_iphone_17
-        data:
-          title: Oven left on
-          message: >-
-            {%- set w = states('sensor.oven_power_15m_average') | float(0) | round(0) -%}
-            {%- set since = relative_time(states.binary_sensor.oven_left_on.last_changed) -%}
-            The oven is drawing {{ w }} W averaged over the last 15 minutes.
-            {% if is_state('binary_sensor.oven_left_on', 'on') %}It has been on
-            for over 3 hours ({{ since }}).{% else %}It is still on after
-            midnight.{% endif %}
-          data:
-            tag: kitchen_oven_left_on
-            push:
-              interruption-level: critical
-              sound:
-                name: default
-                critical: 1
-                volume: 1.0
       - wait_for_trigger:
         - trigger: numeric_state
           entity_id: sensor.oven_power_15m_average
@@ -223,23 +172,6 @@ automation:
   - action: script.house_alert_clear
     data:
       message: OVEN LEFT ON. GO CHECK IT.
-  - action: notify.mobile_app_niks_iphone_17
-    data:
-      title: Oven is off
-      message: The oven circuit has dropped back to zero.
-      data:
-        tag: kitchen_oven_left_on
-
-# RECONCILERS. A list item outlives the run that created it, which a board
-# message never did - so a run that dies before reaching its clear (Home
-# Assistant restarting mid-incident, the automation being reloaded, mode:
-# restart cutting a run short) would strand the alert on the list forever.
-# These exist to make the invariant true rather than hoped for: if the circuit
-# is cold, the alert is not on the list.
-#
-# Deliberately not gated behind an *_enabled boolean, unlike everything above.
-# Muting a reconciler cannot stop an alert - it can only leave a stale one on
-# the board, which is the opposite of what a mute switch is for.
 - id: kitchen_range_alert_reconcile
   alias: Kitchen - Reconcile range alert
   description: Clears the range alert whenever the cooktop is demonstrably off.

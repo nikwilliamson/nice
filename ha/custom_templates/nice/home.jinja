@@ -28,7 +28,10 @@
     {%- set recovering = 'AC IS COOLING AGAIN' in alert_text -%}
     {%- set ns.t = ns.t + [dict(id='climate', tier=3, order=3, shape='W', label='Climate', tone='climate',
         say=("AC's cooling again." if recovering else warm[0] ~ "'s running warm at " ~ warm[1] | round(0) | int ~ '°' if warm[1] > set_t + 3 else 'Cool and comfy'),
-        sub='', viz=dict(type='thermo', rooms=ns.r, set=set_t), act=none, tap='climate')] -%}
+        sub='', viz=dict(type='thermo', rooms=ns.r, set=set_t), act=none, tap='climate',
+        push=(dict(level='active', key='recovered', title='AC is cooling again',
+            message='Condenser is drawing ' ~ states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) | int ~ ' W. Inside '
+                ~ states('sensor.living_room_thermostat_temperature') | float(0) | round(1) ~ 'F.') if recovering else false))] -%}
   {%- endif -%}
 
   {#- The suggested lighting script first, then the shared Whole House levels. Every
