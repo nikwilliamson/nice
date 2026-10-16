@@ -1,0 +1,313 @@
+    this._loadHistory();
+  }
+
+  // Which tiles fit: hazards and act-now always; today folds into "N more"; ambient
+  // fills what's left; house health takes the last slot. Health keeps its last slot
+  // even when it escalates: the escalation changes its words, not where it sits.
+  _choose(tiles) {
+    // A tall list tile with one item is mostly empty space; give it a wide one instead
+    tiles = tiles.map((t) => (t.shape === "T" && t.viz?.type === "list" && (t.viz.items || []).length <= 1 ? { ...t, shape: "W" } : t));
+    const shown = [], folded = [];
+    const health = tiles.find((x) => x.id === "health");
+    let used = health ? 1 : 0;
+    // Fillers sit out the budget: _bestPack drops them into a hole if one is left
+    const fillers = tiles.filter((x) => x.filler);
+    const by = (t) => tiles.filter((x) => x.tier === t && x !== health && !x.filler);
+    for (const t of [...by(0), ...by(1)]) { shown.push(t); used += cells(t.shape); }
+    const today = by(2);
+    for (let i = 0; i < today.length; i++) {
+      const t = today[i], need = cells(t.shape), left = today.length - i - 1;
+      if (used + need + (left ? 1 : 0) <= BUDGET || (!left && used + need <= BUDGET)) { shown.push(t); used += need; }
+      else { folded.push(...today.slice(i)); break; }
+    }
+    if (folded.length) { shown.push({ id: "more", tier: 2, shape: "S", label: "Also today", tone: "today", say: `${folded.length} more`, sub: folded.map((f) => f.label).join(", ") }); used += 1; }
+    let large = shown.some((t) => t.shape === "L");
+    for (const t of by(3)) {
+      let shape = t.shape;
+      if (shape === "L" && large) shape = "W"; // only one large tile at a time
+      if (used + cells(shape) <= BUDGET) { shown.push(shape === t.shape ? t : { ...t, shape }); used += cells(shape); if (shape === "L") large = true; }
+    }
+    if (health) shown.push(health);
+    return [...shown, ...fillers];
+  }
+
+  // Ambient tiles have no urgency order among themselves, so try a few arrangements of
+  // them and keep the one that leaves the fewest holes before any stretching.
+  // House health always packs last, whatever its tier.
+  _bestPack(tiles, cols) {
+    const fill = tiles.filter((t) => t.filler);
+    tiles = tiles.filter((t) => !t.filler);
+    const last = (t) => t.id === "health" || t.tier === 4;
+    const fixed = tiles.filter((t) => t.tier !== 3 && !last(t)), amb = tiles.filter((t) => t.tier === 3 && !last(t)), tail = tiles.filter(last);
+    const size = (t) => cells(t.shape);
+    const orders = [amb, [...amb].sort((a, b) => size(b) - size(a)), [...amb].sort((a, b) => size(a) - size(b)),
+      [...amb.filter((t) => t.shape === "W"), ...amb.filter((t) => t.shape !== "W")], [...amb.filter((t) => t.shape !== "L"), ...amb.filter((t) => t.shape === "L")]];
+    let best = null;
+    for (const o of orders) {
+      const p = this._pack([...fixed, ...o, ...tail], cols, false);
+      if (!best || p.holes < best.holes) best = p;
+      if (best.holes === 0) break;
+    }
+    // A filler goes in only if it closes a hole without adding a row
+    if (best.holes && fill.length) {
+      const rows = (p) => Math.max(0, ...p.tiles.map((t) => t.r + t.h));
+      const base = best.tiles.map(({ r, c, w, h, ...t }) => t);
+      const p = this._pack([...base.filter((t) => !last(t)), ...fill, ...base.filter(last)], cols, false);
+      if (p.holes < best.holes && rows(p) <= rows(best)) best = p;
+    }
+    return this._pack(best.tiles.map(({ r, c, w, h, ...t }) => t), cols, true).tiles;
+  }
+
+  // Place tiles first-fit on an explicit grid, then close any holes by widening the
+  // tile to their left (or lengthening the one above). CSS dense packing alone left
+  // ragged gaps once tall tiles and wide tiles met; this always ends on clean rows.
+  _pack(tiles, cols, fill) {
+    const occ = [];
+    const free = (r, c, w, h) => { for (let y = r; y < r + h; y++) for (let x = c; x < c + w; x++) if (x >= cols || (occ[y] && occ[y][x])) return false; return true; };
+    const take = (r, c, w, h, i) => { for (let y = r; y < r + h; y++) { occ[y] = occ[y] || []; for (let x = c; x < c + w; x++) occ[y][x] = i + 1; } };
+    const out = tiles.map((t, i) => {
+      let [w, h] = SHAPES[t.shape] || SHAPES.S;
+      w = Math.min(w, cols);
+      for (let r = 0; ; r++) for (let c = 0; c < cols; c++) if (free(r, c, w, h)) { take(r, c, w, h, i); return { ...t, r, c, w, h }; }
+    });
+    const rows = occ.length;
+    let holes = 0;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!(occ[r] && occ[r][c])) holes++;
+    if (!fill) return { tiles: out, holes };
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (occ[r] && occ[r][c]) continue;
+      const left = c > 0 && occ[r] && occ[r][c - 1] ? out[occ[r][c - 1] - 1] : null;
+      const up = r > 0 && occ[r - 1] && occ[r - 1][c] ? out[occ[r - 1][c] - 1] : null;
+      if (left && left.h === 1) { left.w += 1; take(r, c, 1, 1, occ[r][c - 1] - 1); }
+      else if (up && up.w === 1) { up.h += 1; take(r, c, 1, 1, occ[r - 1][c] - 1); }
+    }
+    return { tiles: out, holes };
+  }
+
+  _render() {
+    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    // Column count follows the card's own width, not the window's
+    watchColumns(this);
+    // Keep a half-typed chore across redraws
+    const typed = this.shadowRoot.querySelector(".addfield input");
+    const keep = typed ? { value: typed.value, focus: this.shadowRoot.activeElement === typed } : null;
+    const cols = this._cols || 4;
+    const tiles = this._bestPack(this._choose(this._tiles || []), cols);
+    const night = this._night;
+    // A goal: a tile's score (our side's, on live game tiles) went up since the last draw.
+    // The tile pulses for a minute
+    this._goals ||= {};
+    for (const t of tiles) {
+      if (typeof t.score !== "number") continue;
+      const g = this._goals[t.id] || { ts: t.score, at: 0 };
+      if (t.score > g.ts) g.at = Date.now();
+      g.ts = t.score;
+      this._goals[t.id] = g;
+    }
+    const snap = motionBefore(this);
+    this.shadowRoot.innerHTML = `<style>${BASE_CSS}${GRID_CSS}</style>
+      <div class="wrap"><div class="bento ${night ? "is-night" : ""}" style="--cols:${cols}">${tiles.map((t) => this._tile(t, night)).join("")}</div></div>`;
+    if (keep && this._adding) {
+      const input = this.shadowRoot.querySelector(".addfield input");
+      if (input) { input.value = keep.value; if (keep.focus) input.focus(); }
+    }
+    this.shadowRoot.querySelectorAll("[data-tap]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.tap)));
+    this.shadowRoot.querySelectorAll("[data-act]").forEach((el) => el.addEventListener("click", (e) => { e.stopPropagation(); this._act(JSON.parse(el.dataset.act)); }));
+    this.shadowRoot.querySelectorAll("[data-done]").forEach((el) => el.addEventListener("click", (e) => { e.stopPropagation(); this._tick(el); }));
+    const form = this.shadowRoot.querySelector(".addfield");
+    if (form) form.addEventListener("submit", (e) => { e.preventDefault(); this._add(form.querySelector("input").value); });
+    const cancel = this.shadowRoot.querySelector(".addfield .cancel");
+    if (cancel) cancel.addEventListener("click", (e) => { e.stopPropagation(); this._adding = false; this._sig = null; this.hass = this._hass; });
+    motionAfter(this, snap, { night });
+  }
+
+  _layout(t) {
+    const type = t.viz?.type;
+    if (!type) return "text";
+    if (type === "spark") return "bleed";
+    if (["tube", "ring", "battery", "eq"].includes(type)) return "side";
+    if (["list", "kelvin", "checks", "receipt", "rain"].includes(type)) return "after";
+    // Words at the top, the chart or the buttons on the bottom edge
+    if (type === "charge" || type === "buttons") return "foot";
+    return "stack";
+  }
+
+  _viz(t, night) {
+    const v = t.viz, c = t.color ? teamTone(t.color) : tone(t.tone, night);
+    switch (v?.type) {
+      case "spark": return `<div class="spark-slot" data-spark="${esc(t.id)}">${charts.spark(this._series?.[t.id], { color: c.accent, ref: v.ref ?? null, refLabel: v.ref_label, peak: !!v.peak, unit: "" })}</div>`;
+      case "dayline": return charts.dayline(this._series?.[t.id] || []);
+      case "stack": return charts.stack(v, night);
+      case "board": {
+        // Flip only on a change (and everything on first sight), never on an unrelated redraw
+        const key = JSON.stringify([v.lines, v.text]), b = (this._boards ||= {})[t.id];
+        if (!b || b.key !== key) this._boards[t.id] = { key, prev: b ? { lines: b.v.lines, text: b.v.text } : { lines: [] }, v, at: Date.now() };
+        const cur = this._boards[t.id];
+        return charts.board({ ...v, prev: Date.now() - cur.at < 2500 ? cur.prev : null });
+      }
+      case "list": {
+        // A ticked chore stays ticked through a redraw, and is gone once its row has folded away
+        const ticked = (i) => this._ticked?.[i.uid];
+        const items = (v.items || []).filter((i) => !ticked(i) || Date.now() - ticked(i) < 800);
+        return `<ul class="list">${items.map((i) => `<li class="${ticked(i) ? "done" : ""}"><button class="tick ${ticked(i) ? "done" : ""}" data-done="${esc(i.uid)}" aria-label="Done: ${esc(sentence(i.summary))}"></button>${esc(sentence(i.summary))}</li>`).join("")}</ul>`;
+      }
+      case "buttons": return `<div class="btns">${(v.items || []).map((b) => `<button class="sbtn ${b.primary ? "pri" : ""}" data-act='${esc(JSON.stringify({ type: "service", service: b.service, entity_id: b.entity_id, data: b.data }))}'>${esc(b.label)}</button>`).join("")}</div>`;
+      default: return charts[v?.type] ? charts[v.type](v, night) : "";
+    }
+  }
+
+  _tile(t, night) {
+    const c = t.color ? teamTone(t.color) : tone(t.tone, night);
+    const lay = this._layout(t);
+    const say = t.say ? `<div class="say ${t.big ? "big" : ""}">${esc(t.say)}</div>` : "";
+    const sub = t.sub ? `<div class="sub">${esc(t.sub)}</div>` : "";
+    let act = "";
+    if (t.act?.type === "todo_add") {
+      act = this._adding
+        ? `<form class="addfield"><input type="text" placeholder="Add a chore" aria-label="New chore"><div class="addrow"><button type="submit" class="act">Done</button><button type="button" class="cancel" aria-label="Cancel">×</button></div></form>`
+        : `<button class="act add" data-act='${esc(JSON.stringify(t.act))}'>${esc(t.act.label)}</button>`;
+    } else if (t.act) {
+      const armed = t.act.confirm && this._confirm === `act:${t.id}`;
+      act = `<button class="act ${armed ? "armed" : ""}" data-act='${esc(JSON.stringify({ ...t.act, tile: t.id }))}'>${esc(armed ? "Tap again" : t.act.label)}</button>`;
+    }
+    const txt = `<div class="txt">${say}${sub}${lay === "after" ? "" : act}</div>`;
+    const viz = this._viz(t, night);
+    let body;
+    if (lay === "side") body = `<div class="sidebody">${txt}<div class="vz">${viz}</div></div>`;
+    else if (lay === "bleed") body = `${txt}<div class="bleed">${viz}</div>`;
+    else if (lay === "after") body = `${txt}<div class="vz">${viz}</div>${act}`;
+    else if (lay === "foot") body = `${txt}<div class="vz">${viz}</div>`;
+    else if (lay === "stack") body = `<div class="vz">${viz}</div>${txt}`;
+    else body = txt;
+    const goal = this._goals?.[t.id] && Date.now() - this._goals[t.id].at < 60000;
+    return `<div class="tile shape-${t.shape} lay-${lay} ${t.tier === 0 ? "p0" : ""} ${goal ? "goal" : ""}" data-k="${esc(t.id)}" ${t.tap ? `data-tap="${esc(t.tap)}" role="link" tabindex="0"` : ""}
+        style="--bg:${c.bg};--ink:${c.ink};--accent:${c.accent};grid-column:${t.c + 1} / span ${t.w};grid-row:${t.r + 1} / span ${t.h}">
+      ${t.badge ? `<div class="lblrow"><div class="lbl">${esc(t.label)}</div><span class="badge"><i></i>${esc(t.badge)}</span></div>` : `<div class="lbl">${esc(t.label)}</div>`}${body}</div>`;
+  }
+
+  async _loadHistory() {
+    const hass = this._hass;
+    const series = this._series || {};
+    const jobs = (this._tiles || []).map(async (t) => {
+      const v = t.viz;
+      if (v?.type === "spark" && v.entity) {
+        const end = Date.now();
+        const start = v.since === "midnight" ? midnight() : end - (v.hours || 2) * 3600000;
+        const rows = await history(hass, v.entity, start);
+        series[t.id] = smooth(bucket(rows, start, end, Math.max(12, Math.min(96, Math.round((end - start) / 900000)))));
+        if (v.entity.includes("power") && v.since === "midnight") series[t.id] = series[t.id].map((w) => w / 1000);
+      } else if (v?.type === "dayline") {
+        const start = midnight();
+        const marks = [];
+        await Promise.all((v.series || []).map(async (s, si) => {
+          const rows = await history(hass, s.entity, start);
+          for (let i = 1; i < rows.length; i++) {
+            if (rows[i].v > rows[i - 1].v && rows[i].t >= start) {
+              const d = new Date(rows[i].t);
+              marks.push({ h: d.getHours() + d.getMinutes() / 60, series: si, name: s.name });
+            }
+          }
+        }));
+        // Nudge marks that land on the same minute so both stay visible
+        marks.sort((a, b) => a.h - b.h).forEach((m, i, a) => { if (i && Math.abs(m.h - a[i - 1].h) < 0.15) { a[i - 1].dx = -3; m.dx = 3; } });
+        series[t.id] = marks;
+      }
+    });
+    await Promise.all(jobs);
+    this._series = series;
+    const hs = JSON.stringify(series);
+    if (hs !== this._histSig) { this._histSig = hs; this._sig = null; this.hass = this._hass; }
+  }
+
+  // Tiles name a place ("kitchen", "climate"); the card config's routes say where that
+  // is on this dashboard. "tab:<id>" switches the surrounding bento-tabs; anything
+  // unrouted stays put rather than opening a page that does not exist.
+  _navigate(path) {
+    if (!path) return;
+    const routes = this._config.routes;
+    const to = routes ? routes[path] : path;
+    if (!to) return;
+    if (to.startsWith("tab:")) {
+      this.dispatchEvent(new CustomEvent("bento-tab", { detail: { tab: to.slice(4) }, bubbles: true, composed: true }));
+      return;
+    }
+    bentoNavigate(this._config.base_path, to, "home");
+  }
+
+  _act(a) {
+    if (a.type === "navigate") return this._navigate(a.path);
+    if (a.type === "todo_add") { this._adding = true; this._sig = null; this.hass = this._hass; setTimeout(() => this.shadowRoot.querySelector(".addfield input")?.focus(), 0); return; }
+    if (a.type === "service" && a.service) {
+      const [domain, service] = a.service.split(".");
+      const run = () => this._hass.callService(domain, service, a.data || {}, a.entity_id ? { entity_id: a.entity_id } : undefined);
+      // confirm: the first tap arms the button for a few seconds, the second runs it
+      if (a.confirm) return confirmTap(this, `act:${a.tile}`, { run, render: () => { this._sig = null; this.hass = this._hass; } });
+      run();
+    }
+  }
+
+  // Tick a chore off: the check draws and confetti flies, the row folds away, then Home Assistant hears about it
+  _tick(btn) {
+    const uid = btn.dataset.done, li = btn.closest("li"), list = btn.closest(".list");
+    this._ticked ||= {};
+    if (this._ticked[uid]) return;
+    this._ticked[uid] = Date.now();
+    const last = !!list && list.querySelectorAll(".tick:not(.done)").length <= 1;
+    btn.classList.add("done");
+    li?.classList.add("done");
+    celebrate(btn, last);
+    if (li && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      li.style.overflow = "hidden";
+      li.animate([{ height: `${li.offsetHeight}px`, opacity: 1 }, { height: "0px", opacity: 0, marginTop: "-7px" }],
+        { duration: 380, delay: 450, easing: "cubic-bezier(.4, 0, .2, 1)", fill: "forwards" });
+    }
+    setTimeout(() => this._complete(uid), 800);
+    setTimeout(() => { delete this._ticked[uid]; }, 15000);
+  }
+
+  _complete(uid) {
+    this._hass.callService("todo", "update_item", { item: uid, status: "completed" }, { entity_id: "todo.house_alerts" });
+  }
+
+  _add(text) {
+    const item = String(text || "").trim();
+    if (item) this._hass.callService("todo", "add_item", { item: item.toUpperCase() }, { entity_id: "todo.house_alerts" });
+    this._adding = false; this._sig = null; this.hass = this._hass;
+  }
+}
+
+const GRID_CSS = `
+  .wrap { container-type: inline-size; }
+  .bento { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-auto-rows: minmax(var(--b-row), auto); gap: var(--b-gap); font-family: var(--b-body); }
+  .tile { background: var(--bg); color: var(--ink); border-radius: var(--b-radius); padding: var(--b-s-md) var(--b-s-lg);
+    display: grid; grid-template-rows: auto 1fr; gap: var(--b-s-sm); align-content: start; overflow: hidden; min-width: 0; position: relative; }
+  .tile[data-tap] { cursor: pointer; }
+  .tile[data-tap]:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .tile > .txt, .tile > .vz, .tile > .sidebody { align-self: end; min-width: 0; }
+  .lbl { font-size: 0.76em; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: .72; }
+  .say { font-family: var(--b-display); font-weight: 800; font-size: 1.3em; line-height: 1.12; letter-spacing: -0.01em; text-wrap: balance; }
+  .say.big { font-size: 2.1em; line-height: 1; }
+  .shape-L .say { font-size: 1.95em; } .shape-F .say { font-size: 1.6em; }
+  .sub { font-size: 0.94em; font-weight: 600; opacity: .78; margin-top: var(--b-s-2xs); }
+  .shape-S .sub { font-size: 0.9em; }
+  .txt { display: grid; gap: var(--b-s-2xs); }
+  .shape-W .txt, .shape-F .txt { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--b-s-lg); }
+  .shape-W .txt .say, .shape-W .txt .sub, .shape-F .txt .say, .shape-F .txt .sub { grid-column: 1; }
+  .shape-W .txt .act, .shape-F .txt .act { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin: 0; }
+  button { font: inherit; border: 0; cursor: pointer; }
+  .act { justify-self: start; margin-top: var(--b-s-sm); background: var(--ink); color: var(--bg); }
+  .act.armed { background: var(--b-warn); color: #fff; }
+  .act.add { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px currentColor; opacity: .7; align-self: end; }
+  .lay-stack { grid-template-rows: auto auto 1fr; } .lay-stack > .vz { align-self: start; }
+  .lay-after { grid-template-rows: auto auto 1fr auto; } .lay-after > .vz { align-self: start; }
+  .lay-foot { grid-template-rows: auto auto 1fr; } .lay-foot > .txt { align-self: start; } .lay-foot > .vz { align-self: end; }
+  .lay-bleed { grid-template-rows: auto auto 1fr; padding-bottom: 0; } .lay-bleed > .txt { align-self: start; }
+  .bleed { margin: 0 calc(-1 * var(--b-s-lg)); min-height: 56px; position: relative; }
+  .shape-L .bleed { min-height: 110px; } .shape-F.lay-bleed { min-height: 170px; }
+  .sidebody { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--b-s-md); align-items: end; }
+  .p0 { animation: alarm 1.6s ease-out infinite; }
+  @keyframes alarm { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--b-alert) 55%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
+
+  /* spark */
+  .spark-slot { position: absolute; inset: 0; } .spark { position: absolute; inset: 18px 0 0 0; }
+  .spark svg { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; height: 100%; }

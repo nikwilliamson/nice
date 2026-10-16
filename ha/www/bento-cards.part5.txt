@@ -1,0 +1,250 @@
+  .meta { margin-top: auto; padding-top: var(--b-s-md); display: flex; flex-wrap: wrap; gap: var(--b-s-sm); align-items: flex-end; min-width: 0; }
+  .meta .bulb { margin-left: auto; flex: none; font-size: 0.8em; font-weight: 700; padding: var(--b-s-xs) var(--b-s-md); } /* sized like the tags beside it */
+  .chip { font-size: 0.8em; font-weight: 700; background: rgba(28,34,51,.07); border-radius: var(--b-r-full); padding: var(--b-s-xs) var(--b-s-md); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .chip.play { background: #1c2233; color: #fff; } .chip.warn { background: #ffd65c; color: #1c2233; } .chip.off { background: rgba(28,34,51,.12); }
+  .count { font-size: 0.9em; font-weight: 700; opacity: .75; margin-top: var(--b-s-xs); }
+  .bulb { background: rgba(28,34,51,.08); color: inherit; } .is-night .bulb { background: rgba(255,255,255,.16); }
+  .bulb.on { background: var(--ink); color: var(--bg); }
+  .is-night .chip { background: rgba(255,255,255,.14); } .is-night .chip.warn { background: #ffd65c; } .is-night .chip.play { background: #fff8f0; color: #1c2233; }
+  .chip.sleep, .is-night .chip.sleep { background: #6a4be0; color: #ffffff; }
+`;
+
+// ── bento-room: the hero at the top of a room's page
+// The room's colour comes from its place in the room list: areas in the config if given,
+// otherwise the dashboard's shared list (see bento-rooms), otherwise every area Home Assistant
+// knows. While the shared list loads, the hero shows neutral rather than guessing a colour.
+class BentoRoom extends HTMLElement {
+  setConfig(config) {
+    if (!config.area) throw new Error("bento-room needs an area");
+    this._config = { sun: "sun.sun", areas: null, font_scale: 1, ...config };
+    this.style.setProperty("--bento-scale", this._config.font_scale);
+    this._sig = null;
+    this._list = undefined;
+  }
+  getCardSize() { return 3; }
+  getGridOptions() { return { columns: "full", rows: "auto" }; }
+  connectedCallback() { if (!this._gutter) { this._gutter = true; pageGutter(true); } }
+  disconnectedCallback() { if (this._gutter) { this._gutter = false; pageGutter(false); } }
+  set hass(hass) {
+    hass = this._hass = pending(this).take(hass);
+    const id = this._config.area;
+    if (!this._config.areas && this._list === undefined && !this._listing) {
+      this._listing = roomList(hass, this._config.base_path).then((l) => { this._list = l; this._sig = null; if (this._hass) this.hass = this._hass; });
+    }
+    const loading = !this._config.areas && this._list === undefined;
+    const r = readRoom(hass, id);
+    const night = applyNight(this, isNight(hass, this._config.sun));
+    const sig = JSON.stringify([night, loading, r.on, r.lights.length, r.temp, r.playing, r.unlocked, r.open, r.scenes]);
+    if (sig === this._sig) return;
+    this._sig = sig;
+    const order = this._config.areas || this._list?.areas || Object.keys(hass.areas || {});
+    const lit = r.on.length > 0;
+    const c = loading ? offTone(night) : roomTone(Math.max(0, order.indexOf(id)), night, lit);
+    const bits = [
+      r.lights.length ? (lit ? (r.on.length === r.lights.length ? `${r.lights.length} light${r.lights.length === 1 ? "" : "s"} on` : `${r.on.length} of ${r.lights.length} lights on`) : "Lights off") : "",
+      r.temp != null ? `${r.temp}°` : "",
+      r.playing.length ? `${hass.states[r.playing[0]].attributes.media_title || "Something"} on ${hass.states[r.playing[0]].attributes.friendly_name}` : "",
+      r.unlocked.length ? `${r.unlocked.map((e) => cName(hass.states[e], [roomName(hass, id)], hass)).join(", ")} unlocked` : "",
+      r.open.length ? `${r.open.map((e) => cName(hass.states[e], [roomName(hass, id)], hass)).join(", ")} open` : "",
+    ].filter(Boolean);
+    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    const snap = motionBefore(this);
+    this.shadowRoot.innerHTML = `<style>${BASE_CSS}${ROOM_CSS}</style>
+      <div class="hero ${lit ? "lit" : ""} ${night ? "is-night" : ""}" style="--bg:${c.bg};--ink:${c.ink}">
+        <button class="back" aria-label="Back to rooms">‹ Rooms</button>
+        <div class="name">${esc(roomName(hass, id))}</div>
+        <div class="sub">${esc(bits.join(" · ") || "Nothing on in here")}</div>
+        <div class="btns">
+          ${r.lights.length ? `<button class="b pri" data-svc="light.${lit ? "turn_off" : "turn_on"}">${lit ? "All off" : "Lights on"}</button>` : ""}
+          ${r.scenes.map((s) => `<button class="b" data-scene="${esc(s)}">${esc((hass.states[s].attributes.friendly_name || s).replace(/^(Home|Suite) /, ""))}</button>`).join("")}
+        </div>
+      </div>`;
+    this.shadowRoot.querySelector(".back").addEventListener("click", () => bentoNavigate(this._config.base_path, this._config.back || "home", "rooms"));
+    this.shadowRoot.querySelectorAll("[data-svc]").forEach((el) => el.addEventListener("click", () => {
+      const [d, s] = el.dataset.svc.split(".");
+      pending(this).set(readRoom(this._hass, id).lights, { state: s === "turn_off" ? "off" : "on" });
+      hass.callService(d, s, {}, { area_id: id });
+    }));
+    this.shadowRoot.querySelectorAll("[data-scene]").forEach((el) => el.addEventListener("click", () => hass.callService("scene", "turn_on", {}, { entity_id: el.dataset.scene })));
+    motionAfter(this, snap, { night });
+  }
+}
+const ROOM_CSS = `
+  .hero { position: relative; overflow: hidden; border-radius: var(--b-radius); padding: var(--b-s-lg) var(--b-s-xl) var(--b-s-xl); background: var(--bg); color: var(--ink); display: grid; gap: var(--b-s-sm); font-family: var(--b-body); }
+  .back { justify-self: start; padding-left: var(--b-s-md); background: rgba(28,34,51,.08); color: inherit; }
+  .name { font-family: var(--b-display); font-weight: 800; font-size: clamp(2em, 4.4vw, 2.8em); line-height: 1.05; letter-spacing: -0.02em; position: relative; margin-top: var(--b-s-xs); }
+  .sub { font-weight: 600; font-size: 1.02em; opacity: .8; position: relative; }
+  .btns { display: flex; flex-wrap: wrap; gap: var(--b-s-sm); margin-top: var(--b-s-sm); position: relative; }
+  .b { background: rgba(28,34,51,.08); color: inherit; }
+  .is-night .b, .is-night .back { background: rgba(255,255,255,.16); }
+  .b.pri { background: var(--ink); color: var(--bg); }
+  button:focus-visible { outline: var(--b-ring) solid var(--accent, var(--b-focus)); outline-offset: 2px; }
+`;
+
+// ── bento-tabs: the row of tabs under the header
+// Each tab is a list of ordinary card configs, so a tab can hold the bento, the
+// rooms grid or plain Home Assistant cards. The chosen tab survives a trip into a
+// room page and back, so Back lands on Rooms, not on the bento.
+// The tab pills are bento pills in bento colours, and follow the sun (sun: sun.sun), not the theme.
+class BentoTabs extends HTMLElement {
+  setConfig(config) {
+    if (!Array.isArray(config.tabs) || !config.tabs.length) throw new Error("bento-tabs needs tabs");
+    this._config = { sun: "sun.sun", font_scale: 1, ...config };
+    this.style.setProperty("--bento-scale", this._config.font_scale);
+    this._cards = {};
+    let saved = null;
+    try { saved = sessionStorage.getItem("bento-tab"); } catch (e) { /* storage blocked */ }
+    this._active = config.tabs.some((t) => t.id === saved) ? saved : config.tabs[0].id;
+  }
+  getCardSize() { return 10; }
+  getGridOptions() { return { columns: "full", rows: "auto" }; }
+  connectedCallback() {
+    if (this._config && !this.shadowRoot) this._build();
+    if (!this._gutter) { this._gutter = true; pageGutter(true); }
+  }
+  disconnectedCallback() { if (this._gutter) { this._gutter = false; pageGutter(false); } }
+  set hass(hass) {
+    this._hass = hass;
+    applyNight(this, isNight(hass, this._config?.sun));
+    if (!this.shadowRoot) this._build();
+    Object.values(this._cards).flat().forEach((c) => { c.hass = hass; });
+  }
+  async _build() {
+    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    const tabs = this._config.tabs;
+    this.shadowRoot.innerHTML = `<style>${BASE_CSS}${TABS_CSS}</style>
+      <div class="bar" role="tablist"><span class="ind" aria-hidden="true"></span>${tabs.map((t) => `<button class="btn-base" role="tab" data-tab="${esc(t.id)}" aria-selected="${t.id === this._active}">${esc(t.label)}</button>`).join("")}</div>
+      <div class="panels">${tabs.map((t) => `<div class="panel" data-panel="${esc(t.id)}" role="tabpanel" ${t.id === this._active ? "" : "hidden"}></div>`).join("")}</div>`;
+    this.shadowRoot.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => this._select(b.dataset.tab)));
+    // A tile inside a tab can ask for another tab (Power from the power tile, and so on)
+    this.shadowRoot.addEventListener("bento-tab", (e) => { e.stopPropagation(); if (this._config.tabs.some((t) => t.id === e.detail.tab)) this._select(e.detail.tab); });
+    requestAnimationFrame(() => { this._reveal(); this._glide(); });
+    document.fonts?.ready.then(() => this._glide());
+    new ResizeObserver(() => this._glide()).observe(this.shadowRoot.querySelector(".bar"));
+    await this._fill(this._active);
+  }
+  async _fill(id) {
+    if (this._cards[id]) return;
+    const tab = this._config.tabs.find((t) => t.id === id);
+    const panel = this.shadowRoot.querySelector(`[data-panel="${id}"]`);
+    const helpers = await window.loadCardHelpers?.();
+    this._cards[id] = (tab.cards || []).map((conf) => {
+      const el = helpers ? helpers.createCardElement(conf) : document.createElement(conf.type.replace("custom:", ""));
+      if (!helpers && el.setConfig) el.setConfig(conf);
+      if (this._hass) el.hass = this._hass;
+      panel.appendChild(el);
+      return el;
+    });
+  }
+  async _select(id) {
+    const ids = this._config.tabs.map((t) => t.id), from = ids.indexOf(this._active), to = ids.indexOf(id);
+    this._active = id;
+    try { sessionStorage.setItem("bento-tab", id); } catch (e) { /* storage blocked */ }
+    this.shadowRoot.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+    this.shadowRoot.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== id; });
+    this._reveal();
+    this._glide();
+    await this._fill(id);
+    if (from !== to) (this._cards[id] || []).forEach((c) => arrive(c, to > from ? "right" : "left"));
+  }
+  // The selected tab's dark pill slides under whichever tab is chosen
+  _glide() {
+    const bar = this.shadowRoot?.querySelector(".bar"), ind = bar?.querySelector(".ind"), b = bar?.querySelector('[aria-selected="true"]');
+    if (!ind || !b || !b.offsetWidth) return;
+    ind.style.width = `${b.offsetWidth}px`;
+    ind.style.height = `${b.offsetHeight}px`;
+    ind.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
+    if (!bar.classList.contains("glide")) requestAnimationFrame(() => bar.classList.add("glide"));
+  }
+  // On a phone the row scrolls sideways: bring the chosen tab into view by scrolling the row
+  // itself (never scrollIntoView, which would also move the page)
+  _reveal() {
+    const bar = this.shadowRoot?.querySelector(".bar"), b = bar?.querySelector('[aria-selected="true"]');
+    if (!b) return;
+    const left = b.offsetLeft - 8, right = b.offsetLeft + b.offsetWidth + 8;
+    if (left < bar.scrollLeft) bar.scrollLeft = left;
+    else if (right > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = right - bar.clientWidth;
+  }
+}
+// Pill shape from bento-core's tokens; colours from its page-chrome tokens, which switch at sunset.
+// The strip scrolls sideways only, so it needs no scrollbar gutter (that applies to block scrolling).
+const TABS_CSS = `
+  .bar { position: relative; display: flex; gap: var(--b-s-sm); overflow-x: auto; scrollbar-width: none; padding: var(--b-s-2xs) 0 var(--b-s-md); font-family: var(--b-body); }
+  .bar::-webkit-scrollbar { display: none; }
+  .bar button { background: var(--b-chrome-bg); color: var(--b-chrome-ink-strong); }
+  .bar button[aria-selected="true"] { background: var(--b-chrome-sel-bg); color: var(--b-chrome-sel-ink); }
+  .bar button { position: relative; z-index: 1; }
+  .bar .ind { position: absolute; left: 0; top: 0; z-index: 0; border-radius: var(--b-pill-radius); background: var(--b-chrome-sel-bg); pointer-events: none; opacity: 0; }
+  .bar.glide .ind { opacity: 1; transition: transform .5s var(--b-spring), width .5s var(--b-spring), background-color .3s ease; }
+  .bar.glide button[aria-selected="true"] { background: transparent; }
+  .bar button:focus-visible { outline: var(--b-ring) solid var(--b-focus); outline-offset: 2px; }
+  .panel { display: grid; gap: var(--b-gap); }
+  .panel[hidden] { display: none; }
+  /* The same gap under the sky header that a room page leaves under its own header
+     (the sections view's 30px between sections; the card already sits 8px down) */
+  :host { container-type: inline-size; padding-top: var(--b-s-xl); }
+  /* On a phone the pills keep their size and the row scrolls sideways */
+  @container (max-width: 520px) { .bar { margin: 0 calc(-1 * var(--b-s-sm)); padding-left: var(--b-s-sm); padding-right: var(--b-s-sm); scroll-padding: 0 var(--b-s-sm); } .bar button { flex: none; } }
+`;
+
+// ── bento-controls: every control on the inner pages, as bento tiles
+// One renderer per kind of device, packed with the same grid as the landing bento.
+// A thing that is on wears colour; a thing that is off goes neutral, as in the rooms.
+// Tap does the obvious thing (toggle, play/pause, lock); press and hold opens the
+// standard Home Assistant details. Sliders are drag bars along the tile's foot.
+const C_DOMAIN_SHAPE = { light: "S", switch: "S", fan: "S", input_boolean: "S", media_player: "W", climate: "L", lock: "S", binary_sensor: "S", vacuum: "S", scene: "S", script: "S", sensor: "S" };
+const C_TOGGLE = new Set(["light", "switch", "fan", "input_boolean"]);
+const cDomain = (id) => id.split(".")[0];
+const cNum = (v) => parseFloat(v);
+// A device's main entity is often just "Light" or "Contact"; the real name is on the device
+const C_GENERIC = /^(light|lights|lamp|switch|plug|outlet|contact|door|window|motion|occupancy|sensor|fan|lock|speaker)(\s+\d+)?$/i;
+// "Living Room Floor Lights" reads "Floor lights" on the Living Room page, but
+// "Kitchen Light" stays whole rather than shrinking to "Light"
+function cName(s, strip, hass) {
+  let n = String(s.attributes.friendly_name || s.entity_id).replace(/^\[[^\]]*\]\s*/, "").trim();
+  if (C_GENERIC.test(n) && hass) {
+    const dev = hass.devices?.[hass.entities?.[s.entity_id]?.device_id];
+    const dn = dev && (dev.name_by_user || dev.name);
+    if (dn) n = dn;
+  }
+  n = n.replace(/\s+(power minute average|current consumption|power)$/i, "");
+  let short = n;
+  for (const p of [].concat(strip || [])) {
+    const low = String(p).toLowerCase();
+    while (low && short.toLowerCase().startsWith(low + " ")) short = short.slice(low.length + 1);
+  }
+  if (short && !(C_GENERIC.test(short) && !/\d/.test(short))) n = short;
+  return n.charAt(0).toUpperCase() + n.slice(1) || s.entity_id;
+}
+function cPower(w) { return w >= 1000 ? `${(w / 1000).toFixed(1)} kW` : `${Math.round(w)} W`; }
+// A state with no value yet reads as a dash, not "Unknown"
+const cBlank = (st) => st == null || st === "" || st === "unknown" || st === "unavailable";
+// "power_off" reads "Power off"; a state that is already cased ("Party") is left alone
+const cWords = (st) => { const t = String(st); return /_/.test(t) || t === t.toLowerCase() ? sentence(t.replace(/_/g, " ")) : t; };
+// A timestamp as time from now: "In 42 min", "3 hr ago"
+function cWhen(iso) {
+  const at = new Date(iso).getTime();
+  if (Number.isNaN(at)) return "—";
+  const mins = Math.round((at - Date.now()) / 60000), m = Math.abs(mins), ahead = mins > 0;
+  if (m < 1) return "Now";
+  const span = m < 60 ? `${m} min` : m < 1440 ? `${Math.round(m / 60)} hr` : m < 10080 ? `${Math.round(m / 1440)} day${Math.round(m / 1440) === 1 ? "" : "s"}` : null;
+  if (!span) return new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return ahead ? `In ${span}` : `${span} ago`;
+}
+// A duration in whatever unit the sensor uses, as minutes or hours
+function cDuration(v, unit) {
+  const mins = v * ({ ms: 1 / 60000, s: 1 / 60, min: 1, h: 60, d: 1440 }[unit] ?? 1);
+  if (mins < 1) return `${Math.round(mins * 60)} s`;
+  if (mins < 60) return `${Math.round(mins)} min`;
+  const h = Math.floor(mins / 60), rest = Math.round(mins % 60);
+  if (h < 24) return rest ? `${h} hr ${rest} min` : `${h} hr`;
+  const d = Math.floor(h / 24);
+  return h % 24 ? `${d} d ${h % 24} hr` : `${d} d`;
+}
+// (lightTone, the tile colour of a light, is bento-core's.)
+// Settings entities show their value; a number drops a trailing ".0"
+const C_VALUE = new Set(["select", "input_select", "number", "input_number", "text", "input_text", "time", "date", "datetime", "input_datetime"]);
+
+// ── LED strips (WLED and Hue gradient)
+// WLED's own palettes, read from the controller's /json/palx: stop position and
+// colour as PPRRGGBB, or c1/c2/c3/r for the ones built from the light's colours

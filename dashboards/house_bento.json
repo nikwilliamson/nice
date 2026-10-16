@@ -1,0 +1,3270 @@
+{
+ "views": [
+  {
+   "title": "Home",
+   "path": "home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-sky",
+       "weather": "weather.forecast_home",
+       "persons": [
+        "person.nikw",
+        "person.kat"
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      },
+      {
+       "type": "custom:bento-tabs",
+       "tabs": [
+        {
+         "id": "home",
+         "label": "Home",
+         "cards": [
+          {
+           "type": "custom:bento-grid",
+           "entity": "sensor.bento_tiles",
+           "base_path": "/house-bento",
+           "routes": {
+            "kitchen": "room-kitchen",
+            "laundry": "room-laundry_room",
+            "cats": "tab:cats",
+            "doors": "tab:rooms",
+            "climate": "tab:climate",
+            "energy": "tab:power",
+            "garage": "tab:cars"
+           }
+          }
+         ]
+        },
+        {
+         "id": "rooms",
+         "label": "Rooms",
+         "cards": [
+          {
+           "type": "custom:bento-rooms",
+           "areas": [
+            "living_room",
+            "kitchen",
+            "bedroom",
+            "game_room",
+            "guest_room",
+            "race_room",
+            "bathroom",
+            "laundry_room",
+            "outside",
+            "guest_bathroom",
+            "pantry"
+           ],
+           "base_path": "/house-bento",
+           "adaptive": {
+            "living_room": [
+             "switch.adaptive_lighting_living_spaces"
+            ],
+            "kitchen": [
+             "switch.adaptive_lighting_living_spaces"
+            ],
+            "pantry": [
+             "switch.adaptive_lighting_living_spaces"
+            ],
+            "game_room": [
+             "switch.adaptive_lighting_living_spaces"
+            ],
+            "bedroom": [
+             "switch.adaptive_lighting_bedroom_suite"
+            ],
+            "bathroom": [
+             "switch.adaptive_lighting_bedroom_suite"
+            ],
+            "laundry_room": [
+             "switch.adaptive_lighting_bedroom_suite"
+            ],
+            "guest_room": [
+             "switch.adaptive_lighting_guest_and_laundry"
+            ],
+            "race_room": [
+             "switch.adaptive_lighting_race_room",
+             "switch.adaptive_lighting_race_room_key_lights"
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "id": "lists",
+         "label": "Lists",
+         "cards": [
+          {
+           "type": "custom:bento-lists",
+           "lists": [
+            {
+             "entity": "todo.house_alerts",
+             "label": "To-do",
+             "tone": "health",
+             "placeholder": "Add a to-do",
+             "upper": true
+            },
+            {
+             "entity": "todo.shopping_list",
+             "label": "Shopping",
+             "tone": "today",
+             "placeholder": "Add to the list",
+             "get": true
+            }
+           ],
+           "grid_options": {
+            "columns": "full"
+           }
+          }
+         ]
+        },
+        {
+         "id": "cats",
+         "label": "Cats",
+         "cards": [
+          {
+           "type": "custom:bento-snack",
+           "script": "script.cats_feed",
+           "portions": 1,
+           "names": [
+            "Donut",
+            "Zig"
+           ],
+           "feeders": [
+            "zigs_food",
+            "donuts_food"
+           ]
+          },
+          {
+           "type": "custom:bento-litter",
+           "robot": "litter_robot",
+           "place": "Game room",
+           "cats": [
+            {
+             "name": "Zig",
+             "weight": "sensor.zig_weight",
+             "visits": "sensor.zig_visits_today"
+            },
+            {
+             "name": "Donut",
+             "weight": "sensor.donut_weight",
+             "visits": "sensor.donut_visits_today"
+            }
+           ],
+           "part": "cats"
+          },
+          {
+           "type": "custom:bento-litter",
+           "robot": "litter_robot",
+           "place": "Game room",
+           "cats": [
+            {
+             "name": "Zig",
+             "weight": "sensor.zig_weight",
+             "visits": "sensor.zig_visits_today"
+            },
+            {
+             "name": "Donut",
+             "weight": "sensor.donut_weight",
+             "visits": "sensor.donut_visits_today"
+            }
+           ],
+           "part": "robot"
+          },
+          {
+           "type": "custom:bento-feeder",
+           "feeders": [
+            {
+             "name": "Zig",
+             "feeder": "zigs_food"
+            },
+            {
+             "name": "Donut",
+             "feeder": "donuts_food"
+            }
+           ],
+           "schedule": "automation.cats_feeding_schedule",
+           "meals": [
+            {
+             "at": "07:00",
+             "portions": 4
+            },
+            {
+             "at": "17:30",
+             "portions": 3
+            }
+           ],
+           "heading": "Food"
+          }
+         ]
+        },
+        {
+         "id": "cars",
+         "label": "Cars",
+         "cards": [
+          {
+           "type": "custom:bento-car",
+           "car": "nik",
+           "name": "Nik's"
+          },
+          {
+           "type": "custom:bento-car",
+           "car": "kat",
+           "name": "Kat's"
+          }
+         ]
+        },
+        {
+         "id": "climate",
+         "label": "Temps",
+         "cards": [
+          {
+           "type": "custom:bento-controls",
+           "entities": [
+            {
+             "entity": "climate.living_room_thermostat",
+             "shape": "L"
+            },
+            {
+             "entity": "climate.bedroom",
+             "shape": "L"
+            },
+            {
+             "entity": "sensor.living_room_temp_sensor_temperature",
+             "name": "Living Room"
+            },
+            {
+             "entity": "sensor.bedroom_temp_sensor_temperature",
+             "name": "Bedroom"
+            },
+            {
+             "entity": "sensor.game_room_temp_sensor_temperature",
+             "name": "Game Room"
+            },
+            {
+             "entity": "sensor.race_room_temp_sensor_temperature",
+             "name": "Race Room"
+            },
+            {
+             "entity": "sensor.guest_room_temp_sensor_temperature",
+             "name": "Guest Room"
+            },
+            {
+             "entity": "sensor.pantry_temp_sensor_temperature",
+             "name": "Pantry"
+            },
+            {
+             "entity": "sensor.bathroom_temp_sensor_temperature",
+             "name": "Bathroom"
+            }
+           ],
+           "grid_options": {
+            "columns": "full"
+           }
+          }
+         ]
+        },
+        {
+         "id": "power",
+         "label": "Power",
+         "cards": [
+          {
+           "type": "custom:bento-controls",
+           "entities": [
+            {
+             "entity": "sensor.main_breaker_power_minute_average",
+             "name": "Whole house",
+             "shape": "L"
+            },
+            {
+             "entity": "sensor.main_breaker_energy_today",
+             "name": "Energy today"
+            },
+            {
+             "entity": "sensor.electricity_cost_today",
+             "name": "Cost today"
+            },
+            {
+             "name": "Right now",
+             "bars": [
+              {
+               "entity": "sensor.living_room_1_power_minute_average",
+               "name": "Living Room 1"
+              },
+              {
+               "entity": "sensor.living_room_2_power_minute_average",
+               "name": "Living Room 2"
+              },
+              {
+               "entity": "sensor.dining_room_power_minute_average",
+               "name": "Dining Room"
+              },
+              {
+               "entity": "sensor.kitchen_subpanel_power_minute_average",
+               "name": "Kitchen subpanel"
+              },
+              {
+               "entity": "sensor.refrigerator_power_minute_average",
+               "name": "Refrigerator"
+              },
+              {
+               "entity": "sensor.range_power_minute_average",
+               "name": "Range"
+              },
+              {
+               "entity": "sensor.oven_power_minute_average",
+               "name": "Oven"
+              },
+              {
+               "entity": "sensor.range_hood_power_minute_average",
+               "name": "Range hood"
+              },
+              {
+               "entity": "sensor.dishwasher_power_minute_average",
+               "name": "Dishwasher"
+              },
+              {
+               "entity": "sensor.kitchen_gfi_1_power_minute_average",
+               "name": "Kitchen GFI 1"
+              },
+              {
+               "entity": "sensor.kitchen_gfi_2_power_minute_average",
+               "name": "Kitchen GFI 2"
+              },
+              {
+               "entity": "sensor.kitchen_gfci_3_power_minute_average",
+               "name": "Kitchen GFCI 3"
+              },
+              {
+               "entity": "sensor.mini_split_power_minute_average",
+               "name": "Mini split"
+              },
+              {
+               "entity": "sensor.game_room_power_minute_average",
+               "name": "Game Room"
+              },
+              {
+               "entity": "sensor.game_room_1_power_minute_average",
+               "name": "Game Room 1"
+              },
+              {
+               "entity": "sensor.game_room_2_power_minute_average",
+               "name": "Game Room 2"
+              },
+              {
+               "entity": "sensor.back_room_1_power_minute_average",
+               "name": "Back Room 1"
+              },
+              {
+               "entity": "sensor.back_room_2_power_minute_average",
+               "name": "Back Room 2"
+              },
+              {
+               "entity": "sensor.guest_room_power_minute_average",
+               "name": "Guest Room"
+              },
+              {
+               "entity": "sensor.race_room_power_minute_average",
+               "name": "Race Room"
+              },
+              {
+               "entity": "sensor.race_room_1_power_minute_average",
+               "name": "Race Room 1"
+              },
+              {
+               "entity": "sensor.race_room_2_power_minute_average",
+               "name": "Race Room 2"
+              },
+              {
+               "entity": "sensor.master_bathroom_gfi_power_minute_average",
+               "name": "Bathroom GFI"
+              },
+              {
+               "entity": "sensor.washing_machine_power_minute_average",
+               "name": "Washer"
+              },
+              {
+               "entity": "sensor.dryer_power_minute_average",
+               "name": "Dryer"
+              },
+              {
+               "entity": "sensor.garage_power_minute_average",
+               "name": "Garage"
+              },
+              {
+               "entity": "sensor.tesla_charger_power_minute_average",
+               "name": "EV charger"
+              },
+              {
+               "entity": "sensor.pool_pump_power_minute_average",
+               "name": "Pool pump"
+              },
+              {
+               "entity": "sensor.well_pump_power_minute_average",
+               "name": "Well pump"
+              },
+              {
+               "entity": "sensor.water_heater_1_power_minute_average",
+               "name": "Water heater 1"
+              },
+              {
+               "entity": "sensor.water_heater_2_power_minute_average",
+               "name": "Water heater 2"
+              },
+              {
+               "entity": "sensor.garage_light_power_minute_average",
+               "name": "Garage light"
+              },
+              {
+               "entity": "sensor.garage_sprinkler_outlet_power_minute_average",
+               "name": "Sprinkler outlet"
+              },
+              {
+               "entity": "sensor.air_conditioner_power_minute_average",
+               "name": "Air conditioner"
+              },
+              {
+               "entity": "sensor.air_handler_power_minute_average",
+               "name": "Air handler"
+              }
+             ],
+             "top": 8
+            }
+           ],
+           "grid_options": {
+            "columns": "full"
+           }
+          }
+         ]
+        },
+        {
+         "id": "playing",
+         "label": "Media",
+         "cards": [
+          {
+           "type": "custom:bento-controls",
+           "entities": [
+            {
+             "entity": "media_player.living_room_living_room_apple_tv"
+            },
+            {
+             "entity": "media_player.av_living_room_soundbar"
+            },
+            {
+             "entity": "media_player.bedroom_bedroom_apple_tv"
+            },
+            {
+             "entity": "media_player.guest_room_guest_room_apple_tv"
+            },
+            {
+             "entity": "media_player.kitchen_display"
+            },
+            {
+             "entity": "media_player.guest_room_display"
+            },
+            {
+             "entity": "media_player.bedroom_speaker"
+            },
+            {
+             "entity": "media_player.game_room_speaker"
+            },
+            {
+             "entity": "media_player.speaker_group_main"
+            },
+            {
+             "entity": "media_player.speaker_group_everywhere"
+            }
+           ],
+           "grid_options": {
+            "columns": "full"
+           }
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      },
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Living Room",
+   "path": "room-living_room",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "living_room",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Living Room"
+       ],
+       "room_tone": 0,
+       "entities": [
+        {
+         "entity": "light.dining_table_lights"
+        },
+        {
+         "entity": "light.living_room_floor_lights"
+        },
+        {
+         "strip": "light.living_room_kitchen_counter"
+        },
+        {
+         "entity": "light.living_room_ceiling_light"
+        },
+        {
+         "entity": "light.living_room_hallway_downlight"
+        },
+        {
+         "entity": "light.living_room_couch_light"
+        },
+        {
+         "entity": "light.living_room_credenza_light"
+        },
+        {
+         "entity": "light.living_room_circle_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_living_spaces",
+         "name": "Adaptive",
+         "lights": [
+          "light.living_room_ceiling_light",
+          "light.living_room_couch_light",
+          "light.living_room_hallway_downlight",
+          "light.living_room_kitchen_counter",
+          "light.living_room_dining_table_1",
+          "light.living_room_dining_table_2",
+          "light.living_room_dining_table_3",
+          "light.living_room_dining_table_4",
+          "light.living_room_dining_table_5",
+          "light.living_room_dining_table_6",
+          "light.living_room_floor_light_1",
+          "light.living_room_floor_light_2",
+          "light.living_room_credenza_light"
+         ],
+         "min": 2200,
+         "max": 5000
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Living Room"
+       ],
+       "room_tone": 0,
+       "entities": [
+        {
+         "entity": "script.room_common_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_common_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_common_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_common_night",
+         "name": "Night"
+        },
+        {
+         "entity": "script.lighting_evening",
+         "name": "Evening"
+        },
+        {
+         "entity": "script.lighting_dinner",
+         "name": "Dinner"
+        },
+        {
+         "entity": "script.lighting_cooking",
+         "name": "Cooking"
+        },
+        {
+         "entity": "script.lighting_movie",
+         "name": "TV / Movie"
+        },
+        {
+         "entity": "script.lighting_hosting",
+         "name": "Hosting"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Living Room"
+       ],
+       "room_tone": 0,
+       "entities": [
+        {
+         "entity": "climate.living_room_thermostat"
+        },
+        {
+         "entity": "sensor.living_room_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.living_room_temp_sensor_humidity"
+        },
+        {
+         "entity": "sensor.living_room_temperature_trend",
+         "name": "Trend"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Playing",
+       "strip": [
+        "Living Room"
+       ],
+       "room_tone": 0,
+       "entities": [
+        {
+         "entity": "media_player.living_room_living_room_apple_tv"
+        },
+        {
+         "entity": "media_player.av_living_room_soundbar"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Doors & windows",
+       "strip": [
+        "Living Room"
+       ],
+       "room_tone": 0,
+       "entities": [
+        {
+         "entity": "lock.aqara_smart_lock_u100"
+        },
+        {
+         "entity": "binary_sensor.front_door"
+        },
+        {
+         "entity": "binary_sensor.living_room_window_1"
+        },
+        {
+         "entity": "binary_sensor.living_room_window_2"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Motion",
+       "strip": [
+        "Living Room"
+       ],
+       "room_tone": 0,
+       "entities": [
+        {
+         "entity": "binary_sensor.living_room_occupancy",
+         "name": "Occupancy"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.living_room_1_power_minute_average",
+           "name": "Living Room 1"
+          },
+          {
+           "entity": "sensor.living_room_2_power_minute_average",
+           "name": "Living Room 2"
+          },
+          {
+           "entity": "sensor.dining_room_power_minute_average",
+           "name": "Dining Room"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Kitchen",
+   "path": "room-kitchen",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "kitchen",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "entities": [
+        {
+         "board": "sensor.vestaboard_note_current_message",
+         "name": "Vestaboard",
+         "shape": "F"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Kitchen"
+       ],
+       "room_tone": 1,
+       "entities": [
+        {
+         "entity": "light.kitchen_lights"
+        },
+        {
+         "entity": "light.kitchen_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_living_spaces",
+         "name": "Adaptive",
+         "lights": [
+          "light.kitchen_1",
+          "light.kitchen_2",
+          "light.kitchen_3",
+          "light.kitchen_4",
+          "light.kitchen_5",
+          "light.kitchen_6",
+          "light.kitchen_light"
+         ],
+         "min": 2200,
+         "max": 5000
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Kitchen"
+       ],
+       "room_tone": 1,
+       "entities": [
+        {
+         "entity": "script.room_common_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_common_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_common_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_common_night",
+         "name": "Night"
+        },
+        {
+         "entity": "script.lighting_evening",
+         "name": "Evening"
+        },
+        {
+         "entity": "script.lighting_dinner",
+         "name": "Dinner"
+        },
+        {
+         "entity": "script.lighting_cooking",
+         "name": "Cooking"
+        },
+        {
+         "entity": "script.lighting_movie",
+         "name": "TV / Movie"
+        },
+        {
+         "entity": "script.lighting_hosting",
+         "name": "Hosting"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Playing",
+       "strip": [
+        "Kitchen"
+       ],
+       "room_tone": 1,
+       "entities": [
+        {
+         "entity": "media_player.kitchen_display"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Doors & windows",
+       "strip": [
+        "Kitchen"
+       ],
+       "room_tone": 1,
+       "entities": [
+        {
+         "entity": "binary_sensor.kitchen_window"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Vestaboard",
+       "strip": [
+        "Kitchen"
+       ],
+       "room_tone": 1,
+       "entities": [
+        {
+         "entity": "switch.vestaboard_note_rotation",
+         "name": "Rotation"
+        },
+        {
+         "entity": "switch.kitchen_vestaboard_note_clock_card",
+         "name": "Clock card"
+        },
+        {
+         "entity": "switch.kitchen_vestaboard_note_forecast_card",
+         "name": "Forecast card"
+        },
+        {
+         "entity": "sensor.vestaboard_note_needs_attention",
+         "name": "Needs attention"
+        },
+        {
+         "entity": "binary_sensor.vestaboard_note_quiet_hours",
+         "name": "Quiet hours"
+        },
+        {
+         "entity": "time.kitchen_vestaboard_note_quiet_hours_start",
+         "name": "Quiet from"
+        },
+        {
+         "entity": "time.kitchen_vestaboard_note_quiet_hours_end",
+         "name": "Quiet until"
+        },
+        {
+         "entity": "number.vestaboard_note_dwell",
+         "name": "Dwell"
+        },
+        {
+         "entity": "text.kitchen_vestaboard_note_message",
+         "name": "Message"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Safety",
+       "strip": [
+        "Kitchen"
+       ],
+       "room_tone": 1,
+       "entities": [
+        {
+         "entity": "binary_sensor.oven_left_on",
+         "name": "Oven left on"
+        },
+        {
+         "entity": "binary_sensor.range_left_on",
+         "name": "Range left on"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.kitchen_subpanel_power_minute_average",
+           "name": "Subpanel"
+          },
+          {
+           "entity": "sensor.refrigerator_power_minute_average",
+           "name": "Refrigerator"
+          },
+          {
+           "entity": "sensor.range_power_minute_average",
+           "name": "Range"
+          },
+          {
+           "entity": "sensor.oven_power_minute_average",
+           "name": "Oven"
+          },
+          {
+           "entity": "sensor.range_hood_power_minute_average",
+           "name": "Range hood"
+          },
+          {
+           "entity": "sensor.dishwasher_power_minute_average",
+           "name": "Dishwasher"
+          },
+          {
+           "entity": "sensor.kitchen_gfi_1_power_minute_average",
+           "name": "GFI 1"
+          },
+          {
+           "entity": "sensor.kitchen_gfi_2_power_minute_average",
+           "name": "GFI 2"
+          },
+          {
+           "entity": "sensor.kitchen_gfci_3_power_minute_average",
+           "name": "GFCI 3"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Bedroom",
+   "path": "room-bedroom",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "bedroom",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Bedroom"
+       ],
+       "room_tone": 2,
+       "entities": [
+        {
+         "entity": "light.bedroom_front_light"
+        },
+        {
+         "entity": "light.bedroom_front_downlights"
+        },
+        {
+         "entity": "light.bedroom_back_downlights"
+        },
+        {
+         "entity": "light.bedroom_fireplace"
+        },
+        {
+         "entity": "light.bedroom_reading_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_bedroom_suite",
+         "name": "Adaptive",
+         "lights": [
+          "light.bedroom_back_left_downlight",
+          "light.bedroom_back_middle_downlight",
+          "light.bedroom_back_right_downlight",
+          "light.bedroom_front_left_downlight",
+          "light.bedroom_front_middle_downlight",
+          "light.bedroom_front_right_downlight",
+          "light.bedroom_front_light_1",
+          "light.bedroom_front_light_2",
+          "light.bedroom_front_light_3",
+          "light.bedroom_front_light_4",
+          "light.bedroom_front_light_5",
+          "light.bedroom_front_light_6",
+          "light.bedroom_reading_light"
+         ],
+         "min": 2000,
+         "max": 4500
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Bedroom"
+       ],
+       "room_tone": 2,
+       "entities": [
+        {
+         "entity": "script.room_bedroom_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_bedroom_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_bedroom_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_bedroom_night",
+         "name": "Night"
+        },
+        {
+         "entity": "script.lighting_fireside",
+         "name": "Fireside"
+        },
+        {
+         "entity": "script.lighting_reading",
+         "name": "Reading"
+        },
+        {
+         "entity": "script.lighting_wake_up",
+         "name": "Wake up"
+        },
+        {
+         "entity": "scene.bedroom_chill",
+         "name": "Chill"
+        },
+        {
+         "entity": "scene.bedroom_palm_beach",
+         "name": "Palm beach"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Bedroom"
+       ],
+       "room_tone": 2,
+       "entities": [
+        {
+         "entity": "climate.bedroom"
+        },
+        {
+         "entity": "sensor.bedroom_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.bedroom_temp_sensor_humidity"
+        },
+        {
+         "entity": "switch.bedroom_power",
+         "name": "Mini split"
+        },
+        {
+         "entity": "select.bedroom_fan",
+         "name": "Fan"
+        },
+        {
+         "entity": "select.bedroom_swing",
+         "name": "Swing"
+        },
+        {
+         "entity": "select.bedroom_preset",
+         "name": "Preset"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Playing",
+       "strip": [
+        "Bedroom"
+       ],
+       "room_tone": 2,
+       "entities": [
+        {
+         "entity": "media_player.bedroom_bedroom_apple_tv"
+        },
+        {
+         "entity": "media_player.bedroom_speaker"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Doors & windows",
+       "strip": [
+        "Bedroom"
+       ],
+       "room_tone": 2,
+       "entities": [
+        {
+         "entity": "lock.aqara_smart_lock_u50"
+        },
+        {
+         "entity": "binary_sensor.bedroom_exterior_door"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Plugs & more",
+       "strip": [
+        "Bedroom"
+       ],
+       "room_tone": 2,
+       "entities": [
+        {
+         "entity": "switch.bedroom_freezing_point"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.mini_split_power_minute_average",
+           "name": "Mini split"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Game Room",
+   "path": "room-game_room",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "game_room",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "light.game_room_spotlights"
+        },
+        {
+         "entity": "light.game_room_pool_table"
+        },
+        {
+         "entity": "light.game_room_overhead_light"
+        },
+        {
+         "entity": "light.game_room_lounge_light"
+        },
+        {
+         "entity": "light.game_room_console_light"
+        },
+        {
+         "entity": "light.game_room_console"
+        },
+        {
+         "entity": "light.game_room_circle_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_living_spaces",
+         "name": "Adaptive",
+         "lights": [
+          "light.game_room_console",
+          "light.game_room_console_light",
+          "light.game_room_lounge_light",
+          "light.game_room_overhead_light",
+          "light.game_room_pool_table",
+          "light.game_room_spotlight_1",
+          "light.game_room_spotlight_2",
+          "light.game_room_spotlight_3",
+          "light.game_room_circle_light"
+         ],
+         "min": 2200,
+         "max": 5000
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "script.room_game_room_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_game_room_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_game_room_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_game_room_night",
+         "name": "Night"
+        },
+        {
+         "entity": "script.lighting_game_night",
+         "name": "Game night"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "sensor.game_room_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.game_room_temp_sensor_humidity"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Playing",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "media_player.game_room_speaker"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Doors & windows",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "lock.aqara_smart_lock_u100_2"
+        },
+        {
+         "entity": "lock.aqara_smart_lock_u50_2"
+        },
+        {
+         "entity": "binary_sensor.back_door"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Motion",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "binary_sensor.game_room_game_room_motion",
+         "name": "Motion"
+        },
+        {
+         "entity": "binary_sensor.game_room_motion_motion",
+         "name": "Motion \u00b7 sensor 2"
+        },
+        {
+         "entity": "sensor.game_room_game_room_illuminance",
+         "name": "Light level"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Litter box",
+       "strip": [
+        "Litter Robot"
+       ],
+       "tone": "cats",
+       "all": false,
+       "entities": [
+        {
+         "entity": "vacuum.litter_robot_litter_box",
+         "name": "Litter box"
+        },
+        {
+         "entity": "sensor.litter_robot_waste_drawer",
+         "name": "Waste drawer"
+        },
+        {
+         "entity": "sensor.litter_robot_hopper_status",
+         "name": "Hopper"
+        },
+        {
+         "entity": "sensor.litter_robot_litter_level",
+         "name": "Litter level",
+         "chart": "spark",
+         "hours": 168,
+         "shape": "W"
+        },
+        {
+         "entity": "sensor.zig_visits_today",
+         "name": "Zig's visits"
+        },
+        {
+         "entity": "sensor.donut_visits_today",
+         "name": "Donut's visits"
+        },
+        {
+         "entity": "sensor.zig_weight",
+         "name": "Zig's weight",
+         "chart": "bars",
+         "days": 14,
+         "shape": "W"
+        },
+        {
+         "entity": "sensor.donut_weight",
+         "name": "Donut's weight",
+         "chart": "bars",
+         "days": 14,
+         "shape": "W"
+        },
+        {
+         "entity": "sensor.litter_robot_status_code",
+         "name": "Status"
+        },
+        {
+         "entity": "sensor.litter_robot_last_seen",
+         "name": "Last visit"
+        },
+        {
+         "entity": "select.litter_robot_globe_light",
+         "name": "Globe light"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Plugs & more",
+       "strip": [
+        "Game Room"
+       ],
+       "room_tone": 3,
+       "entities": [
+        {
+         "entity": "switch.game_room_game_room_power_strip_litter_box"
+        },
+        {
+         "entity": "switch.game_room_game_room_power_strip"
+        },
+        {
+         "entity": "switch.game_room_game_room_power_strip_plug_2",
+         "name": "Plug 2"
+        },
+        {
+         "entity": "switch.game_room_game_room_power_strip_plug_3",
+         "name": "Plug 3"
+        },
+        {
+         "entity": "switch.game_room_game_room_power_strip_plug_4",
+         "name": "Plug 4"
+        },
+        {
+         "entity": "switch.game_room_game_room_power_strip_plug_5",
+         "name": "Plug 5"
+        },
+        {
+         "entity": "switch.game_room_game_room_power_strip_plug_6",
+         "name": "Plug 6"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.game_room_power_minute_average",
+           "name": "Game Room"
+          },
+          {
+           "entity": "sensor.game_room_1_power_minute_average",
+           "name": "Game Room 1"
+          },
+          {
+           "entity": "sensor.game_room_2_power_minute_average",
+           "name": "Game Room 2"
+          },
+          {
+           "entity": "sensor.back_room_1_power_minute_average",
+           "name": "Back Room 1"
+          },
+          {
+           "entity": "sensor.back_room_2_power_minute_average",
+           "name": "Back Room 2"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Guest Room",
+   "path": "room-guest_room",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "guest_room",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Guest Room"
+       ],
+       "room_tone": 4,
+       "entities": [
+        {
+         "entity": "light.guest_room_lights"
+        },
+        {
+         "entity": "light.guest_room_mirror"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_guest_and_laundry",
+         "name": "Adaptive",
+         "lights": [
+          "light.guest_room_light_1",
+          "light.guest_room_light_2",
+          "light.guest_room_light_3",
+          "light.guest_room_mirror"
+         ],
+         "min": 2200,
+         "max": 5000
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Guest Room"
+       ],
+       "room_tone": 4,
+       "entities": [
+        {
+         "entity": "script.room_guest_room_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_guest_room_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_guest_room_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_guest_room_night",
+         "name": "Night"
+        },
+        {
+         "entity": "scene.guest_room_relax",
+         "name": "Hue relax"
+        },
+        {
+         "entity": "scene.guest_room_read",
+         "name": "Read"
+        },
+        {
+         "entity": "scene.guest_room_concentrate",
+         "name": "Concentrate"
+        },
+        {
+         "entity": "scene.guest_room_energize",
+         "name": "Energize"
+        },
+        {
+         "entity": "scene.guest_room_nightlight",
+         "name": "Nightlight"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Guest Room"
+       ],
+       "room_tone": 4,
+       "entities": [
+        {
+         "entity": "sensor.guest_room_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.guest_room_temp_sensor_humidity"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Playing",
+       "strip": [
+        "Guest Room"
+       ],
+       "room_tone": 4,
+       "entities": [
+        {
+         "entity": "media_player.guest_room_guest_room_apple_tv"
+        },
+        {
+         "entity": "media_player.guest_room_display"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Plugs & more",
+       "strip": [
+        "Guest Room"
+       ],
+       "room_tone": 4,
+       "entities": [
+        {
+         "entity": "switch.guest_room_guest_room_power_strip_guest_room_tv"
+        },
+        {
+         "entity": "switch.guest_room_guest_room_power_strip_guest_room_apple_tv"
+        },
+        {
+         "entity": "switch.guest_room_guest_room_power_strip_guest_room_lightstrip"
+        },
+        {
+         "entity": "switch.guest_room_guest_room_power_strip",
+         "name": "Power strip"
+        },
+        {
+         "entity": "switch.guest_room_guest_room_power_strip_plug_3",
+         "name": "Plug 3"
+        },
+        {
+         "entity": "switch.guest_room_guest_room_power_strip_plug_4",
+         "name": "Plug 4"
+        },
+        {
+         "entity": "switch.guest_room_guest_room_power_strip_plug_6",
+         "name": "Plug 6"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.guest_room_power_minute_average",
+           "name": "Guest Room"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Race Room",
+   "path": "room-race_room",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "race_room",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Race Room"
+       ],
+       "room_tone": 5,
+       "entities": [
+        {
+         "strip": "light.dig2go",
+         "palette": "select.dig2go_color_palette",
+         "speed": "number.dig2go_speed",
+         "intensity": "number.dig2go_intensity",
+         "reverse": "switch.dig2go_reverse",
+         "freeze": "switch.dig2go_freeze"
+        },
+        {
+         "entity": "light.race_room_corner_light"
+        },
+        {
+         "entity": "light.race_room_desk_lightstrip"
+        },
+        {
+         "entity": "light.race_room_desk_light"
+        },
+        {
+         "entity": "light.race_room_rig_light"
+        },
+        {
+         "entity": "light.race_room_side_light"
+        },
+        {
+         "entity": "light.race_room_hue_go"
+        },
+        {
+         "entity": "light.race_room_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_race_room",
+         "name": "Adaptive",
+         "lights": [
+          "light.race_room_corner_light",
+          "light.race_room_desk_light",
+          "light.race_room_desk_lightstrip",
+          "light.race_room_hue_go",
+          "light.race_room_light",
+          "light.race_room_rig_light",
+          "light.race_room_side_light"
+         ],
+         "min": 2200,
+         "max": 5500
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Stream lights",
+       "strip": [
+        "Race Room"
+       ],
+       "room_tone": 5,
+       "entities": [
+        {
+         "entity": "light.race_room_key_light_air"
+        },
+        {
+         "entity": "light.race_room_key_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_race_room_key_lights",
+         "name": "Adaptive",
+         "lights": [
+          "light.race_room_key_light",
+          "light.race_room_key_light_air"
+         ],
+         "min": 2900,
+         "max": 5500
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Race Room"
+       ],
+       "room_tone": 5,
+       "entities": [
+        {
+         "entity": "script.room_race_room_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_race_room_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_race_room_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_race_room_night",
+         "name": "Night"
+        },
+        {
+         "entity": "script.lighting_race_mode",
+         "name": "Race mode"
+        },
+        {
+         "entity": "script.lighting_race_streaming",
+         "name": "Streaming"
+        },
+        {
+         "entity": "script.lighting_race_focus",
+         "name": "Focus"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Race Room"
+       ],
+       "room_tone": 5,
+       "entities": [
+        {
+         "entity": "sensor.race_room_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.race_room_temp_sensor_humidity"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Plugs & more",
+       "strip": [
+        "Race Room"
+       ],
+       "room_tone": 5,
+       "entities": [
+        {
+         "entity": "switch.race_room_race_room_power_strip_racing_sim"
+        },
+        {
+         "entity": "switch.race_room_race_room_power_strip_computer"
+        },
+        {
+         "entity": "switch.race_room_race_room_power_strip_top_monitor"
+        },
+        {
+         "entity": "switch.race_room_race_room_power_strip_bottom_monitor"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.race_room_power_minute_average",
+           "name": "Race Room"
+          },
+          {
+           "entity": "sensor.race_room_1_power_minute_average",
+           "name": "Race Room 1"
+          },
+          {
+           "entity": "sensor.race_room_2_power_minute_average",
+           "name": "Race Room 2"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Bathroom",
+   "path": "room-bathroom",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "bathroom",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Bathroom"
+       ],
+       "room_tone": 6,
+       "entities": [
+        {
+         "entity": "light.bathroom_light"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_bedroom_suite",
+         "name": "Adaptive",
+         "lights": [
+          "light.bathroom_light"
+         ],
+         "min": 2000,
+         "max": 4500
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Bathroom"
+       ],
+       "room_tone": 6,
+       "entities": [
+        {
+         "entity": "script.room_bathroom_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_bathroom_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_bathroom_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_bathroom_night",
+         "name": "Night"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Bathroom"
+       ],
+       "room_tone": 6,
+       "entities": [
+        {
+         "entity": "sensor.bathroom_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.bathroom_temp_sensor_humidity"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Motion",
+       "strip": [
+        "Bathroom"
+       ],
+       "room_tone": 6,
+       "entities": [
+        {
+         "entity": "binary_sensor.bathroom_motion_motion",
+         "name": "Motion"
+        },
+        {
+         "entity": "sensor.bathroom_motion_illuminance",
+         "name": "Light level"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.master_bathroom_gfi_power_minute_average",
+           "name": "Bathroom GFI"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Laundry Room",
+   "path": "room-laundry_room",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "laundry_room",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Laundry Room"
+       ],
+       "room_tone": 7,
+       "entities": [
+        {
+         "entity": "light.laundry_room_lights"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_bedroom_suite",
+         "name": "Adaptive",
+         "lights": [
+          "light.laundry_room_light_1",
+          "light.laundry_room_light_2"
+         ],
+         "min": 2000,
+         "max": 4500
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Laundry Room"
+       ],
+       "room_tone": 7,
+       "entities": [
+        {
+         "entity": "script.room_laundry_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_laundry_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_laundry_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_laundry_night",
+         "name": "Night"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Washer & dryer",
+       "strip": [
+        "Laundry Room"
+       ],
+       "room_tone": 7,
+       "entities": [
+        {
+         "entity": "sensor.laundry_room_washer_current_status",
+         "name": "Washer"
+        },
+        {
+         "entity": "sensor.laundry_room_washer_remaining_time",
+         "name": "Washer done"
+        },
+        {
+         "entity": "sensor.laundry_room_washer_total_time",
+         "name": "Washer cycle"
+        },
+        {
+         "entity": "sensor.laundry_room_washer_cycles",
+         "name": "Washer cycles"
+        },
+        {
+         "entity": "binary_sensor.laundry_room_washer_remote_start",
+         "name": "Washer remote start"
+        },
+        {
+         "entity": "switch.laundry_room_washer_power",
+         "name": "Washer power"
+        },
+        {
+         "entity": "sensor.dryer_current_status",
+         "name": "Dryer"
+        },
+        {
+         "entity": "sensor.dryer_remaining_time",
+         "name": "Dryer done"
+        },
+        {
+         "entity": "sensor.dryer_total_time",
+         "name": "Dryer cycle"
+        },
+        {
+         "entity": "binary_sensor.dryer_remote_start",
+         "name": "Dryer remote start"
+        },
+        {
+         "entity": "switch.dryer_power",
+         "name": "Dryer power"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.washing_machine_power_minute_average",
+           "name": "Washer"
+          },
+          {
+           "entity": "sensor.dryer_power_minute_average",
+           "name": "Dryer"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Outside",
+   "path": "room-outside",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "outside",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Outside"
+       ],
+       "room_tone": 8,
+       "entities": [
+        {
+         "entity": "light.front_door_lights"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Outside"
+       ],
+       "room_tone": 8,
+       "entities": [
+        {
+         "entity": "scene.outside_blood_moon",
+         "name": "Blood moon"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Outside"
+       ],
+       "room_tone": 8,
+       "entities": [
+        {
+         "entity": "sensor.outside_nik_s_weather_station_temperature_1"
+        },
+        {
+         "entity": "sensor.nik_s_weather_station_relative_pressure",
+         "name": "Pressure"
+        },
+        {
+         "entity": "binary_sensor.outside_sprinklers_rain",
+         "name": "Rain"
+        },
+        {
+         "entity": "sensor.nik_s_weather_station_last_rain",
+         "name": "Last rain"
+        },
+        {
+         "entity": "sensor.weather_station_pressure_change_3h",
+         "name": "Pressure, 3 hr"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Sprinklers",
+       "strip": [
+        "Outside"
+       ],
+       "room_tone": 8,
+       "entities": [
+        {
+         "entity": "switch.outside_sprinklers_left_front"
+        },
+        {
+         "entity": "switch.outside_sprinklers_right_front"
+        },
+        {
+         "entity": "switch.outside_sprinklers_left_driveway"
+        },
+        {
+         "entity": "switch.outside_sprinklers_right_driveway"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Sprinkler schedule",
+       "strip": [
+        "Outside"
+       ],
+       "room_tone": 8,
+       "entities": [
+        {
+         "entity": "switch.outside_sprinklers_standard_schedule",
+         "name": "Standard schedule"
+        },
+        {
+         "entity": "switch.outside_sprinklers_standby",
+         "name": "Standby"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Power",
+       "entities": [
+        {
+         "name": "Circuits",
+         "shape": "F",
+         "bars": [
+          {
+           "entity": "sensor.garage_power_minute_average",
+           "name": "Garage"
+          },
+          {
+           "entity": "sensor.tesla_charger_power_minute_average",
+           "name": "EV charger"
+          },
+          {
+           "entity": "sensor.pool_pump_power_minute_average",
+           "name": "Pool pump"
+          },
+          {
+           "entity": "sensor.well_pump_power_minute_average",
+           "name": "Well pump"
+          },
+          {
+           "entity": "sensor.water_heater_1_power_minute_average",
+           "name": "Water heater 1"
+          },
+          {
+           "entity": "sensor.water_heater_2_power_minute_average",
+           "name": "Water heater 2"
+          },
+          {
+           "entity": "sensor.garage_light_power_minute_average",
+           "name": "Garage light"
+          },
+          {
+           "entity": "sensor.garage_sprinkler_outlet_power_minute_average",
+           "name": "Sprinkler outlet"
+          }
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Guest Bathroom",
+   "path": "room-guest_bathroom",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "guest_bathroom",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Guest Bathroom"
+       ],
+       "room_tone": 9,
+       "entities": [
+        {
+         "entity": "light.guest_bathroom_light"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Guest Bathroom"
+       ],
+       "room_tone": 9,
+       "entities": [
+        {
+         "entity": "script.room_guest_bathroom_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_guest_bathroom_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_guest_bathroom_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_guest_bathroom_night",
+         "name": "Night"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Fan",
+       "strip": [
+        "Guest Bathroom"
+       ],
+       "room_tone": 9,
+       "entities": [
+        {
+         "entity": "light.guest_bathroom_fan",
+         "name": "Fan"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Plugs & more",
+       "strip": [
+        "Guest Bathroom"
+       ],
+       "room_tone": 9,
+       "entities": [
+        {
+         "entity": "switch.guest_bathroom_plug"
+        },
+        {
+         "entity": "sensor.guest_bathroom_plug_power",
+         "name": "Plug power"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Pantry",
+   "path": "room-pantry",
+   "subview": true,
+   "back_path": "/house-bento/home",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-room",
+       "area": "pantry",
+       "base_path": "/house-bento",
+       "back": "home",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Lights",
+       "strip": [
+        "Pantry"
+       ],
+       "room_tone": 10,
+       "entities": [
+        {
+         "entity": "light.pantry_lights"
+        },
+        {
+         "adaptive": "switch.adaptive_lighting_living_spaces",
+         "name": "Adaptive",
+         "lights": [
+          "light.pantry_pantry_light_1",
+          "light.pantry_light_2",
+          "light.pantry_light_3",
+          "light.pantry_light_4",
+          "light.pantry_light_5"
+         ],
+         "min": 2200,
+         "max": 5000
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Scenes",
+       "strip": [
+        "Pantry"
+       ],
+       "room_tone": 10,
+       "entities": [
+        {
+         "entity": "script.room_pantry_bright",
+         "name": "Bright"
+        },
+        {
+         "entity": "script.room_pantry_relax",
+         "name": "Relax"
+        },
+        {
+         "entity": "script.room_pantry_dim",
+         "name": "Dim"
+        },
+        {
+         "entity": "script.room_pantry_night",
+         "name": "Night"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       },
+       "all": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Climate",
+       "strip": [
+        "Pantry"
+       ],
+       "room_tone": 10,
+       "entities": [
+        {
+         "entity": "sensor.pantry_temp_sensor_temperature"
+        },
+        {
+         "entity": "sensor.pantry_temp_sensor_humidity"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-controls",
+       "title": "Motion",
+       "strip": [
+        "Pantry"
+       ],
+       "room_tone": 10,
+       "entities": [
+        {
+         "entity": "binary_sensor.pantry_motion_motion",
+         "name": "Motion"
+        },
+        {
+         "entity": "sensor.pantry_motion_illuminance",
+         "name": "Light level"
+        }
+       ],
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:bento-footer",
+       "grid_options": {
+        "columns": "full"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

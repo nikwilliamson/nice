@@ -1,0 +1,220 @@
+      const ids = switchable.map((e) => e.entity);
+      this._call(ev.currentTarget.dataset.all === "off" ? "homeassistant.turn_off" : "homeassistant.turn_on", {}, ids);
+    });
+    root.querySelectorAll("[data-more]").forEach((el) => el.addEventListener("click", () => this._more(el.dataset.more)));
+    root.querySelectorAll("[data-bars-all]").forEach((el) => el.addEventListener("click", () => { this._barsAll = !this._barsAll; this._sig = null; this.hass = this._hass; }));
+    root.querySelectorAll("[data-al-tile]").forEach((tile) => {
+      const sw = tile.dataset.alTile, manual = tile.dataset.lights ? tile.dataset.lights.split(",") : [];
+      tile.querySelectorAll("[data-al]").forEach((b) => b.addEventListener("click", () => {
+        const what = b.dataset.al;
+        if (what === "sleep") this._call("switch.toggle", {}, `${sw}_sleep_mode`);
+        else if (what === "power") this._call("switch.toggle", {}, sw);
+        else if (what === "resume" && manual.length) {
+          // Hand the lights back, then adapt them now rather than at the next interval
+          this._hass.callService("adaptive_lighting", "set_manual_control", { entity_id: sw, lights: manual, manual_control: false })
+            .then(() => this._hass.callService("adaptive_lighting", "apply", {
+              entity_id: sw, lights: manual, transition: 2,
+              // apply adapts both unless told otherwise, whatever the zone's own switches say
+              adapt_brightness: this._hass.states[`${sw}_adapt_brightness`]?.state !== "off",
+              adapt_color: this._hass.states[`${sw}_adapt_color`]?.state !== "off",
+            }));
+        }
+      }));
+    });
+    root.querySelectorAll(".tile[data-id]").forEach((el) => {
+      const eid = el.dataset.id;
+      bindTap(el, { tap: () => this._primary(eid), hold: () => this._more(eid) });
+      el.querySelectorAll("[data-svc]").forEach((b) => b.addEventListener("click", () => this._call(b.dataset.svc, {}, eid)));
+      el.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => this._call("climate.set_hvac_mode", { hvac_mode: b.dataset.mode }, eid)));
+      el.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => this._step(eid, Number(b.dataset.step))));
+      el.querySelectorAll("[data-lock]").forEach((b) => b.addEventListener("click", () => {
+        if (b.dataset.lock === "lock") return this._call("lock.lock", {}, eid);
+        // Unlocking takes two taps, so a brush past the tile cannot open the door
+        const redraw = () => { this._sig = null; this.hass = this._hass; };
+        confirmTap(this, eid, { run: () => { this._call("lock.unlock", {}, eid); redraw(); }, render: redraw });
+      }));
+      el.querySelectorAll("select[data-sel]").forEach((sel) => {
+        sel.addEventListener("focus", () => { this._picking = Date.now(); });
+        sel.addEventListener("blur", () => { if (!this._picking) return; this._picking = 0; this._sig = null; this.hass = this._hass; });
+        sel.addEventListener("change", () => this._choose(eid, el.dataset.pal, sel.dataset.sel, sel.value));
+      });
+      el.querySelectorAll(".slide").forEach((bar) => this._slider(bar, eid));
+    });
+  }
+
+  // Drag along the foot of a tile; the value is sent once, when the finger lifts
+  _slider(bar, eid) {
+    const kind = bar.dataset.slide, fill = bar.querySelector("i"), lbl = bar.querySelector("span");
+    let v = Number(bar.dataset.v);
+    const at = (ev) => { const r = bar.getBoundingClientRect(); return Math.max(kind === "brightness" ? 1 : 0, Math.min(100, Math.round(((ev.clientX - r.left) / r.width) * 100))); };
+    const show = () => { fill.style.width = `${v}%`; fill.style.display = ""; if (lbl) lbl.textContent = `Volume ${v}%`; const say = bar.closest(".tile").querySelector(".bri, .say"); if (kind === "brightness" && say) say.textContent = `${v}%`; };
+    bar.addEventListener("pointerdown", (ev) => { ev.stopPropagation(); this._drag = true; bar.setPointerCapture(ev.pointerId); v = at(ev); show(); });
+    bar.addEventListener("pointermove", (ev) => { if (!this._drag) return; v = at(ev); show(); });
+    const done = () => {
+      if (!this._drag) return;
+      this._drag = false;
+      if (kind === "brightness") this._call("light.turn_on", { brightness_pct: v }, eid);
+      else this._call("media_player.volume_set", { volume_level: v / 100 }, eid);
+    };
+    bar.addEventListener("pointerup", done); bar.addEventListener("pointercancel", done);
+    bar.addEventListener("click", (ev) => ev.stopPropagation());
+  }
+
+  // Setpoint taps collect for a moment, then go as one call
+  _step(eid, dir) {
+    // The setpoint on screen already includes earlier taps that haven't gone out yet
+    const s = this._hass.states[eid], a = s.attributes, stepBy = a.target_temp_step || 1;
+    const next = Math.max(a.min_temp ?? 40, Math.min(a.max_temp ?? 95, a.temperature + dir * stepBy));
+    pending(this).set(eid, { attrs: { temperature: next } }, { ttl: 20000 });
+    pending(this).later(eid, 700, () => this._call("climate.set_temperature", { temperature: next }, eid));
+  }
+
+  // A sensor's chart: what its config asks for (chart: spark | bars | none), else a
+  // line for the readings that move through the day
+  _chart(e, s) {
+    if (e.chart) return e.chart === "none" ? null : e.chart;
+    return cDomain(s.entity_id) === "sensor" && ["power", "temperature", "humidity"].includes(s.attributes.device_class) ? "spark" : null;
+  }
+
+  async _loadHistory() {
+    this._histAt = Date.now();
+    const h = this._hass, end = Date.now();
+    const want = this._config.entities.filter((e) => e.entity && h.states[e.entity] && this._chart(e, h.states[e.entity]));
+    await Promise.all(want.map(async (e) => {
+      const id = e.entity;
+      if (this._chart(e, h.states[id]) === "bars") {
+        // Daily averages, midnight to midnight, today last
+        const days = e.days || 14, start = midnight() - (days - 1) * 86400000;
+        const vals = bucket(await history(h, id, start), start, start + days * 86400000, days).slice(0, days);
+        const labels = vals.map((v, i) => `${new Date(start + i * 86400000).toLocaleDateString(undefined, { weekday: "short", day: "numeric" })} · ${v.toFixed(1)}`);
+        this._daily[id] = { vals, labels };
+      } else {
+        const start = end - (e.hours || this._config.spark_hours) * 3600000;
+        this._series[id] = smooth(bucket(await history(h, id, start), start, end, 48));
+      }
+    }));
+    const hs = JSON.stringify([this._series, this._daily]);
+    if (hs !== this._histSig) { this._histSig = hs; this._sig = null; this.hass = this._hass; }
+  }
+}
+// Tiles, eyebrow, words, pills, setpoints and the focus ring are bento-core's (the canonical
+// scale is this card's); what follows is only the controls' own.
+const CONTROLS_CSS = `
+  :host { font-family: var(--b-body); }
+  .all { background: var(--primary-text-color, #1c2233); color: var(--card-background-color, #fff); }
+  .grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-auto-rows: minmax(var(--b-row), auto); gap: var(--b-gap); }
+  .row { align-items: normal; }
+  .shape-L .say, .shape-FL .say { font-size: var(--b-say-big); line-height: var(--b-say-big-line); } .climate.shape-W .say { font-size: 2.2em; }
+  .run .say { font-size: 1.25em; }
+  .media.on .pill { background: var(--b-pill-bg-night); }
+  .slide { position: relative; height: 12px; border-radius: var(--b-r-full); background: rgba(28,34,51,.1); cursor: ew-resize; touch-action: none; margin-top: var(--b-s-2xs); }
+  .slide::before { content: ""; position: absolute; inset: -12px 0; }
+  .is-night .slide, .media.on .slide { background: rgba(255,255,255,.18); }
+  .slide i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--b-r-full); background: var(--accent); min-width: 12px; }
+  .media.on .slide i { background: #fff; }
+  .slide.labelled { height: var(--b-c-sm); border-radius: var(--b-r-sm); } .slide.labelled i { border-radius: var(--b-r-sm); opacity: .55; }
+  .slide.labelled span { position: relative; display: block; line-height: var(--b-c-sm); padding-left: var(--b-s-md); font-size: 0.78em; font-weight: 800; pointer-events: none; }
+  .media .eq { position: absolute; right: 14px; top: 12px; height: 22px; }
+  .has-spark { grid-template-rows: auto auto 1fr; padding-bottom: 0; } .has-spark .txt { align-self: start; }
+  .bleed { position: relative; margin: 0 calc(-1 * var(--b-s-lg)); min-height: 48px; }
+  .bleed .spark { inset: 14px 0 0 0; }
+  .bleed .spark svg { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; height: 100%; }
+  .bleed .spark .end { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); }
+  .bleed .spark .peak { position: absolute; transform: translate(-50%, -150%); font-size: 0.74em; font-weight: 800; }
+  .bars-tile, .al { cursor: default; grid-template-rows: auto auto 1fr; }
+  .al .txt { align-self: start; }
+  .al .foot { align-self: end; }
+  .al .sub { white-space: normal; }
+  /* All rows share one grid: names as wide as the longest name, values as wide as the
+     longest value, and the bars take everything between, at any width */
+  .bars { display: grid; grid-template-columns: minmax(0, max-content) minmax(48px, 1fr) max-content; column-gap: var(--b-s-md); row-gap: var(--b-s-sm); align-items: center; align-self: end; font-size: 0.9em; font-weight: 700; }
+  .bar { display: contents; }
+  .bar[data-more] > * { cursor: pointer; }
+  .bar .bn { max-width: 12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .bt { height: 14px; border-radius: var(--b-r-full); background: rgba(28,34,51,.07); overflow: hidden; }
+  .is-night .bar .bt { background: rgba(255,255,255,.1); }
+  .bar .bt i { display: block; height: 100%; border-radius: var(--b-r-full); background: var(--accent); }
+  .bar b { text-align: right; font-family: var(--b-display); font-weight: 800; }
+  .more-bars { grid-column: 1 / -1; justify-self: start; margin-top: var(--b-s-2xs); font-size: 0.96em; }
+  .tile.inkl .slide, .tile.inkl .pill { background: rgba(255,255,255,.2); }
+  .strip-tile { grid-template-rows: auto auto 1fr; isolation: isolate; }
+  .strip-tile > :not(.fx) { position: relative; z-index: 1; }
+  .strip-tile .txt { align-self: start; }
+  .strip-tile .foot { align-self: end; }
+  .strip-tile.shape-L .say, .strip-tile.shape-FL .say { font-size: 2em; }
+  .strip-tile.on .say, .strip-tile.on .sub, .strip-tile.on .lbl { text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+  .strip-tile.on .slide { background: rgba(255,255,255,.22); }
+  .fx { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; z-index: 0; pointer-events: none; }
+  /* The bands run at an angle: the scrolling layer sits in a tilted frame big enough to cover any tile */
+  .fx .rot { position: absolute; left: 50%; top: 50%; width: 180%; height: 260%; transform: translate(-50%, -50%) rotate(-24deg); }
+  .fx i { position: absolute; top: 0; bottom: 0; left: 0; width: 200%; filter: blur(16px) saturate(1.15); }
+  /* A scrim so the words stay readable on any palette, plus the light's dimness */
+  .fx::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,.04) 42%, rgba(0,0,0,.34)), linear-gradient(rgba(0,0,0,var(--dim)), rgba(0,0,0,var(--dim))); }
+  .fx b { position: absolute; z-index: 2; width: 12px; height: 12px; margin: calc(-1 * var(--b-s-sm)); border-radius: 50%; background: var(--c); box-shadow: 0 0 14px 4px var(--c); animation: ledtw var(--t) ease-in-out var(--dl) infinite; }
+  .fx, .fx * { animation-play-state: var(--play) !important; }
+  .fx.scroll i { animation: ledscroll var(--dur) linear infinite var(--dir); }
+  .fx.drift i { animation: ledscroll calc(var(--dur) * 3) ease-in-out infinite alternate; }
+  .fx.breathe i { animation: fxbreathe var(--dur) ease-in-out infinite; }
+  .fx.fire i { animation: ledscroll calc(var(--dur) * 4) linear infinite var(--dir), fxflicker calc(var(--dur) * .4) steps(1) infinite; }
+  .fx.blink i { animation: fxblink calc(var(--dur) * .3) steps(1) infinite; }
+  .fx.audio i { animation: ledscroll var(--dur) linear infinite var(--dir), fxbeat calc(var(--dur) * .35) ease-in-out infinite; }
+  .fx.twinkle i { opacity: .45; }
+  @keyframes ledscroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes ledtw { 0%, 100% { opacity: .1; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+  @keyframes fxbreathe { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  @keyframes fxblink { 50% { opacity: .1; } }
+  @keyframes fxflicker { 0% { opacity: 1; } 14% { opacity: .8; } 29% { opacity: .96; } 47% { opacity: .72; } 63% { opacity: 1; } 81% { opacity: .86; } }
+  @keyframes fxbeat { 0%, 100% { opacity: .62; } 20% { opacity: 1; } 45% { opacity: .78; } 60% { opacity: .98; } 80% { opacity: .7; } }
+  @media (prefers-reduced-motion: reduce) { .fx, .fx * { animation: none !important; } }
+  /* Effect and palette: the same pill as every other control, with a native select laid
+     invisibly over it so the phone's own picker opens */
+  .dds { display: flex; flex-wrap: wrap; gap: var(--b-s-sm); }
+  .dd { position: relative; display: inline-flex; align-items: baseline; gap: var(--b-s-sm); min-width: 0; max-width: 100%; border-radius: var(--b-r-full); padding: var(--b-s-sm) var(--b-s-xl) var(--b-s-sm) var(--b-s-md);
+    font-size: 0.86em; font-weight: 800; white-space: nowrap; cursor: pointer; background: rgba(255,255,255,.16); }
+  .dd span { opacity: .7; }
+  .dd b { font-weight: 800; overflow: hidden; text-overflow: ellipsis; }
+  .dd select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font: inherit; -webkit-appearance: none; appearance: none; }
+  .dd select option { color: #1c2233; background: #fff; }
+  .dd:focus-within { outline: var(--b-ring) solid var(--accent, var(--b-focus)); outline-offset: 2px; }
+  .dd::after { content: ""; position: absolute; right: 12px; top: 50%; width: 5px; height: 5px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: translateY(-70%) rotate(45deg); opacity: .8; pointer-events: none; }
+  .board-tile { cursor: default; grid-template-rows: auto 1fr; }
+  .board-tile .foot { align-self: end; }
+  .vb { display: grid; grid-template-columns: repeat(var(--vb-cols, 15), minmax(0, 1fr)); gap: var(--b-s-2xs); container-type: inline-size; perspective: 400px; }
+  .vb b { aspect-ratio: 3 / 4; border-radius: var(--b-r-xs); background: rgba(255,255,255,.07); color: #f4f1ea; display: grid; place-items: center;
+    font-family: var(--b-display); font-weight: 800; font-size: max(7px, 4.4cqi); line-height: 1; backface-visibility: hidden; }
+  .vb b.flip { animation: vbflip .5s cubic-bezier(.3, .7, .4, 1) var(--d, 0ms) both; transform-origin: 50% 50%; }
+  @keyframes vbflip { 0% { transform: rotateX(90deg); opacity: .2; } 60% { transform: rotateX(-14deg); opacity: 1; } 100% { transform: rotateX(0); } }
+  .dbars { display: flex; align-items: flex-end; gap: var(--b-s-xs); height: 46px; }
+  .dbars i { flex: 1; min-width: 0; border-radius: 3px 3px 1px 1px; background: var(--accent); opacity: .45; }
+  .dbars i.now { opacity: 1; }
+  .eq { display: flex; gap: var(--b-s-xs); align-items: flex-end; }
+  .eq b { width: 5px; height: 100%; border-radius: var(--b-r-xs); background: currentColor; transform-origin: bottom; animation: eqb 1s ease-in-out infinite alternate; }
+  .eq b:nth-child(2) { animation-delay: -.3s; } .eq b:nth-child(3) { animation-delay: -.6s; } .eq b:nth-child(4) { animation-delay: -.9s; }
+  @keyframes eqb { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+`;
+
+// Navigate inside the dashboard, remembering which tab to come back to
+function bentoNavigate(basePath, path, tab) {
+  if (tab) { try { sessionStorage.setItem("bento-tab", tab); } catch (e) { /* storage blocked */ } }
+  const base = basePath || window.location.pathname.split("/").slice(0, 2).join("/");
+  window.history.pushState(null, "", path.startsWith("/") ? path : `${base}/${path}`);
+  window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+}
+
+customElements.define("bento-grid", BentoGrid);
+customElements.define("bento-sky", BentoSky);
+customElements.define("bento-tabs", BentoTabs);
+customElements.define("bento-rooms", BentoRooms);
+customElements.define("bento-room", BentoRoom);
+customElements.define("bento-controls", BentoControls);
+window.customCards = window.customCards || [];
+window.customCards.push(
+  { type: "bento-grid", name: "Bento grid", description: "The landing-page bento, drawn from sensor.bento_tiles." },
+  { type: "bento-sky", name: "Bento sky", description: "A sky header that follows the sun and the weather." },
+  { type: "bento-tabs", name: "Bento tabs", description: "Tabs under the header; each tab holds a list of cards." },
+  { type: "bento-rooms", name: "Bento rooms", description: "A card per room, coloured when its lights are on, that opens the room's page." },
+  { type: "bento-room", name: "Bento room", description: "The header for a room's page." },
+  { type: "bento-controls", name: "Bento controls", description: "Lights, media, climate, locks and sensors as bento tiles." },
+);
+console.info(`%c BENTO %c ${BENTO_VERSION} `, "background:#ff6b4a;color:#fff;font-weight:700", "background:#1c2233;color:#fff");

@@ -1,0 +1,625 @@
+{#- Bento - every rule that decides what the landing page shows.
+
+    sensor.bento_tiles renders tiles(); the bento card only lays out what comes back.
+    Nothing here knows about pixels. A tile is a dict:
+
+      id      stable key, also the card's grid-area and subview name
+      tier    0 hazard · 1 act now · 2 today · 3 ambient · 4 house health
+      order   position inside its tier (the catalog order in the Bento Playbook)
+      shape   F full row · W wide 2x1 · T tall 1x2 · L large 2x2 · S square
+      label   the eyebrow
+      say     the sentence, written for the moment (sensor.house_mode)
+      sub     the second line, may be empty
+      tone    a colour role the card maps to its palette
+      viz     what to draw, or none; numbers only, never markup
+      act     the one button, or none. confirm=true makes it a two-tap button; data is
+              passed to the service
+      tap     where the tile goes
+      filler  optional. Shown only to fill a hole the other tiles leave; never takes
+              room from them
+      color   optional. A team's colour, drawn as the tile in place of tone
+      badge   optional. A word pinned top-right ("Live")
+      score   optional. Our side's score on a live game; the card pulses when it goes up
+
+    The sports tiles' rules live in bento_sports.jinja; tiles() adds what it returns.
+
+    Escalation is done here, not in the card: a tile arrives with the tier it should
+    be shown at right now. The card sorts, packs and draws.
+
+    Imported macros do not see the caller's variables, so everything is read from
+    states directly. -#}
+
+{#- Alerts on todo.house_alerts that a tile already shows. Matched on the start of the
+    summary, case-insensitive, so a hand-typed "Unload dishwasher" is caught too.
+    Everything else on the list is a chore. -#}
+{%- macro owned_prefixes() -%}
+{{ ['STOVE LEFT ON', 'OVEN LEFT ON', 'AC NOT COOLING', 'AC IS ON BUT NOT COOLING', 'AC IS COOLING AGAIN',
+    'EMPTY THE LITTER DRAWER', 'REFILL THE LITTER HOPPER', 'CHECK THE LITTER HOPPER',
+    'TAKE THE RECYCLING OUT', 'TAKE THE TRASH OUT',
+    'PUT THE CLOTHES IN THE DRYER', 'WASHER DONE', 'DRYER IS DONE', 'LAUNDRY IS DONE',
+    'KAT! CHARGE YOUR CAR', 'UNLOAD THE DISHWASHER', 'UNLOAD DISHWASHER'] | to_json }}
+{%- endmacro -%}
+
+{%- macro is_owned(summary) -%}
+{%- set s = summary | upper | trim -%}
+{%- set ns = namespace(hit=false) -%}
+{%- for p in owned_prefixes() | from_json -%}{%- if s.startswith(p) -%}{%- set ns.hit = true -%}{%- endif -%}{%- endfor -%}
+{{ ns.hit }}
+{%- endmacro -%}
+
+{#- "1 h 40 m", "25 min" -#}
+{%- macro dur(minutes) -%}
+{%- set m = minutes | int(0) -%}
+{%- if m >= 60 -%}{{ m // 60 }} h{% if m % 60 %} {{ m % 60 }} m{% endif %}{%- else -%}{{ m }} min{%- endif -%}
+{%- endmacro -%}
+
+{%- macro times(n) -%}
+{%- set n = n | int(0) -%}{{ 'once' if n == 1 else 'twice' if n == 2 else n ~ ' times' }}
+{%- endmacro -%}
+
+{%- macro sentence(text) -%}
+{%- set t = text | trim | lower | regex_replace('[.!]+$', '') -%}{{ t[:1] | upper }}{{ t[1:] }}
+{%- endmacro -%}
+
+{#- "4 pm", "noon", "9:30 am". Not "clock": the next-event tile has a variable by that name -#}
+{%- macro at_clock(dt) -%}
+{%- if dt.hour == 12 and dt.minute == 0 -%}noon{%- elif dt.minute -%}{{ dt.strftime('%-I:%M') }} {{ dt.strftime('%p') | lower }}{%- else -%}{{ dt.strftime('%-I') }} {{ dt.strftime('%p') | lower }}{%- endif -%}
+{%- endmacro -%}
+
+{%- macro tiles() -%}
+{%- set mode = states('sensor.house_mode') -%}
+{%- set night = mode == 'night' -%}
+{%- set away = mode == 'away' -%}
+{%- set evening = mode == 'evening' -%}
+{%- set morning = mode in ['morning', 'pickup_morning'] -%}
+{%- set demo = is_state('input_boolean.bento_demo_hazards', 'on') -%}
+{%- set alerts = state_attr('sensor.house_chores', 'alerts') or [] -%}
+{%- set alert_text = alerts | map(attribute='summary') | map('upper') | join('|') -%}
+{%- set ns = namespace(t=[]) -%}
+{#- Only the cars that live here. Alex's car reports to this Tesla account but is left out on purpose. -#}
+{%- set CARS = [['nik', "Nik's"], ['kat', "Kat's"]] -%}
+
+{#- ============================== P0 hazards ============================== -#}
+{%- set range_w = states('sensor.range_power_15m_average') | float(0) -%}
+{%- set range_late = range_w > 40 and now().hour < 5 -%}
+{%- if is_state('binary_sensor.range_left_on', 'on') or range_late -%}
+  {%- set on_for = ((now() - states.binary_sensor.range_left_on.last_changed).total_seconds() / 60 + 90) if is_state('binary_sensor.range_left_on', 'on') else 0 -%}
+  {%- set ns.t = ns.t + [dict(id='stove', tier=0, order=1, shape='F', label='Stove left on', tone='hazard',
+      say=("It's past midnight and a burner's still on." if range_late and on_for == 0 else "The stove's been on " ~ dur(on_for) ~ ". Go check it."),
+      sub=(range_w | round(0) | int) ~ ' W averaged over 15 min',
+      viz=dict(type='spark', entity='sensor.range_power_minute_average', hours=2),
+      act=dict(label='Kitchen', type='navigate', path='kitchen'), tap='kitchen')] -%}
+{%- endif -%}
+{%- set oven_w = states('sensor.oven_power_15m_average') | float(0) -%}
+{%- set oven_late = oven_w > 40 and now().hour < 5 -%}
+{%- if is_state('binary_sensor.oven_left_on', 'on') or oven_late -%}
+  {%- set on_for = ((now() - states.binary_sensor.oven_left_on.last_changed).total_seconds() / 60 + 180) if is_state('binary_sensor.oven_left_on', 'on') else 0 -%}
+  {%- set ns.t = ns.t + [dict(id='oven', tier=0, order=2, shape='F', label='Oven left on', tone='hazard',
+      say=("The oven's still on after midnight." if oven_late and on_for == 0 else "The oven's been on for " ~ dur(on_for) ~ ". Still cooking?"),
+      sub=(oven_w | round(0) | int) ~ ' W averaged over 15 min',
+      viz=none, act=dict(label='Kitchen', type='navigate', path='kitchen'), tap='kitchen')] -%}
+{%- endif -%}
+{%- set condenser = is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
+{%- if condenser or is_state('binary_sensor.ac_running_not_cooling', 'on') -%}
+  {%- set sp = state_attr('climate.living_room_thermostat', 'temperature') | float(0) -%}
+  {%- set ins = states('sensor.living_room_thermostat_temperature') | float(0) -%}
+  {%- set ns.t = ns.t + [dict(id='ac', tier=0, order=3, shape='F', label='AC fault', tone='hazard',
+      say=("Blower's on but the outdoor unit didn't start." if condenser else "The AC's running but the house isn't cooling."),
+      sub='Set to ' ~ (sp | round(0) | int) ~ '°, ' ~ ins | round(1) ~ '° inside',
+      viz=dict(type='spark', entity='sensor.living_room_thermostat_temperature', hours=2, ref=sp, ref_label='set ' ~ (sp | round(0) | int) ~ '°'),
+      act=dict(label='Climate', type='navigate', path='climate'), tap='climate')] -%}
+{%- endif -%}
+{%- if demo -%}
+  {%- set ns.t = ns.t + [dict(id='stove', tier=0, order=1, shape='F', label='Stove left on · demo', tone='hazard',
+      say="The stove's been on 1 h 40 m. Go check it.", sub='Demo tile from Bento demo hazards. Nothing is actually on.',
+      viz=dict(type='spark', entity='sensor.range_power_minute_average', hours=2),
+      act=dict(label='Turn off demo', type='service', service='input_boolean.turn_off', entity_id='input_boolean.bento_demo_hazards'), tap='kitchen')] -%}
+{%- endif -%}
+
+{#- ============================== P1 act now ============================== -#}
+{%- set locks = label_entities('security') | select('match', 'lock\.') | list -%}
+{%- set contacts = label_entities('security') | select('match', 'binary_sensor\.') | list -%}
+{%- set unlocked = locks | select('is_state', 'unlocked') | list -%}
+{%- set opened = contacts | select('is_state', 'on') | list -%}
+{%- if unlocked or opened -%}
+  {%- set names = (unlocked + opened) | map('state_attr', 'friendly_name') | map('replace', ' Door', ' door') | map('replace', ' Window', ' window') | list -%}
+  {%- set what = names[0] ~ ("'s unlocked" if unlocked else "'s open") if names | count == 1 else (names | count) ~ ' doors and windows are open' -%}
+  {%- set say = "You're both out and the " ~ names | join(' and ') ~ (' is' if names | count == 1 else ' are') ~ (' unlocked.' if unlocked else ' open.') if away
+      else 'Heading to bed? ' ~ what ~ '.' if night
+      else what ~ '. Lock up for the night?' if evening and unlocked
+      else what ~ '.' -%}
+  {%- set ns.t = ns.t + [dict(id='doors', tier=(0 if away or night else 1), order=1, shape='W', label='Doors & windows', tone='act',
+      say=say, sub=('Everything else is shut' if names | count == 1 else names | join(', ')),
+      viz=none, act=(dict(label=('Lock it' if unlocked | count == 1 else 'Lock all'), type='service', service='lock.lock', entity_id=unlocked) if unlocked else none),
+      tap='doors')] -%}
+{%- endif -%}
+
+{%- set drawer = states('sensor.litter_robot_waste_drawer') | float(0) -%}
+{%- set code = states('sensor.litter_robot_status_code') -%}
+{%- if drawer > 80 or code in ['df1', 'df2', 'dfs'] -%}
+  {%- set ns.t = ns.t + [dict(id='drawer', tier=(0 if code == 'dfs' else 1), order=2, shape='W', label='Litter drawer', tone='act',
+      say=("The box has stopped. Zig and Donut need you." if code == 'dfs' else "One cycle left before the box stops." if code == 'df2' else "Two cycles left before the box stops." if code == 'df1' else "Litter drawer's nearly full. About a day left."),
+      sub='Zig and Donut are counting on you',
+      viz=dict(type='tbar', value=drawer | round(0), line=80, line_label='alert'), act=none, tap='cats')] -%}
+{%- endif -%}
+
+{%- set pickup = states('input_select.curbside_pickup') -%}
+{%- if pickup in ['Recycling', 'Trash'] -%}
+  {%- set what = 'recycling' if pickup == 'Recycling' else 'trash' -%}
+  {%- set bin = 'Blue' if pickup == 'Recycling' else 'Green' -%}
+  {%- set ns.t = ns.t + [dict(id='curb', tier=(0 if mode == 'pickup_morning' else 1), order=3, shape='W', label='Curbside', tone=('recycling' if pickup == 'Recycling' else 'trash'),
+      say=("Truck comes by 10. The " ~ what ~ "'s still in." if mode == 'pickup_morning' else (what | capitalize) ~ " night. " ~ bin ~ " bin out before bed?"),
+      sub='Truck comes by 10 am', viz=none,
+      act=dict(label='Taken out', type='service', service='input_button.press', entity_id='input_button.curbside_taken_out'), tap=none)] -%}
+{%- endif -%}
+
+{%- if is_state('input_boolean.wash_waiting_for_dryer', 'on') -%}
+  {%- set dry = states('sensor.dryer_current_status') -%}
+  {%- set waited = ((now() - states.input_boolean.wash_waiting_for_dryer.last_changed).total_seconds() / 60) | int -%}
+  {%- set ns.t = ns.t + [dict(id='swap', tier=1, order=4, shape='W', label='Swap the laundry', tone='act',
+      say=("Washer's done. Dryer has " ~ states('sensor.dryer_remaining_time') ~ " left." if dry in ['running', 'cooling', 'wrinkle_care'] else "Dryer's done. Swap the loads." if dry == 'end' else "Wash is done and the dryer's free. Swap time."),
+      sub='Waiting ' ~ dur(waited), viz=none, act=none, tap='laundry')] -%}
+{%- endif -%}
+
+{%- for c in CARS -%}
+  {%- set home = is_state('device_tracker.' ~ c[0] ~ '_s_car_location', 'home') -%}
+  {%- set prefix = c[1] ~ ' Car ' -%}
+  {#- A sleeping car can come back from a refresh with no body data at all: the lock
+      and doors go unknown and Tesla reports the frunk and trunk as open. Trust the
+      covers only while the lock still knows its own state -#}
+  {%- set fresh = states('lock.' ~ c[0] ~ '_s_car_lock') not in ['unknown', 'unavailable'] -%}
+  {%- set parts = (states.binary_sensor | selectattr('entity_id', 'match', 'binary_sensor\.' ~ c[0] ~ '_s_car_.*_(door|window)$') | selectattr('state', 'eq', 'on') | map(attribute='name') | list)
+      + (states.cover | selectattr('entity_id', 'match', 'cover\.' ~ c[0] ~ '_s_car_(frunk|trunk|windows)$') | selectattr('state', 'eq', 'open') | map(attribute='name') | list if fresh else []) -%}
+  {%- set unlocked_car = is_state('lock.' ~ c[0] ~ '_s_car_lock', 'unlocked') -%}
+  {%- if home and (parts or unlocked_car) -%}
+    {%- set part = parts[0] | replace(prefix, '') | lower if parts else '' -%}
+    {%- set ns.t = ns.t + [dict(id='caropen_' ~ c[0], tier=(0 if night else 1), order=5, shape='W', label='Car left open', tone='act',
+        say=(c[1] ~ ' car has the ' ~ part ~ ' open.' if parts else c[1] ~ ' car is unlocked in the driveway.'),
+        sub='Parked at home', viz=none,
+        act=(dict(label='Lock it', type='service', service='lock.lock', entity_id='lock.' ~ c[0] ~ '_s_car_lock') if unlocked_car else none), tap='garage')] -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{#- Rain, from the hourly forecast (sensor.rain_outlook), not the weather station. Act
+    now when rain is under two hours out, the forecast puts a real amount on it, and
+    something is open to it: a car window at home or a house window. Otherwise it is
+    an ambient heads-up for rain in the next six hours. Car windows only count while
+    the car's lock knows its state, for the same sleeping-car reason as above. -#}
+{%- set rain_min = states('sensor.rain_outlook') | int(-1) -%}
+{%- if 0 <= rain_min <= 6 * 60 -%}
+  {%- set r_start = as_datetime(state_attr('sensor.rain_outlook', 'starts')) | as_local -%}
+  {%- set r_stop_at = state_attr('sensor.rain_outlook', 'stops') -%}
+  {%- set r_stop = as_datetime(r_stop_at) | as_local if r_stop_at else none -%}
+  {%- set r_sure = state_attr('sensor.rain_outlook', 'sure') == true -%}
+  {%- set nsr = namespace(cars=[], covers=[]) -%}
+  {%- for c in CARS -%}
+    {%- if is_state('device_tracker.' ~ c[0] ~ '_s_car_location', 'home') and is_state('cover.' ~ c[0] ~ '_s_car_windows', 'open')
+        and states('lock.' ~ c[0] ~ '_s_car_lock') not in ['unknown', 'unavailable'] -%}
+      {%- set nsr.cars = nsr.cars + [c[1]] -%}{%- set nsr.covers = nsr.covers + ['cover.' ~ c[0] ~ '_s_car_windows'] -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {#- The contact sensors are all named "Contact", so the name comes from the entity id -#}
+  {%- set wins = opened | select('search', 'window') | map('regex_replace', '^binary_sensor\.', '') | map('replace', '_', ' ') | list -%}
+  {%- set bits = (['both cars have the windows down'] if nsr.cars | count > 1 else [nsr.cars[0] ~ ' car has the windows down'] if nsr.cars else [])
+      + (['the ' ~ wins[0] ~ ' is open'] if wins | count == 1 else [(wins | count) ~ ' windows are open'] if wins else []) -%}
+  {%- set when = 'Raining now' if rain_min == 0 else 'Rain within the hour' if rain_min < 60 else 'Rain around ' ~ at_clock(r_start) -%}
+  {%- set clears = ('Should clear by ' ~ at_clock(r_stop) if r_stop else 'Settling in for a while') -%}
+  {%- set urgent = bits and r_sure and rain_min <= 120 -%}
+  {%- set inches = state_attr('sensor.rain_outlook', 'inches') | float(0) -%}
+  {%- set ns.t = ns.t + [dict(id='rain', tier=(1 if urgent else 3), order=(6 if urgent else 0), shape='W', label=('Rain coming' if urgent else 'Rain'), tone='water',
+      say=(when ~ ', and ' ~ bits | join(' and ') ~ '.' if urgent
+          else ('Raining now.' if rain_min == 0 else (('Rain' if r_sure else 'Maybe a shower') ~ ' around ' ~ at_clock(r_start) ~ '.'))),
+      sub=(clears if urgent
+          else (bits | join(' and ') | capitalize) if bits
+          else 'Sprinklers are skipping today' if is_state('switch.outside_sprinklers_rain_delay', 'on')
+          else clears if rain_min == 0
+          else ('About ' ~ inches | round(1) ~ ' in' if inches >= 0.1 else 'Just a passing shower')),
+      viz=dict(type='rain', hours=state_attr('sensor.rain_outlook', 'hours') or []),
+      act=(dict(label='Close windows', type='service', service='cover.close_cover', entity_id=nsr.covers) if urgent and nsr.covers else none), tap=none)] -%}
+{%- endif -%}
+
+{#- ============================== P2 today ============================== -#}
+{%- set chores = state_attr('sensor.house_chores', 'chores') or [] -%}
+{%- set ns.t = ns.t + [dict(id='chores', tier=(2 if chores else 3), order=(1 if chores else 30), shape='T', label='Chores', tone='health',
+    say=('Nothing to do. Add something?' if not chores else 'Just one thing' if chores | count == 1 else (chores | count) ~ ' little things'),
+    sub='', viz=dict(type='list', items=chores[:4]),
+    act=dict(label='+ Add', type='todo_add', entity_id='todo.house_alerts'), tap=none)] -%}
+
+{%- set hopper = states('sensor.litter_robot_hopper_status') -%}
+{%- set globe = states('sensor.litter_robot_litter_level') | float(100) -%}
+{%- if hopper == 'empty' or hopper.startswith('motor') or globe < 20 -%}
+  {%- set shopping = state_attr('sensor.house_chores', 'shopping') or [] -%}
+  {%- set listed = shopping | map(attribute='summary') | map('lower') | select('search', 'litter') | list | count > 0 -%}
+  {%- set ns.t = ns.t + [dict(id='hopper', tier=(1 if hopper.startswith('motor') else 2), order=2, shape='S', label='Litter hopper', tone='today',
+      say=("Hopper's jammed." if hopper.startswith('motor') else "Hopper's empty." if hopper == 'empty' else 'Globe is down to ' ~ globe | round(0) | int ~ '%.'),
+      sub=('Grab a screwdriver, not a bag.' if hopper.startswith('motor') else "Litter's on the list." if listed else 'Add litter to the list?'),
+      viz=none, act=none, tap='cats')] -%}
+{%- endif -%}
+
+{%- set ns2 = namespace(low=[], out=[]) -%}
+{%- for c in CARS -%}
+  {%- set pct = states('sensor.' ~ c[0] ~ '_s_car_battery_level') | int(-1) -%}
+  {%- set home = is_state('device_tracker.' ~ c[0] ~ '_s_car_location', 'home') -%}
+  {%- if not home -%}{%- set ns2.out = ns2.out + [c[1]] -%}{%- endif -%}
+  {%- if home and 0 <= pct < 50 and is_state('binary_sensor.' ~ c[0] ~ '_s_car_charge_cable', 'off') -%}
+    {%- set ns2.low = ns2.low + [dict(id=c[0], name=c[1], pct=pct, range=states('sensor.' ~ c[0] ~ '_s_car_battery_range') | float(0) | round(0) | int,
+        limit=states('number.' ~ c[0] ~ '_s_car_charge_limit') | int(80))] -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- set charge_up = ns2.low and (17 <= now().hour < 23 or mode in ['evening', 'night']) -%}
+{%- if charge_up -%}
+  {%- set car = (ns2.low | sort(attribute='pct'))[0] -%}
+  {%- set others = ns2.out | join(' and ') -%}
+  {%- set ns.t = ns.t + [dict(id='charge', tier=(1 if car.pct < 20 else 2), order=3, shape='T', label='Charge tonight', tone='car',
+      say=(car.name ~ ' car is at ' ~ car.pct ~ '%. ' ~ ('Plug it in.' if car.pct < 20 else 'Plug in tonight?')),
+      sub=(others ~ (' are' if ns2.out | count > 1 else ' is') ~ ' out.' if others else ''),
+      viz=dict(type='charge', value=car.pct, limit=car.limit, now_mi=car.range,
+          full_mi=((car.range / car.pct * car.limit) if car.pct > 0 else 0) | round(0) | int), act=none, tap='garage')] -%}
+{%- endif -%}
+
+{%- set wash = states('sensor.laundry_room_washer_current_status') -%}
+{%- set dry = states('sensor.dryer_current_status') -%}
+{%- set running = ['running', 'rinsing', 'spinning', 'drying', 'cooling', 'wrinkle_care', 'detecting', 'prewash'] -%}
+{%- if not is_state('input_boolean.wash_waiting_for_dryer', 'on') and (wash in running or dry in running or 'LAUNDRY IS DONE' in alert_text) -%}
+  {%- set who = 'Dryer' if dry in running else 'Washer' -%}
+  {%- set rem_raw = states('sensor.dryer_remaining_time' if dry in running else 'sensor.laundry_room_washer_remaining_time') -%}
+  {%- set tot = states('sensor.dryer_total_time' if dry in running else 'sensor.laundry_room_washer_total_time') | float(0) -%}
+  {%- set parts = rem_raw.split(':') -%}
+  {%- set rem = (parts[0] | int(0)) * 60 + (parts[1] | int(0)) if parts | count >= 2 else rem_raw | int(0) -%}
+  {%- set ns.t = ns.t + [dict(id='laundry', tier=2, order=4, shape='S', label='Laundry', tone='today',
+      say=("Laundry's done." if wash not in running and dry not in running else who ~ "'s " ~ ('tumbling.' if who == 'Dryer' else 'going.')),
+      sub=('Fold when you can' if wash not in running and dry not in running else ('Washer is free' if who == 'Dryer' and wash not in running else '')),
+      viz=(dict(type='ring', value=((rem / tot * 100) if tot > 0 else 0) | round(0), label=rem ~ 'm') if rem > 0 else none), act=none, tap='laundry')] -%}
+{%- endif -%}
+
+{%- set nxt_min = state_attr('sensor.next_event', 'minutes_until') -%}
+{%- if nxt_min is number and nxt_min <= 36 * 60 -%}
+  {%- set st = as_datetime(state_attr('sensor.next_event', 'start')) | as_local -%}
+  {%- set day = 'Today' if st.date() == now().date() else 'Tomorrow' if (st.date() - now().date()).days == 1 else st.strftime('%a') -%}
+  {%- set clock = st.strftime('%-I:%M') -%}
+  {%- set ns.t = ns.t + [dict(id='next', tier=(1 if nxt_min < 60 else 2), order=5, shape='S', label='Next up', tone='plan',
+      say=('Leaving in ' ~ nxt_min | int ~ ' min?' if nxt_min < 60 else (('Today' if day == 'Today' else st.strftime('%a')) ~ (' · all day' if state_attr('sensor.next_event', 'all_day') else ' ' ~ clock))),
+      sub=states('sensor.next_event'), big=(nxt_min >= 60), viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- Tesla's arrival time is for whatever the navigation is set to. The route tracker sits
+    in the zone the drive ends in: home is someone pulling in, a named zone (Work) is just
+    where they're headed, and anywhere else isn't shown -#}
+{%- for c in CARS -%}
+  {%- set eta = states('sensor.' ~ c[0] ~ '_s_car_time_to_arrival') -%}
+  {%- set dest = states('device_tracker.' ~ c[0] ~ '_s_car_route') -%}
+  {%- set who = c[1] | replace("'s", '') -%}
+  {%- if eta not in ['unknown', 'unavailable', ''] and dest not in ['home', 'not_home', 'unknown', 'unavailable']
+      and not is_state('device_tracker.' ~ c[0] ~ '_s_car_location', dest) -%}
+    {%- set eta_dt = as_datetime(eta, none) -%}
+    {%- set mins = ((eta_dt - now()).total_seconds() / 60) | int if eta_dt else eta | int(0) -%}
+    {%- if 0 < mins < 120 -%}
+      {%- set ns.t = ns.t + [dict(id='arrive_' ~ c[0], tier=3, order=6, shape='W', label='On the way', tone='plan',
+          say=who ~ "'s " ~ mins ~ (' minute' if mins == 1 else ' minutes') ~ ' from ' ~ dest | lower ~ '.',
+          sub='Driving to ' ~ dest | lower ~ ' in ' ~ who ~ "'s car", viz=none, act=none, tap='garage')] -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if eta not in ['unknown', 'unavailable', ''] and dest == 'home'
+      and not is_state('device_tracker.' ~ c[0] ~ '_s_car_location', 'home') -%}
+    {%- set eta_dt = as_datetime(eta, none) -%}
+    {%- set mins = ((eta_dt - now()).total_seconds() / 60) | int if eta_dt else eta | int(0) -%}
+    {%- if 0 < mins < 120 -%}
+      {%- set front_locked = is_state('lock.aqara_smart_lock_u100', 'locked') -%}
+      {%- set ns.t = ns.t + [dict(id='arrive_' ~ c[0], tier=(1 if mins <= 3 else 2), order=6, shape='W', label='On the way', tone='plan',
+          say=(c[1] | replace("'s", '') ~ "'s pulling in." if mins <= 3 else c[1] | replace("'s", '') ~ "'s " ~ mins ~ ' minutes away.'),
+          sub=('Unlock the front door?' if mins <= 3 and front_locked else 'Driving home in ' ~ c[1] | replace("'s", '') ~ "'s car"),
+          viz=none, act=(dict(label='Unlock', type='service', service='lock.unlock', entity_id='lock.aqara_smart_lock_u100') if mins <= 3 and front_locked else none), tap='garage')] -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- set dish_w = states('sensor.dishwasher_power_minute_average') | float(0) -%}
+{%- set dish_done = 'UNLOAD THE DISHWASHER' in alert_text or 'UNLOAD DISHWASHER' in alert_text -%}
+{%- if dish_w > 5 or dish_done -%}
+  {%- set ns.t = ns.t + [dict(id='dish', tier=2, order=7, shape='S', label='Dishwasher', tone='today',
+      say=("Dishwasher's running." if dish_w > 5 else "Dishwasher's done."), sub=('' if dish_w > 5 else 'Unload when you can'),
+      viz=none, act=(none if dish_w > 5 else dict(label='Done', type='service', service='script.turn_on', entity_id='script.kitchen_dishwasher_unloaded')), tap=none)] -%}
+{%- endif -%}
+
+{%- set zones = [['right_front', 'right front'], ['left_front', 'left front'], ['right_driveway', 'right driveway'], ['left_driveway', 'left driveway']] -%}
+{%- set watering = zones | selectattr('0', 'in', states.switch | selectattr('state', 'eq', 'on') | map(attribute='object_id') | map('replace', 'outside_sprinklers_', '') | list) | list -%}
+{%- if watering or is_state('switch.outside_sprinklers_rain_delay', 'on') -%}
+  {%- set ns.t = ns.t + [dict(id='sprink', tier=2, order=8, shape='S', label='Sprinklers', tone='today',
+      say=('Watering the ' ~ watering[0][1] if watering else 'Skipping today.'), sub=('' if watering else 'Rain delay is on'),
+      viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{%- set shopping = state_attr('sensor.house_chores', 'shopping') or [] -%}
+{%- if shopping -%}
+  {%- set first = sentence(shopping[0].summary) -%}
+  {%- set ns.t = ns.t + [dict(id='shop', tier=(2 if away else 3), order=(9 if away else 20), shape='S', label='Shopping', tone='today',
+      say=("Grab " ~ first | lower ~ " while you're out." if away else first),
+      sub=('The only thing on the list' if shopping | count == 1 else '+ ' ~ (shopping | count - 1) ~ ' more'),
+      viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- While you're away: one large tile that answers "is the house OK?" in a glance. It
+    stands in for the climate, cats and scenes tiles, which are dropped at the end
+    while away. Each line is a check; anything not OK sorts to the top and changes
+    the sentence. "Since you left" and "last opened" come from sensor.away_since and
+    sensor.last_door_opened, which keep their value across a restart; last_changed
+    does not. Contact names come from the entity id, since they are all "Contact". -#}
+{%- if away -%}
+  {%- set left_at = (as_datetime(states('sensor.away_since'), none) or states.sensor.house_mode.last_changed) | as_local -%}
+  {%- set ns6 = namespace(c=[]) -%}
+  {%- set lock_names = unlocked | map('state_attr', 'friendly_name') | map('replace', ' Door', ' door') | list -%}
+  {%- set ns6.c = ns6.c + [dict(label=(lock_names[0] ~ ' is unlocked' if lock_names | count == 1 else (lock_names | count) ~ ' doors unlocked' if lock_names else 'Locked up'), ok=not lock_names)] -%}
+  {%- set open_names = opened | map('regex_replace', '^binary_sensor\.', '') | map('replace', '_', ' ') | map('capitalize') | list -%}
+  {%- set ns6.c = ns6.c + [dict(label=(open_names[0] ~ ' is open' if open_names | count == 1 else (open_names | count) ~ ' doors and windows open' if open_names else 'Doors and windows shut'), ok=not open_names)] -%}
+  {%- set lo = as_datetime(states('sensor.last_door_opened'), none) -%}
+  {%- set last_open = lo if lo and lo > left_at else none -%}
+  {%- set lo_name = (state_attr('sensor.last_door_opened', 'entity_id') or '') | regex_replace('^binary_sensor\.', '') | replace('_', ' ') | capitalize -%}
+  {%- set ns6.c = ns6.c + [dict(label=(lo_name ~ ' opened at ' ~ at_clock(last_open | as_local) if last_open else 'No doors opened since you left'), ok=not last_open)] -%}
+  {%- set cooking = is_state('binary_sensor.range_left_on', 'on') or is_state('binary_sensor.oven_left_on', 'on') or range_w > 40 or oven_w > 40 -%}
+  {%- set ns6.c = ns6.c + [dict(label=('The stove or oven is on' if cooking else 'Stove and oven off'), ok=not cooking)] -%}
+  {%- set hvac = states('climate.living_room_thermostat') -%}
+  {%- set ins = states('sensor.living_room_thermostat_temperature') | float(0) -%}
+  {%- set sp = state_attr('climate.living_room_thermostat', 'temperature') -%}
+  {%- set ns6.c = ns6.c + [dict(label=('AC is off, ' if hvac == 'off' else 'AC set to ' ~ sp | float(0) | round(0) | int ~ '°, ') ~ ins | round(0) | int ~ '° inside', ok=(hvac != 'off' or ins < 82))] -%}
+  {%- set fed = states('sensor.zigs_food_portions_dispensed_today') | int(0) + states('sensor.donuts_food_portions_dispensed_today') | int(0) -%}
+  {%- set visits = states('sensor.zig_visits_today') | int(0) + states('sensor.donut_visits_today') | int(0) -%}
+  {%- set ns6.c = ns6.c + [dict(label=('Cats fed, ' ~ visits ~ (' litter visit' if visits == 1 else ' litter visits') ~ ' today' if fed > 0 else 'Cats not fed yet today'), ok=(fed > 0 or now().hour < 9))] -%}
+  {%- set bad = ns6.c | rejectattr('ok') | list -%}
+  {%- set ns.t = ns.t + [dict(id='away', tier=2, order=0, shape='L', label="While you're out", tone='scenes',
+      say=('All quiet.' if not bad else 'One thing to look at.' if bad | count == 1 else (bad | count) ~ ' things to look at.'),
+      sub='Since you left at ' ~ at_clock(left_at) ~ ('' if left_at.date() == now().date() else ' ' ~ left_at.strftime('%A')),
+      viz=dict(type='checks', items=bad + (ns6.c | selectattr('ok') | list)), act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- ============================== P3 ambient ============================== -#}
+{%- set players = ['media_player.living_room_living_room_apple_tv', 'media_player.bedroom_bedroom_apple_tv', 'media_player.guest_room_guest_room_apple_tv',
+    'media_player.av_living_room_soundbar', 'media_player.kitchen_display', 'media_player.guest_room_display',
+    'media_player.speaker_group_main', 'media_player.speaker_group_everywhere', 'media_player.bedroom_speaker', 'media_player.game_room_speaker'] -%}
+{%- set playing = players | select('is_state', 'playing') | list -%}
+{%- if playing and not away -%}
+  {%- set p = playing[0] -%}
+  {%- set title = state_attr(p, 'media_title') or state_attr(p, 'app_name') or 'Something' -%}
+  {%- set ns.t = ns.t + [dict(id='playing', tier=3, order=1, shape='S', label='Now playing', tone='media',
+      say=title ~ (' + ' ~ (playing | count - 1) ~ ' more' if playing | count > 1 else ''), sub=state_attr(p, 'friendly_name'),
+      viz=dict(type='eq'), act=none, tap=none, entity=p)] -%}
+{%- endif -%}
+
+{%- if not night -%}
+  {%- set kw = states('sensor.main_breaker_power_minute_average') | float(0) / 1000 -%}
+  {%- set big = state_attr('sensor.biggest_load', 'max_entity_id') -%}
+  {%- set big_name = (state_attr(big, 'friendly_name') or '') | replace(' Power Minute Average', '') -%}
+  {%- set ns.t = ns.t + [dict(id='power', tier=3, order=2, shape='L', label='Power', tone='energy',
+      say=kw | round(1) ~ ' kW now', sub=('Mostly the ' ~ big_name | lower ~ '. ' if big_name else '') ~ '$' ~ '%.2f' | format(states('sensor.electricity_cost_today') | float(0)) ~ ' so far today.',
+      viz=dict(type='spark', entity='sensor.main_breaker_power_minute_average', since='midnight', peak=true), act=none, tap='energy')] -%}
+{%- endif -%}
+
+{%- set rooms_src = [['Living Room', 'sensor.living_room_temp_sensor_temperature'], ['Pantry', 'sensor.pantry_temp_sensor_temperature'], ['Bedroom', 'sensor.bedroom_temp_sensor_temperature'],
+    ['Bathroom', 'sensor.bathroom_temp_sensor_temperature'], ['Game Room', 'sensor.game_room_temp_sensor_temperature'], ['Race Room', 'sensor.race_room_temp_sensor_temperature'],
+    ['Guest Room', 'sensor.guest_room_temp_sensor_temperature']] -%}
+{%- set ns3 = namespace(r=[]) -%}
+{%- for r in rooms_src -%}{%- if states(r[1]) | is_number -%}{%- set ns3.r = ns3.r + [[r[0], states(r[1]) | float | round(1)]] -%}{%- endif -%}{%- endfor -%}
+{%- if ns3.r -%}
+  {%- set warm = (ns3.r | sort(attribute='1'))[-1] -%}
+  {%- set set_t = state_attr('climate.living_room_thermostat', 'temperature') | float(74) -%}
+  {%- set recovering = 'AC IS COOLING AGAIN' in alert_text -%}
+  {%- set ns.t = ns.t + [dict(id='climate', tier=3, order=3, shape='W', label='Climate', tone='climate',
+      say=("AC's cooling again." if recovering else warm[0] ~ "'s running warm at " ~ warm[1] | round(0) | int ~ '°' if warm[1] > set_t + 3 else 'Cool and comfy'),
+      sub='', viz=dict(type='thermo', rooms=ns3.r, set=set_t), act=none, tap='climate')] -%}
+{%- endif -%}
+
+{%- if not night -%}
+  {%- set z = states('sensor.zig_visits_today') | int(0) -%}
+  {%- set d = states('sensor.donut_visits_today') | int(0) -%}
+  {%- set ns.t = ns.t + [dict(id='cats', tier=3, order=4, shape='W', label='Cats', tone='cats',
+      say=('No visits yet today' if z + d == 0 else ("Donut's been in " ~ times(d) ~ ', Zig ' ~ times(z) if d >= z and z > 0 else "Zig's been in " ~ times(z) ~ ', Donut ' ~ times(d) if d > 0 else "Zig's been in " ~ times(z) if z > 0 else "Donut's been in " ~ times(d))),
+      sub='', viz=dict(type='dayline', series=[dict(entity='sensor.zig_visits_today', name='Zig'), dict(entity='sensor.donut_visits_today', name='Donut')]), act=none, tap='cats')] -%}
+{%- endif -%}
+
+{#- Scenes: the suggested lighting script first, then the shared Whole House levels.
+    Every button runs a lighting script (not a raw scene), so Adaptive Lighting leaves
+    the result alone. sensor.suggested_scene picks the first one. -#}
+{%- set suggested = states('sensor.suggested_scene') -%}
+{%- set scene_q = {'script.lighting_movie': 'Movie night?', 'script.lighting_morning': 'Good morning?', 'script.lighting_evening': 'Settling in for the evening?',
+    'script.lighting_bedtime': 'Winding down?', 'script.whole_house_bright': ('Bright and early?' if morning else 'Brighten things up?')} -%}
+{%- set shared = ['script.whole_house_adaptive', 'script.whole_house_bright', 'script.whole_house_relax', 'script.whole_house_dim', 'script.whole_house_night'] -%}
+{%- set scene_list = ([suggested] if suggested.startswith('script.') else []) + (shared | reject('eq', suggested) | list) -%}
+{%- set nss = namespace(b=[]) -%}
+{%- for s in scene_list -%}
+  {%- set nss.b = nss.b + [dict(label=(state_attr(s, 'friendly_name') or s).split(' - ')[-1], service='script.turn_on', entity_id=s, primary=loop.first)] -%}
+{%- endfor -%}
+{%- set ns.t = ns.t + [dict(id='scenes', tier=3, order=5, shape='W', label='Scenes', tone='scenes',
+    say=scene_q.get(suggested, 'Set the mood?'),
+    sub=("The TV's on and it's getting dark" if suggested == 'script.lighting_movie' else ''),
+    viz=dict(type='buttons', items=nss.b + [dict(label='All off', service='light.turn_off', entity_id='light.zone_home', primary=false)]),
+    act=none, tap=none)] -%}
+
+{%- if not ns2.low or not charge_up -%}
+  {%- set ns5 = namespace(home=[], out=[]) -%}
+  {%- for c in CARS -%}
+    {%- set at = states('device_tracker.' ~ c[0] ~ '_s_car_location') -%}
+    {#- A car parked in a named zone says where: "Kat's is at work" -#}
+    {%- if at == 'home' -%}{%- set ns5.home = ns5.home + [c] -%}{%- else -%}{%- set ns5.out = ns5.out + [c[1] ~ (' is at ' ~ at | lower if at not in ['not_home', 'unknown', 'unavailable'] else ' is out')] -%}{%- endif -%}
+  {%- endfor -%}
+  {%- set out_cars = ns5.out -%}
+  {%- set car = ns5.home | first -%}
+  {%- set pct = states('sensor.' ~ car[0] ~ '_s_car_battery_level') | int(0) if car else 0 -%}
+  {%- set ns.t = ns.t + [dict(id='cars', tier=3, order=6, shape='W', label='Cars', tone='car',
+      say=(car[1] ~ ' car is home.' if car else 'Both cars are out.'),
+      sub=(out_cars | join(', ') ~ '.' if out_cars and car else ''),
+      viz=(dict(type='battery', value=pct, label=pct ~ '% · ' ~ states('sensor.' ~ car[0] ~ '_s_car_battery_range') | float(0) | round(0) | int ~ ' mi',
+          charging=is_state('sensor.' ~ car[0] ~ '_s_car_charging', 'charging')) if car else none), act=none, tap='garage')] -%}
+{%- endif -%}
+
+{%- set kwh = states('sensor.main_breaker_grid_monthly_energy') | float(0) -%}
+{%- if kwh > 0 -%}
+  {%- set price = states('sensor.grid_energy_price') | float(0) -%}
+  {%- set cost = kwh * price -%}
+  {%- set dim = ((now().replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)).day -%}
+  {%- set pace = cost / now().day * dim -%}
+  {%- set ev = states('sensor.tesla_charger_energy_this_month') | float(0) -%}
+  {%- set ac = states('sensor.air_conditioner_energy_this_month') | float(0) + states('sensor.air_handler_energy_this_month') | float(0) -%}
+  {%- set pool = states('sensor.pool_pump_energy_this_month') | float(0) -%}
+  {%- set other = [kwh - ev - ac - pool, 0] | max -%}
+  {%- set ns.t = ns.t + [dict(id='month', tier=3, order=7, shape='W', label='This month', tone='money',
+      say='About $' ~ cost | round(0) | int ~ ' so far in ' ~ now().strftime('%B'), sub='On pace for about $' ~ (pace / 10) | round(0) | int * 10,
+      viz=dict(type='stack', segments=[dict(name='EV ' ~ (ev / kwh * 100) | round(0) | int ~ '%', value=ev | round(0), tone='car', show=true),
+          dict(name='AC ' ~ (ac / kwh * 100) | round(0) | int ~ '%', value=ac | round(0), tone='climate', show=true),
+          dict(name='Pool', value=pool | round(0), tone='plan', show=false),
+          dict(name='Everything else', value=other | round(0), tone='muted', show=true)]),
+      act=none, tap='energy')] -%}
+{%- endif -%}
+
+{%- if states('sensor.audiobookshelf_open_sessions') | int(0) > 0 -%}
+  {%- set ns.t = ns.t + [dict(id='listen', tier=3, order=8, shape='S', label='Audiobooks', tone='plan',
+      say="Someone's listening", sub='Audiobookshelf', viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{%- set lit = states('sensor.lights_on') | int(0) -%}
+{%- if lit > 0 and (evening or night) -%}
+  {#- Adaptive Lighting for the main living spaces says how the house is lit, and the
+      tile shows where that sits between warm and cool -#}
+  {%- set al = 'switch.adaptive_lighting_living_spaces' -%}
+  {%- set al_on = is_state(al, 'on') -%}
+  {%- set al_sleep = is_state(al ~ '_sleep_mode', 'on') -%}
+  {%- set k = state_attr(al, 'color_temp_kelvin') | int(0) -%}
+  {%- set warmth = 'Warm' if k < 2700 else 'Soft white' if k < 3600 else 'Neutral' if k < 4600 else 'Daylight' -%}
+  {%- set al_sub = 'Sleep mode is on' if al_on and al_sleep else (warmth ~ ', following the sun') if al_on and k else '' -%}
+  {%- set ns.t = ns.t + [dict(id='lights', tier=3, order=9, shape=('W' if al_on and k else 'S'), label='Lights', tone='night',
+      say=('Still ' ~ lit ~ ' on. All off?' if night else lit ~ ' lights on'), sub=al_sub,
+      viz=(dict(type='kelvin', value=k, min=2200, max=5000) if al_on and k and not al_sleep else none),
+      act=dict(label='All off', type='service', service='light.turn_off', entity_id='light.zone_home'), tap=none)] -%}
+{%- endif -%}
+
+{%- if states('sensor.pool_pump_power_minute_average') | float(0) > 100 -%}
+  {%- set ns.t = ns.t + [dict(id='pool', tier=3, order=10, shape='S', label='Pool', tone='water',
+      say="Pool pump's running", sub=states('sensor.pool_pump_energy_today') | float(0) | round(0) | int ~ ' kWh so far today', viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- The board as it is: Vestassistant reads the wall back every minute and reports
+    the rows exactly, including messages posted from the Vestaboard app -#}
+{%- set vb = state_attr('sensor.vestaboard_note_current_message', 'board') -%}
+{%- if vb is list and vb | select | list | count -%}
+  {%- set ns.t = ns.t + [dict(id='board', tier=3, order=11, shape='W', label='Vestaboard', tone='night',
+      say='', sub='', viz=dict(type='board', lines=vb), act=none, tap=none)] -%}
+{%- endif -%}
+
+{%- if is_state('switch.garland', 'on') -%}
+  {%- set ns.t = ns.t + [dict(id='garland', tier=3, order=12, shape='S', label='Seasonal', tone='festive',
+      say="Garland's twinkling", sub='', viz=dict(type='garland'),
+      act=dict(label='Turn off', type='service', service='switch.turn_off', entity_id='switch.garland'), tap=none)] -%}
+{%- endif -%}
+
+{#- The day in numbers, once the house goes to night mode (the power tile has stepped
+    aside by then, so the large slot is free). Power is judged against this month's
+    usual day, scaled to how much of today has gone by. -#}
+{%- if night -%}
+  {%- set kwh_today = states('sensor.main_breaker_energy_today') | float(0) -%}
+  {%- set month_kwh = states('sensor.main_breaker_grid_monthly_energy') | float(0) -%}
+  {%- set usual = ((month_kwh - kwh_today) / (now().day - 1)) if now().day > 1 else 0 -%}
+  {%- set frac = ((now() - today_at('00:00')).total_seconds() / 86400) -%}
+  {%- set vs = ((kwh_today / (usual * frac) - 1) * 100) | round(0) | int if usual > 0 and frac > 0 else none -%}
+  {%- set doors = states('sensor.living_room_front_door_opens_today') | int(0) -%}
+  {%- set visits = states('sensor.zig_visits_today') | int(0) + states('sensor.donut_visits_today') | int(0) -%}
+  {%- set washed = states('sensor.laundry_room_washer_energy_today') | float(0) > 0.1 -%}
+  {%- set dried = states('sensor.dryer_energy_today') | float(0) > 0.3 -%}
+  {%- set rows = [['Power', kwh_today | round(0) | int ~ ' kWh · $' ~ '%.2f' | format(states('sensor.electricity_cost_today') | float(0))],
+      ['Front door', doors ~ (' open' if doors == 1 else ' opens')],
+      ['Litter visits', visits | string]]
+      + ([['Dishwasher', 'ran']] if states('sensor.dishwasher_energy_today') | float(0) > 0.3 else [])
+      + ([['Laundry', 'washed and dried' if dried else 'washed']] if washed else ([['Laundry', 'dried']] if dried else [])) -%}
+  {%- set ns.t = ns.t + [dict(id='recap', tier=3, order=0, shape='L', label='Today', tone='night',
+      say=('A quiet day.' if doors < 8 else 'A busy day.' if doors >= 20 else 'A regular day.'),
+      sub=('' if vs is none else 'Power ran about usual' if -10 < vs < 10 else 'Power ran ' ~ vs | abs ~ '% ' ~ ('under' if vs < 0 else 'over') ~ ' usual'),
+      viz=dict(type='receipt', rows=rows), act=none, tap='energy')] -%}
+{%- endif -%}
+
+{#- Charging: a filler for a car that's plugged in. While it charges, the battery climbing since
+    it was plugged in and when it'll be full. Once it's full,
+    no chart: just that it's charged and when it finished, for up to 12 hours or until it's
+    unplugged, so a car left plugged in and full doesn't keep a tile up. -#}
+{%- for c in CARS -%}
+  {%- set chg = states('sensor.' ~ c[0] ~ '_s_car_charging') -%}
+  {%- set cable = expand('binary_sensor.' ~ c[0] ~ '_s_car_charge_cable') | first -%}
+  {%- set plugged = cable is defined and cable and cable.state == 'on' -%}
+  {%- if chg in ['starting', 'charging'] -%}
+    {%- set full = as_datetime(states('sensor.' ~ c[0] ~ '_s_car_time_to_full_charge'), none) -%}
+    {%- set hours = [[((now() - cable.last_changed).total_seconds() / 3600) if plugged else 2, 0.5] | max, 12] | min -%}
+    {%- set ns.t = ns.t + [dict(id='charging_' ~ c[0], tier=3, order=97, shape='S', filler=true, label=c[1] ~ ' car', tone='today',
+        say=(states('sensor.' ~ c[0] ~ '_s_car_battery_level') | int(0)) ~ '%',
+        sub=('Full by ' ~ at_clock(full | as_local) if full else ''),
+        viz=dict(type='spark', entity='sensor.' ~ c[0] ~ '_s_car_battery_level', hours=hours | round(2)),
+        act=none, tap='garage')] -%}
+  {%- elif chg == 'complete' and plugged -%}
+    {%- set done = (expand('sensor.' ~ c[0] ~ '_s_car_charging') | first).last_changed | as_local -%}
+    {%- if (now() - done).total_seconds() < 12 * 3600 -%}
+      {%- set ns.t = ns.t + [dict(id='charging_' ~ c[0], tier=3, order=97, shape='S', filler=true, label=c[1] ~ ' car', tone='today',
+          say="Car's charged", sub='Finished at ' ~ at_clock(done), viz=none, act=none, tap='garage')] -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{#- The next launch from the Cape (sensor.next_florida_launch, from Launch Library). A
+    filler, always there to fill a hole. Rich purple once it's Go with a real time;
+    light purple while the date is still loose. Day and month dates are read in UTC,
+    which is how Launch Library pins them, so midnight UTC doesn't land on the day before. -#}
+{%- set lw = as_datetime(states('sensor.next_florida_launch'), none) -%}
+{%- if lw and (now() - lw).total_seconds() < 3600 -%}
+  {%- set prec = (state_attr('sensor.next_florida_launch', 'net_precision') or {}).get('name', 'Day') -%}
+  {%- set l_go = (state_attr('sensor.next_florida_launch', 'status') or {}).get('abbrev') == 'Go' -%}
+  {%- set timed = prec in ['Second', 'Minute', 'Hour'] -%}
+  {%- set l_at = lw | as_local if timed else lw -%}
+  {%- set l_days = (l_at.date() - now().date()).days -%}
+  {%- set l_day = 'Today' if l_days == 0 else 'Tomorrow' if l_days == 1 else l_at.strftime('%a') if 0 < l_days < 7 else l_at.strftime('%b %-d') -%}
+  {%- set l_parts = (state_attr('sensor.next_florida_launch', 'name') or '').split(' | ') -%}
+  {%- set rocket = l_parts[0] | regex_replace('\\s+(Block\\s*\\d+|[A-Z]{2,}\\d+[A-Z]*)$', '') -%}
+  {%- set payload = (l_parts[1] if l_parts | count > 1 else '') | regex_replace('\\s*\\(.*\\)$', '') -%}
+  {%- set ns.t = ns.t + [dict(id='launch', tier=3, order=98, shape='S', filler=true, label='Launch', tone=('plan' if l_go and timed else 'climate'),
+      say=((l_day ~ (', ' if l_days >= 7 else ' ') ~ at_clock(l_at)) if timed else l_day if prec in ['Day', 'Morning', 'Afternoon'] else l_at.strftime('%B')),
+      sub=rocket ~ (' · ' ~ payload if payload else ''), viz=none, act=none, tap=none)] -%}
+{%- endif -%}
+
+{#- A snack, offered only when a hole in the grid needs filling: never at night or while
+    you're away, never within three hours of a meal, and not while a feeder reports a
+    problem. Runs the same Feed both script as the Snack time button, one portion each,
+    and asks for a second tap first. -#}
+{%- set fed_at = [states('button.zigs_food_feed'), states('button.donuts_food_feed')] | map('as_datetime', none) | reject('none') | list -%}
+{%- set fed_ago = ((now() - fed_at | max).total_seconds() / 3600) if fed_at else 99 -%}
+{%- if not night and not away and fed_ago >= 3 and 10 <= now().hour < 21
+    and not is_state('binary_sensor.zigs_food_problem', 'on') and not is_state('binary_sensor.donuts_food_problem', 'on') -%}
+  {%- set ns.t = ns.t + [dict(id='snack', tier=3, order=99, shape='S', filler=true, label='Zig & Donut', tone='cats',
+      say='Snack time?', sub=('Fed ' ~ fed_ago | int ~ ' h ago' if fed_ago < 24 else ''), viz=none,
+      act=dict(label='Give a snack', type='service', service='script.cats_feed', data=dict(portions=1), confirm=true), tap='cats')] -%}
+{%- endif -%}
+
+{#- ============================== P4 house health ============================== -#}
+{%- set batt = label_entities('battery') | select('is_state_attr', 'device_class', 'battery') | list -%}
+{%- set ns4 = namespace(low=[], off=[]) -%}
+{%- for e in batt -%}{%- if states(e) | is_number and states(e) | float < 15 -%}{%- set ns4.low = ns4.low + [state_attr(e, 'friendly_name') | replace(' Battery', '')] -%}{%- endif -%}{%- endfor -%}
+{%- for e in label_entities('security') + label_entities('safety') -%}
+  {%- set so = expand(e) | first -%}
+  {%- if so is defined and so and so.state == 'unavailable' and (now() - so.last_changed).total_seconds() > 3600 -%}
+    {%- set ns4.off = ns4.off + [state_attr(e, 'friendly_name')] -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- set updates = states.update | selectattr('state', 'eq', 'on') | map(attribute='name') | list -%}
+{%- set bk = states('sensor.backup_last_successful_automatic_backup') -%}
+{%- set no_backup = bk in ['unknown', 'unavailable'] or (as_datetime(bk, none) is not none and (now() - as_datetime(bk)).days >= 3) -%}
+{%- set issues = (ns4.low | count) + (ns4.off | count) + (updates | count) + (1 if no_backup else 0) -%}
+{%- if issues > 0 -%}
+  {%- set bits = ([(ns4.low | count) ~ (' battery' if ns4.low | count == 1 else ' batteries')] if ns4.low else [])
+      + ([ns4.off[0] ~ ' offline'] if ns4.off | count == 1 else [(ns4.off | count) ~ ' offline'] if ns4.off else [])
+      + ([(updates | count) ~ (' update' if updates | count == 1 else ' updates')] if updates else [])
+      + (['no recent backup'] if no_backup else []) -%}
+  {%- set ns.t = ns.t + [dict(id='health', tier=(1 if ns4.off else 4), order=(9 if ns4.off else 1), shape='S', label='House health', tone='health',
+      say=issues ~ (' little fix' if issues == 1 else ' little fixes'), sub=bits | join(', ') | capitalize,
+      viz=none, act=none, tap='health', detail=dict(batteries=ns4.low, offline=ns4.off, updates=updates, backup=not no_backup))] -%}
+{%- endif -%}
+
+{#- ============================== Sports ============================== -#}
+{%- from 'bento_sports.jinja' import sports_tiles -%}
+{%- set ns.t = ns.t + (sports_tiles(away) | from_json) -%}
+
+{#- While away, the away tile covers climate, cats and scenes -#}
+{%- set hide = ['climate', 'cats', 'scenes'] if away else [] -%}
+{{ ns.t | rejectattr('id', 'in', hide) | sort(attribute='order') | sort(attribute='tier') | to_json }}
+{%- endmacro -%}

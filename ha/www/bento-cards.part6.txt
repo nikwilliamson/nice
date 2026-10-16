@@ -1,0 +1,165 @@
+const WLED_PAL = {"Default":["009b00d5","10bd00b8","20da0092","30f3005c","40f45500","50dc8f00","60d5b400","70d5d500","80d59b00","90ef6600","a0f90044","b0e10086","c0c400b0","d0a300cf","e07600e8","f00032fc"],"* Random Cycle":["r","r","r","r"],"* Color 1":["c1"],"* Colors 1&2":["c1","c1","c2","c2"],"* Color Gradient":["c3","c2","c1"],"* Colors Only":["c1","c1","c1","c1","c1","c2","c2","c2","c2","c2","c3","c3","c3","c3","c3","c1"],"Party":["009b00d5","10bd00b8","20da0092","30f3005c","40f45500","50dc8f00","60d5b400","70d5d500","80d59b00","90ef6600","a0f90044","b0e10086","c0c400b0","d0a300cf","e07600e8","f00032fc"],"Cloud":["000000ff","1000008b","2000008b","3000008b","4000008b","5000008b","6000008b","7000008b","800000ff","9000008b","a087ceeb","b087ceeb","c0add8e6","d0ffffff","e0add8e6","f087ceeb"],"Lava":["00000000","10800000","20000000","30800000","408b0000","508b0000","60800000","708b0000","808b0000","908b0000","a0ff0000","b0ffa500","c0ffffff","d0ffa500","e0ff0000","f08b0000"],"Ocean":["00191970","1000008b","20191970","30000080","4000008b","500000cd","602e8b57","70008080","805f9ea0","900000ff","a0008b8b","b06495ed","c07fffd4","d02e8b57","e000ffff","f087cefa"],"Forest":["00006400","10006400","20556b2f","30006400","40008000","50228b22","606b8e23","70008000","802e8b57","9066cdaa","a032cd32","b09acd32","c090ee90","d07cfc00","e066cdaa","f0228b22"],"Rainbow":["00ff0000","10eb7000","20d59b00","30d5ba00","40d5d500","509ceb00","6000ff00","7000eb70","8000d59b","90009cd4","a00000ff","b07000eb","c09b00d5","d0ba00bb","e0d5009b","f0eb0072"],"Rainbow Bands":["00ff0000","10000000","20d59b00","30000000","40d5d500","50000000","6000ff00","70000000","8000d59b","90000000","a00000ff","b0000000","c09b00d5","d0000000","e0d5009b","f0000000"],"Sunset":["00b50000","16da5500","33ffaa00","55d3554d","87a700a9","c64900bc","ff0000cf"],"Rivendell":["0018452c","65496946","a5818c61","f2c8cca6","ffc8cca6"],"Breeze":["00103033","591ba6af","99c5e9ff","ff009198"],"Red & Blue":["00290e63","1f80184a","3fe32232","5f841f4c","7f2f1d66","9f6d2f65","bfb04264","df813968","ff54306c"],"Yellowout":["00debf08","ff753401"],"Analogous":["002600ff","3f5600ff","7f8b00ff","bfc40075","ffff0000"],"Splash":["00ba3fff","7fe30955","afeacdd5","ddcd26b0","ffcd26b0"],"Pastel":["003d87b8","2481bca9","57cbf19b","64e4ed8d","6bffe87f","73fbca82","78f8ac85","80fbca82","b4ffe87f","dffff278","fffffc71"],"Sunset 2":["00af793e","1d80673c","4454543a","44f8b837","61efcc5d","7ce6e185","b2667d81","ff001a7d"],"Beach":["00fffeec","0cfffeec","16fffeec","1adfe0b2","1cc0c37c","1cb0ffe7","327bfbec","474af6f1","5d21e1e4","7800ccd7","8504a8b2","880a848f","8833bdd4","d0179fc9","ff0081be"],"Vintage":["00291218","33490016","4ca5aa26","65ffbd50","7f8b3828","99490016","e5291218","ff291218"],"Departure":["00352200","2a563300","3f936c31","54d4a66c","6aebd4b4","74ffffff","8abfffc1","9454ff58","aa00ff00","bf00c000","d4008000","ff008000"],"Landscape":["00000000","251f5913","4c48b22b","7f96eb05","80baea77","82dee9fc","99c5dbe7","cc84b3fd","ff1c6be1"],"Beech":["000c2d00","13655602","26cf8004","3ff3c512","426dc492","ff052707"],"Sherbet":["00ff6629","2bff8c5a","56ff335a","7fff99a9","aafffff9","d171ff55","ff9dff89"],"Hult":["00fbd8fc","30ffc0ff","59ef5ff1","a03399d9","d818b8ae","ff18b8ae"],"Hult 64":["0018b8ae","4208a296","687c8907","82b2ba16","967c8907","c9069c90","ef008075","ff008075"],"Drywet":["00776121","2aebc758","54a9ee7c","7f25eee8","aa0778ec","d41b01af","ff043365"],"Jul":["00e2060c","5e1a604e","8482bd5e","ffb10309"],"Grintage":["001d0803","354c0100","688e601c","99d3bf3d","ff75812a"],"Rewhi":["00b1a0c7","48cd9e95","59e99b65","6bff5f3f","8dc0626d","ff84659f"],"Tertiary":["000019ff","3f268c75","7f56ff00","bfa78c13","ffff1929"],"Fire":["00000000","2e4d0000","60b10000","6cc42609","77d74c13","92eb731d","aeff9929","bcffb229","caffcc29","daffe629","eaffff29","f4ffff8f","ffffffff"],"Icefire":["00000000","3b003375","770066ff","952699ff","b456ccff","d9a7e6ff","ffffffff"],"Cyane":["003d9b2c","195fae4d","3c84c171","5d9aa67d","6aaf8a88","6db77989","71c2688a","74e1b3a5","7cffffc0","a8a7dacb","ff54b6d7"],"Light Pink":["004f206d","195a2875","3366307c","4c8d87b9","66b4def8","6dd0ecfc","72edfaff","7acec8ef","95b195de","b7bb82cb","ffc66fb8"],"Autumn":["005a0e05","338b290d","54b44611","68c0ca7d","70b18903","7abec883","7cc0ca7c","87b18903","8ec2cb76","a3b14411","cc80230c","f94a0502","ff4a0502"],"Magenta":["00000000","2a000075","540000ff","7f7100ff","aaff00ff","d4ff80ff","ffffffff"],"Magred":["00000000","3f710075","7fff00ff","bfff0075","ffff0000"],"Yelmag":["00000000","2a710000","54ff0000","7fff0075","aaff00ff","d4ff8075","ffffff00"],"Yelblu":["000000ff","3f0080ff","7f00ffff","bf71ff75","ffffff00"],"Orange & Teal":["0000965c","3700965c","c8ff4800","ffff4800"],"Tiamat":["0001020e","21020523","640d875c","782bffc1","8cf707f9","a0c111d0","b427ff9a","c804d5ec","dc27fc87","f0c1d5fd","fffff9ff"],"April Night":["0001052d","0a01052d","1905a9af","2801052d","3d01052d","4c2daf1f","5b01052d","7001052d","7ff99605","8f01052d","a201052d","b2ff5c00","c101052d","d601052d","e5df2d48","f401052d","ff01052d"],"Orangery":["00ff5f17","1eff5200","3cdf0d08","5a902c02","78ff6e11","96ff4500","b49e0d0b","d2f15211","ffd52504"],"C9":["00b80400","3cb80400","41902c02","7d902c02","82046002","be046002","c3070758","ff070758"],"Sakura":["00c4130a","41ff452d","82df2d48","c3ff5267","ffdf0d11"],"Aurora":["0001052d","4000c817","8000ff00","aa00f32d","c8008707","ff01052d"],"Atlantica":["00001c70","322060ff","6400f32d","960c5f52","c819be5f","ff28aa50"],"C9 2":["00067e02","2d067e02","2e041e72","5a041e72","5bff0500","87ff0500","88c43902","b4c43902","b5895502","ff895502"],"C9 New":["00ff0500","3cff0500","3dc43902","78c43902","79067e02","b4067e02","b5041e72","ff041e72"],"Temperature":["00145cab","0e0f6fba","1c068ed3","2a02a1e3","3810b5ef","4626bcc9","5456ccc8","638bdbb0","71b6e57d","7fc4e63f","8df1f016","9bfede1e","aafbc704","b8f79d09","c6f3720f","e2d51e1d","f0972623","ff972623"],"Aurora 2":["0011b10d","4079f205","8019ad79","c0fa4d7f","ffab65dd"],"Retro Clown":["00f2a826","75e24e50","ffa136e1"],"Candy":["00f3f217","0ff2a826","8e6f1597","c64a1696","ff000075"],"Toxy Reaf":["0002ef7e","ff9123d9"],"Fairy Reaf":["00dc13bb","a00ce1db","dbcbf2df","ffffffff"],"Semi Blue":["00000000","0c180426","35370854","502b309f","771f59ed","91323ba6","ba471e62","e91f0f2d","ff000000"],"Pink Candy":["00ffffff","2d3240ff","70f210ba","8cffffff","9bf210ba","c4740da6","ffffffff"],"Red Reaf":["00244472","6895c3f8","bcff0000","ff5e0e09"],"Aqua Flash":["00000000","4282f2f5","60ffff35","7cffffff","99ffff35","bc82f2f5","ff000000"],"Yelblu Hot":["002b1e39","3a490077","7a57004a","9ec53916","b7da751b","dbefb120","fff6f71b"],"Lite Light":["00000000","09141516","282e2b31","422e2b31","653d1041","ff000000"],"Red Flash":["00000000","63f20c08","82fde4a3","9bf20c08","ff000000"],"Blink Red":["00040704","2b28193e","4c3d0f24","6dcf2760","7fff9cb8","a5b949cf","cc6942f0","ff4d1d4e"],"Red Shift":["0062165d","2d671649","63c02d38","84ebbb3b","afe4551a","c9e43830","ff020002"],"Red Tide":["00fb2e00","1cff8b19","2bf69e3f","3af6d87b","54f35e0a","72b1410b","8cfff173","a8b1410b","c4fae99e","d8ff5e06","ff7e0804"],"Candy2":["006d6666","192a3147","30796054","49f1d61a","59d8682c","822a3147","a3ffb12f","baf1d61a","d36d6666","ff14130d"],"Traffic Light":["00000000","5500ff00","aaffff00","ffff0000"]};
+// Effects that paint with the light's colours rather than the palette, and the
+// ones that move to sound (from WLED's /json/fxdata)
+const WLED_NOPAL = new Set(["Solid", "Image", "Stream 2", "Oscillate", "Pride 2015", "Copy Segment", "Solid Pattern Tri", "Solid Glitter", "Freqwave", "Freqmatrix", "Noisefire", "Matrix", "DJ Light", "Funky Plank", "Sun Radiation"]);
+const WLED_AUDIO = new Set(["Pixels", "Pixelwave", "Juggles", "Matripix", "Gravimeter", "Plasmoid", "Puddles", "Midnoise", "Noisemeter", "Freqwave", "Freqmatrix", "GEQ", "Waterfall", "Freqpixels", "Noisefire", "Puddlepeak", "Noisemove", "Ripple Peak", "Freqmap", "Gravcenter", "Gravcentric", "Gravfreq", "DJ Light", "Funky Plank", "Blurz", "Waverly", "Swirl", "Rocktaves", "Akemi", "PS Spray", "PS GEQ 2D", "PS GEQ Nova", "PS Blobs", "PS GEQ 1D", "PS Sonic Stream", "PS Sonic Boom", "PS Springy"]);
+// Hue's effects have no palette to read, so each gets the colours it is known for
+const HUE_FX = {
+  candle: ["fire", ["ff8a1c", "ffb35c", "ff7012", "ffc074"]], fire: ["fire", ["ff2a00", "ff6a00", "ffb000", "ff4500"]],
+  prism: ["scroll", "r"], sparkle: ["twinkle", ["c1", "c1", "ffffff"]], glisten: ["twinkle", ["c1", "c3", "c1"]],
+  opal: ["drift", ["ffd6e8", "c9f0ff", "fff3c4", "d8ffd6"]], underwater: ["drift", ["0040ff", "00a6c8", "00e0c0", "1a6bff"]],
+  cosmos: ["drift", ["2a0a6b", "6a2bd9", "ff4fd8", "1a1a8c"]], sunbeam: ["breathe", ["ffd27a", "fff1c9", "ffb84d"]],
+  enchant: ["drift", ["ff5fa2", "b45cff", "ffc0e0", "8a4dff"]], sunrise: ["still", ["2b1055", "d4386b", "ff9a3c", "ffe29a"]],
+  sunset: ["still", ["ffe29a", "ff7b39", "c8305c", "2b1055"]],
+};
+const RAINBOW = [0, 51, 102, 153, 204, 255].map((p, i) => [p, ...hslRgb(i * 60)]);
+function hslRgb(h) { const f = (n) => { const k = (n + h / 30) % 12; return Math.round(255 * (0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); }; return [f(0), f(8), f(4)]; }
+// Palette tokens to [pos, r, g, b] stops, spread evenly when they carry no position
+function ledStops(list, c1) {
+  if (list === "r" || list?.[0] === "r") return RAINBOW;
+  const c2 = c1.map((v) => Math.round(v * 0.35)), c3 = c1.map((v) => Math.round(v + (255 - v) * 0.55));
+  const cs = list.map((x) => (x === "c1" ? [null, ...c1] : x === "c2" ? [null, ...c2] : x === "c3" ? [null, ...c3]
+    : x.length === 8 ? [parseInt(x.slice(0, 2), 16), ...[2, 4, 6].map((i) => parseInt(x.slice(i, i + 2), 16))] : [null, ...[0, 2, 4].map((i) => parseInt(x.slice(i, i + 2), 16))]));
+  if (cs.length === 1) cs.push([...cs[0]]);
+  return cs.map((s, i) => (s[0] == null ? [Math.round((i / (cs.length - 1)) * 255), s[1], s[2], s[3]] : s));
+}
+function ledAt(stops, t) {
+  const p = t * 255;
+  let i = 0;
+  while (i < stops.length - 1 && stops[i + 1][0] <= p) i++;
+  const a = stops[i], b = stops[i + 1] || [256, ...stops[0].slice(1)], f = b[0] === a[0] ? 0 : (p - a[0]) / (b[0] - a[0]);
+  return [1, 2, 3].map((k) => Math.round(a[k] + (b[k] - a[k]) * Math.max(0, Math.min(1, f))));
+}
+// Two periods side by side, so sliding it half its width loops without a seam
+function ledGradient(stops) {
+  const one = (off) => stops.map((s) => `rgb(${s[1]},${s[2]},${s[3]}) ${(off + (s[0] / 255) * 50).toFixed(1)}%`);
+  const first = `rgb(${stops[0][1]},${stops[0][2]},${stops[0][3]})`;
+  return `linear-gradient(90deg, ${[...one(0), `${first} 50%`, ...one(50), `${first} 100%`].join(", ")})`;
+}
+// How a WLED effect moves, by its name
+function wledMotion(fx) {
+  if (!fx || /^(solid|static|image|copy segment|solid pattern( tri)?)$/i.test(fx)) return "still";
+  if (WLED_AUDIO.has(fx)) return "audio";
+  if (/fire|candle|flame|lava|torch/i.test(fx)) return "fire";
+  if (/breath|fade|heartbeat|pulse/i.test(fx)) return "breathe";
+  if (/blink|strobe|lightning|flash|police/i.test(fx)) return "blink";
+  if (/twink|sparkle|glitter|star|dissolve|popcorn|ripple|drip|rain|firework|pixel|juggle|danc|bounc|fairy|halloween|flicker|confetti|random/i.test(fx)) return "twinkle";
+  if (/noise|plasma|lake|pacifica|aurora|flow|ocean|wave|cloud|perlin|blend|pride|drift/i.test(fx)) return "drift";
+  return "scroll";
+}
+// What a strip shows: its colours and how they move
+function stripLook({ wled, fx, pal, c1 }) {
+  if (wled) {
+    const usePal = !WLED_NOPAL.has(fx) && pal && WLED_PAL[pal];
+    const motion = wledMotion(fx);
+    return { stops: usePal ? ledStops(WLED_PAL[pal], c1) : ledStops(["c1", "c1"], c1), motion, usesPal: !!usePal };
+  }
+  const h = HUE_FX[String(fx || "").toLowerCase()];
+  if (h) return { stops: ledStops(h[1], c1), motion: h[0], usesPal: false };
+  const dim = c1.map((v) => Math.round(v * 0.72)), lift = c1.map((v) => Math.round(v + (255 - v) * 0.25));
+  return { stops: [[0, ...dim], [96, ...c1], [160, ...lift], [224, ...c1]], motion: "still", usesPal: false };
+}
+
+class BentoControls extends HTMLElement {
+  setConfig(config) {
+    if (!Array.isArray(config.entities)) throw new Error("bento-controls needs entities");
+    this._config = { title: "", tone: null, room_tone: null, strip: null, all: null, sun: "sun.sun", spark_hours: 24, font_scale: 1, ...config };
+    this._config.entities = config.entities.map((e) => (typeof e === "string" ? { entity: e } : e));
+    this.style.setProperty("--bento-scale", this._config.font_scale);
+    this._sig = null;
+    this._series = {};
+    this._daily = {};
+    this._pending = {};
+  }
+  getCardSize() { return Math.ceil(this._config.entities.length / 2) + 1; }
+  getGridOptions() { return { columns: "full", rows: "auto" }; }
+  connectedCallback() { if (!this._gutter) { this._gutter = true; pageGutter(true); } }
+  disconnectedCallback() { this._ro?.disconnect(); this._ro = null; if (this._gutter) { this._gutter = false; pageGutter(false); } }
+
+  set hass(hass) {
+    hass = this._hass = pending(this).take(hass);
+    if (this._drag) return; // never redraw under a finger
+    if (this._picking && Date.now() - this._picking < 30000) return; // nor under an open dropdown
+    const ids = this._config.entities.flatMap((e) => e.bars ? e.bars.map((b) => b.entity || b) : e.adaptive ? [e.adaptive, `${e.adaptive}_sleep_mode`] : e.strip ? [e.strip, e.palette, e.speed, e.intensity, e.reverse, e.freeze].filter(Boolean) : [e.board || e.entity]);
+    const night = applyNight(this, isNight(hass, this._config.sun));
+    const sig = JSON.stringify([night, this._cols, this._confirm, ids.map((id) => { const s = hass.states[id]; return s ? [s.state, s.attributes.brightness, s.attributes.rgb_color, s.attributes.media_title, s.attributes.volume_level, s.attributes.temperature, s.attributes.current_temperature, s.attributes.hvac_action, s.attributes.color_temp_kelvin, (s.attributes.manual_control || []).length, s.attributes.board, s.attributes.effect] : null; }), this._histSig || "", this._pending]);
+    if (sig === this._sig) return;
+    this._sig = sig;
+    this._night = night;
+    keepScroll(() => this._render());
+    if (!this._histAt || Date.now() - this._histAt > 300000) this._loadHistory();
+  }
+
+  // Tone for a tile: the room's own colour for lights in a room, otherwise by kind
+  _tone(s, on) {
+    const night = this._night, d = cDomain(s.entity_id), dc = s.attributes.device_class;
+    if (!on) return offTone(night);
+    if (d === "light") return lightTone(s.attributes, night);
+    if (this._config.room_tone != null && C_TOGGLE.has(d)) { const t = roomTone(this._config.room_tone, night, true); return { ...t, accent: tone("act", night).accent }; }
+    if (this._config.tone) return tone(this._config.tone, night);
+    if (d === "media_player") return tone("media", night);
+    if (d === "climate") return tone("climate", night);
+    if (d === "lock" || d === "binary_sensor") return tone("act", night);
+    if (d === "scene" || d === "script") return tone("scenes", night);
+    if (d === "sensor") return tone(dc === "power" || dc === "energy" || dc === "humidity" ? "energy" : dc === "monetary" ? "money" : dc === "battery" ? "health" : "climate", night);
+    return tone("today", night);
+  }
+
+  _isOn(s) {
+    const d = cDomain(s.entity_id), st = s.state;
+    if (st === "unavailable" || st === "unknown") return false;
+    if (d === "media_player") return st === "playing" || st === "paused" || st === "on" || st === "buffering";
+    if (d === "climate") return st !== "off";
+    if (d === "lock") return st === "unlocked" || st === "open" || st === "jammed";
+    if (d === "vacuum") return st === "cleaning" || st === "returning";
+    if (d === "sensor" || d === "scene" || d === "script" || C_VALUE.has(d)) return true;
+    return st === "on";
+  }
+
+  _render() {
+    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    watchColumns(this, (w) => (w && w < 420 ? 2 : w && w < 760 ? 3 : 4));
+    const h = this._hass, c = this._config, cols = this._cols || 4;
+    const list = c.entities.filter((e) => e.bars || (e.adaptive && h.states[e.adaptive]) || (e.board && h.states[e.board]?.attributes?.board) || (e.strip && h.states[e.strip]) || h.states[e.entity]);
+    const tiles = list.map((e, i) => {
+      if (e.bars) return { id: `bars-${i}`, shape: e.shape || "F", e, s: null };
+      if (e.adaptive) return { id: `al-${i}`, shape: e.shape || "W", e, s: null };
+      if (e.board) return { id: `board-${i}`, shape: e.shape || "W", e, s: null };
+      if (e.strip) return { id: e.strip, shape: e.shape || (h.states[e.strip].state !== "on" ? "W" : cols < 4 ? "FL" : "L"), e, s: null };
+      const s = h.states[e.entity];
+      const d = cDomain(e.entity), dc = s.attributes.device_class;
+      let shape = e.shape || C_DOMAIN_SHAPE[d] || "S";
+      // Charts want width on a wide screen; on a phone two small ones sit side by side
+      if (!e.shape && d === "sensor" && ["power", "temperature", "humidity"].includes(dc)) shape = cols < 3 ? "S" : "W";
+      // A player that is off is just a switch; only a busy one earns the wide tile
+      if (!e.shape && d === "media_player" && !this._isOn(s)) shape = "S";
+      // Under four columns a big chart takes the whole row (never two-thirds of it);
+      // a big control shrinks to wide instead
+      if (shape === "L" && cols < 4) shape = d === "sensor" ? "FL" : "W";
+      return { id: e.entity, shape, e, s };
+    });
+    // Rather than stretch one lonely tile across the last row, widen a few small ones
+    // (busy ones first) so the cells come out even
+    const used = tiles.reduce((n, t) => n + Math.min(SHAPES[t.shape][0], cols) * SHAPES[t.shape][1], 0);
+    let spare = (cols - (used % cols)) % cols;
+    const small = tiles.filter((t) => t.s && t.shape === "S").sort((a, b) => Number(this._isOn(b.s)) - Number(this._isOn(a.s)));
+    for (const t of small) { if (!spare) break; t.shape = "W"; spare -= 1; }
+    const packed = BentoGrid.prototype._pack(tiles, cols, true).tiles;
+    // Section header: a title, and one switch for everything switchable in it
+    const switchable = list.filter((e) => e.strip || (e.entity && C_TOGGLE.has(cDomain(e.entity)))).map((e) => (e.strip ? { ...e, entity: e.strip } : e)).filter((e) => h.states[e.entity].state !== "unavailable");
+    let all = "";
+    if (c.all !== false && switchable.length > 1) {
+      const any = switchable.some((e) => h.states[e.entity].state === "on");
+      all = `<button class="all" data-all="${any ? "off" : "on"}">${any ? "All off" : "All on"}</button>`;
+    }
+    const snap = motionBefore(this);
+    this.shadowRoot.innerHTML = `<style>${BASE_CSS}${BENTO_BASE_CSS}${CONTROLS_CSS}</style>
+      ${c.title || all ? `<div class="head">${c.title ? `<span class="title">${esc(c.title)}</span>` : "<span></span>"}${all}</div>` : ""}
+      <div class="grid ${this._night ? "is-night" : ""}" style="--cols:${cols}">${packed.map((t) => this._tile(t)).join("")}</div>`;
+    this._wire(switchable);
+    motionAfter(this, snap, { night: this._night });
+  }
+
+  // Which Adaptive Lighting tiles in this card have let go of a light (it was changed by hand)
+  _manual(eid) {
+    const s = this._hass.states[eid];

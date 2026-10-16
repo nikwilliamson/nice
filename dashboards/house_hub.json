@@ -1,0 +1,4659 @@
+{
+ "views": [
+  {
+   "title": "Home",
+   "path": "home",
+   "icon": "mdi:home",
+   "type": "sections",
+   "max_columns": 3,
+   "theme": "Hearth",
+   "dense_section_placement": false,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-hero",
+       "people": [
+        {
+         "entity": "person.nikw",
+         "name": "Nik"
+        },
+        {
+         "entity": "person.kat",
+         "name": "Kat",
+         "driving": "binary_sensor.kat_s_car_user_present",
+         "eta": "sensor.kat_s_car_time_to_arrival"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-today",
+       "hours": 24,
+       "empty": "Nothing on the calendar",
+       "calendars": [
+        {
+         "entity": "calendar.home_calendar",
+         "icon": "mdi:calendar-heart"
+        },
+        {
+         "entity": "calendar.rachio_base_station_ca824098",
+         "icon": "mdi:sprinkler-variant"
+        }
+       ],
+       "lookahead_hours": 72
+      },
+      {
+       "type": "custom:hearth-attention",
+       "calm": "All calm. Doors locked, nothing running.",
+       "items": [
+        {
+         "entity": "binary_sensor.oven_left_on",
+         "is": "on",
+         "tone": "alert",
+         "icon": "mdi:stove",
+         "label": "Oven is on"
+        },
+        {
+         "entity": "binary_sensor.range_left_on",
+         "is": "on",
+         "tone": "alert",
+         "icon": "mdi:gas-burner",
+         "label": "Range is on"
+        },
+        {
+         "entity": "binary_sensor.ac_condenser_not_starting",
+         "is": "on",
+         "tone": "alert",
+         "icon": "mdi:air-conditioner",
+         "label": "AC condenser isn't starting"
+        },
+        {
+         "entity": "binary_sensor.ac_running_not_cooling",
+         "is": "on",
+         "tone": "alert",
+         "icon": "mdi:air-conditioner",
+         "label": "AC is running but not cooling"
+        },
+        {
+         "entity": "lock.aqara_smart_lock_u100",
+         "is": "unlocked",
+         "tone": "warn",
+         "icon": "mdi:lock-open-variant-outline",
+         "label": "Front door unlocked",
+         "button": {
+          "label": "Lock",
+          "action": {
+           "service": "lock.lock",
+           "target": {
+            "entity_id": "lock.aqara_smart_lock_u100"
+           }
+          }
+         }
+        },
+        {
+         "entity": "lock.aqara_smart_lock_u100_2",
+         "is": "unlocked",
+         "tone": "warn",
+         "icon": "mdi:lock-open-variant-outline",
+         "label": "Game room door unlocked",
+         "button": {
+          "label": "Lock",
+          "action": {
+           "service": "lock.lock",
+           "target": {
+            "entity_id": "lock.aqara_smart_lock_u100_2"
+           }
+          }
+         }
+        },
+        {
+         "entity": "lock.aqara_smart_lock_u50",
+         "is": "unlocked",
+         "tone": "warn",
+         "icon": "mdi:lock-open-variant-outline",
+         "label": "Bedroom door unlocked",
+         "button": {
+          "label": "Lock",
+          "action": {
+           "service": "lock.lock",
+           "target": {
+            "entity_id": "lock.aqara_smart_lock_u50"
+           }
+          }
+         }
+        },
+        {
+         "entity": "binary_sensor.front_door",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:door-open",
+         "label": "Front door is open"
+        },
+        {
+         "entity": "binary_sensor.back_door",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:door-open",
+         "label": "Back door is open"
+        },
+        {
+         "entity": "binary_sensor.bedroom_exterior_door",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:door-open",
+         "label": "Bedroom outside door is open"
+        },
+        {
+         "entity": "binary_sensor.living_room_window_1",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:window-open-variant",
+         "label": "Living room window open"
+        },
+        {
+         "entity": "binary_sensor.living_room_window_2",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:window-open-variant",
+         "label": "Living room window open"
+        },
+        {
+         "entity": "binary_sensor.kitchen_window",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:window-open-variant",
+         "label": "Kitchen window open"
+        },
+        {
+         "entity": "input_boolean.wash_waiting_for_dryer",
+         "is": "on",
+         "tone": "warn",
+         "icon": "mdi:basket-unfill",
+         "label": "Move the wash to the dryer"
+        },
+        {
+         "entity": "sensor.litter_robot_waste_drawer",
+         "above": 79,
+         "tone": "warn",
+         "icon": "mdi:cat",
+         "label": "Empty the litter drawer",
+         "tap": {
+          "navigate": "/house-hub/household"
+         }
+        },
+        {
+         "entity": "sensor.laundry_room_washer_current_status",
+         "not": [
+          "power_off",
+          "unavailable",
+          "unknown"
+         ],
+         "icon": "mdi:washing-machine",
+         "label": "Washer",
+         "detail_entity": "sensor.laundry_room_washer_current_status",
+         "tap": {
+          "navigate": "/house-hub/household"
+         }
+        },
+        {
+         "entity": "sensor.dryer_current_status",
+         "not": [
+          "power_off",
+          "unavailable",
+          "unknown"
+         ],
+         "icon": "mdi:tumble-dryer",
+         "label": "Dryer",
+         "detail_entity": "sensor.dryer_current_status",
+         "tap": {
+          "navigate": "/house-hub/household"
+         }
+        },
+        {
+         "any": [
+          {
+           "entity": "switch.outside_sprinklers_left_front",
+           "is": "on"
+          },
+          {
+           "entity": "switch.outside_sprinklers_right_front",
+           "is": "on"
+          },
+          {
+           "entity": "switch.outside_sprinklers_left_driveway",
+           "is": "on"
+          },
+          {
+           "entity": "switch.outside_sprinklers_right_driveway",
+           "is": "on"
+          }
+         ],
+         "icon": "mdi:sprinkler-variant",
+         "label": "Sprinklers running",
+         "tap": {
+          "navigate": "/house-hub/rooms"
+         }
+        },
+        {
+         "any": [
+          {
+           "entity": "schedule.recycling_out",
+           "is": "on"
+          },
+          {
+           "entity": "schedule.trash_out",
+           "is": "on"
+          }
+         ],
+         "icon": "mdi:recycle",
+         "label": "Bins out tonight",
+         "detail_entity": "input_select.curbside_pickup",
+         "button": {
+          "label": "Done",
+          "action": {
+           "service": "input_button.press",
+           "target": {
+            "entity_id": "input_button.curbside_taken_out"
+           }
+          }
+         },
+         "when": [
+          {
+           "entity": "input_select.curbside_pickup",
+           "not": [
+            "Nothing",
+            "unknown",
+            "unavailable"
+           ]
+          }
+         ]
+        },
+        {
+         "entity": "sensor.litter_robot_hopper_status",
+         "is": "empty",
+         "icon": "mdi:cat",
+         "label": "Refill the litter hopper",
+         "tap": {
+          "navigate": "/house-hub/household"
+         }
+        },
+        {
+         "entity": "media_player.living_room_living_room_apple_tv",
+         "is": "playing",
+         "icon": "mdi:television-play",
+         "label": "Living room TV playing",
+         "tap": {
+          "more_info": "media_player.living_room_living_room_apple_tv"
+         }
+        },
+        {
+         "entity": "media_player.bedroom_bedroom_apple_tv",
+         "is": "playing",
+         "icon": "mdi:television-play",
+         "label": "Bedroom TV playing",
+         "tap": {
+          "more_info": "media_player.bedroom_bedroom_apple_tv"
+         }
+        },
+        {
+         "entity": "media_player.guest_room_guest_room_apple_tv",
+         "is": "playing",
+         "icon": "mdi:television-play",
+         "label": "Guest room TV playing",
+         "tap": {
+          "more_info": "media_player.guest_room_guest_room_apple_tv"
+         }
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-moods",
+       "moods": [
+        {
+         "name": "Adaptive",
+         "icon": "mdi:theme-light-dark",
+         "color": "#9cbf2b",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.whole_house_adaptive"
+          }
+         }
+        },
+        {
+         "name": "Bright",
+         "icon": "mdi:white-balance-sunny",
+         "color": "#ffb81c",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.whole_house_bright"
+          }
+         }
+        },
+        {
+         "name": "Relax",
+         "icon": "mdi:sofa-outline",
+         "color": "#ff6b2c",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.whole_house_relax"
+          }
+         }
+        },
+        {
+         "name": "Dim",
+         "icon": "mdi:brightness-4",
+         "color": "#c2509a",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.whole_house_dim"
+          }
+         }
+        },
+        {
+         "name": "Night",
+         "icon": "mdi:weather-night",
+         "color": "#3f6fd8",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.whole_house_night"
+          }
+         }
+        },
+        {
+         "name": "Morning",
+         "icon": "mdi:weather-sunset-up",
+         "color": "#ffb81c",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.lighting_morning"
+          }
+         }
+        },
+        {
+         "name": "Night path",
+         "icon": "mdi:shoe-print",
+         "color": "#3f6fd8",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.lighting_night_path"
+          }
+         }
+        },
+        {
+         "name": "Bedtime",
+         "icon": "mdi:bed-outline",
+         "color": "#3f6fd8",
+         "action": {
+          "service": "script.turn_on",
+          "target": {
+           "entity_id": "script.lighting_bedtime"
+          }
+         }
+        },
+        {
+         "name": "All off",
+         "icon": "mdi:lightbulb-group-off-outline",
+         "quiet": true,
+         "action": {
+          "service": "light.turn_off",
+          "target": {
+           "entity_id": "light.zone_home"
+          },
+          "confirm": "Turn off every light in the house?"
+         }
+        },
+        {
+         "name": "Lock up",
+         "icon": "mdi:lock-outline",
+         "quiet": true,
+         "action": {
+          "service": "lock.lock",
+          "target": {
+           "entity_id": [
+            "lock.aqara_smart_lock_u100",
+            "lock.aqara_smart_lock_u100_2",
+            "lock.aqara_smart_lock_u50"
+           ]
+          },
+          "confirm": "Lock every door?"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-rooms",
+       "zones": [
+        {
+         "name": "Main",
+         "navigate": "/house-hub/rooms",
+         "rooms": [
+          {
+           "name": "Living room",
+           "icon": "mdi:sofa-outline",
+           "lights": "light.living_room_living_room",
+           "temp": "sensor.living_room_temp_sensor_temperature",
+           "path": "/house-hub/rooms",
+           "alerts": [
+            {
+             "entity": "lock.aqara_smart_lock_u100",
+             "is": "unlocked",
+             "label": "Front door unlocked"
+            },
+            {
+             "any": [
+              {
+               "entity": "binary_sensor.living_room_window_1",
+               "is": "on"
+              },
+              {
+               "entity": "binary_sensor.living_room_window_2",
+               "is": "on"
+              }
+             ],
+             "label": "Window open"
+            },
+            {
+             "entity": "binary_sensor.front_door",
+             "is": "on",
+             "label": "Front door open"
+            }
+           ],
+           "tap": {
+            "navigate": "/house-hub/room-living-room"
+           },
+           "color": "#ff6b2c"
+          },
+          {
+           "name": "Kitchen",
+           "icon": "mdi:stove",
+           "lights": "light.kitchen_kitchen",
+           "path": "/house-hub/rooms",
+           "alerts": [
+            {
+             "entity": "binary_sensor.oven_left_on",
+             "is": "on",
+             "label": "Oven on"
+            },
+            {
+             "entity": "binary_sensor.range_left_on",
+             "is": "on",
+             "label": "Range on"
+            },
+            {
+             "entity": "binary_sensor.kitchen_window",
+             "is": "on",
+             "label": "Window open"
+            }
+           ],
+           "tap": {
+            "navigate": "/house-hub/room-kitchen"
+           },
+           "color": "#00a19a"
+          },
+          {
+           "name": "Game room",
+           "icon": "mdi:gamepad-variant-outline",
+           "lights": "light.game_room_game_room",
+           "temp": "sensor.game_room_temp_sensor_temperature",
+           "path": "/house-hub/rooms",
+           "alerts": [
+            {
+             "entity": "lock.aqara_smart_lock_u100_2",
+             "is": "unlocked",
+             "label": "Door unlocked"
+            },
+            {
+             "entity": "binary_sensor.back_door",
+             "is": "on",
+             "label": "Back door open"
+            }
+           ],
+           "tap": {
+            "navigate": "/house-hub/room-game-room"
+           },
+           "color": "#ffb81c"
+          },
+          {
+           "name": "Race room",
+           "icon": "mdi:racing-helmet",
+           "lights": "light.race_room_race_room",
+           "power": "sensor.race_room_power_minute_average",
+           "path": "/house-hub/rooms",
+           "temp": "sensor.race_room_temp_sensor_temperature",
+           "tap": {
+            "navigate": "/house-hub/room-race-room"
+           },
+           "color": "#c2509a"
+          },
+          {
+           "name": "Guest room",
+           "icon": "mdi:bed-queen-outline",
+           "lights": "light.guest_room_guest_room",
+           "path": "/house-hub/rooms",
+           "tap": {
+            "navigate": "/house-hub/room-guest-room"
+           },
+           "color": "#9cbf2b"
+          },
+          {
+           "name": "Outside",
+           "icon": "mdi:pine-tree",
+           "lights": "light.outside_outside",
+           "temp": "sensor.outside_nik_s_weather_station_temperature_1",
+           "path": "/house-hub/rooms",
+           "alerts": [
+            {
+             "any": [
+              {
+               "entity": "switch.outside_sprinklers_left_front",
+               "is": "on"
+              },
+              {
+               "entity": "switch.outside_sprinklers_right_front",
+               "is": "on"
+              },
+              {
+               "entity": "switch.outside_sprinklers_left_driveway",
+               "is": "on"
+              },
+              {
+               "entity": "switch.outside_sprinklers_right_driveway",
+               "is": "on"
+              }
+             ],
+             "label": "Watering"
+            }
+           ],
+           "tap": {
+            "navigate": "/house-hub/room-outside"
+           },
+           "color": "#3f6fd8"
+          },
+          {
+           "name": "Pantry",
+           "icon": "mdi:cupboard-outline",
+           "lights": "light.pantry_lights",
+           "temp": "sensor.pantry_temp_sensor_temperature",
+           "path": "/house-hub/rooms",
+           "secondary": true,
+           "tap": {
+            "navigate": "/house-hub/room-pantry"
+           },
+           "color": "#e8473b"
+          },
+          {
+           "name": "Guest bath",
+           "icon": "mdi:shower",
+           "lights": "light.guest_bathroom_fan",
+           "path": "/house-hub/rooms",
+           "secondary": true,
+           "tap": {
+            "navigate": "/house-hub/room-guest-bath"
+           },
+           "color": "#2ec4c6"
+          }
+         ],
+         "climate": "climate.living_room_thermostat"
+        },
+        {
+         "name": "Bedroom suite",
+         "navigate": "/house-hub/rooms",
+         "rooms": [
+          {
+           "name": "Bedroom",
+           "icon": "mdi:bed-outline",
+           "lights": "light.bedroom_bedroom",
+           "temp": "sensor.bedroom_temp_sensor_temperature",
+           "path": "/house-hub/rooms",
+           "alerts": [
+            {
+             "entity": "lock.aqara_smart_lock_u50",
+             "is": "unlocked",
+             "label": "Door unlocked"
+            },
+            {
+             "entity": "binary_sensor.bedroom_exterior_door",
+             "is": "on",
+             "label": "Outside door open"
+            }
+           ],
+           "tap": {
+            "navigate": "/house-hub/room-bedroom"
+           },
+           "color": "#3f6fd8"
+          },
+          {
+           "name": "Bathroom",
+           "icon": "mdi:bathtub-outline",
+           "lights": "light.bathroom_bathroom",
+           "temp": "sensor.bathroom_motion_temperature",
+           "path": "/house-hub/rooms",
+           "secondary": true,
+           "tap": {
+            "navigate": "/house-hub/room-bathroom"
+           },
+           "color": "#c2509a"
+          },
+          {
+           "name": "Laundry",
+           "icon": "mdi:washing-machine",
+           "lights": "light.laundry_room_laundry_room",
+           "path": "/house-hub/household",
+           "alerts": [
+            {
+             "entity": "sensor.laundry_room_washer_current_status",
+             "not": [
+              "power_off",
+              "unavailable",
+              "unknown"
+             ],
+             "label": "Washer running"
+            },
+            {
+             "entity": "sensor.dryer_current_status",
+             "not": [
+              "power_off",
+              "unavailable",
+              "unknown"
+             ],
+             "label": "Dryer running"
+            }
+           ],
+           "secondary": true,
+           "tap": {
+            "navigate": "/house-hub/room-laundry"
+           },
+           "color": "#2ec4c6"
+          }
+         ],
+         "climate": "climate.bedroom"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-panels",
+       "panels": [
+        {
+         "type": "cars",
+         "title": "Cars",
+         "navigate": "/house-hub/garage",
+         "cars": [
+          {
+           "name": "Nik's car",
+           "battery": "sensor.nik_s_car_battery_level",
+           "charging": "sensor.nik_s_car_charging",
+           "cable": "binary_sensor.nik_s_car_charge_cable",
+           "tracker": "device_tracker.nik_s_car_location",
+           "driving": "binary_sensor.nik_s_car_user_present",
+           "power": "sensor.nik_s_car_charger_power",
+           "range": "sensor.nik_s_car_battery_range",
+           "lock": "lock.nik_s_car_lock"
+          },
+          {
+           "name": "Kat's car",
+           "battery": "sensor.kat_s_car_battery_level",
+           "charging": "sensor.kat_s_car_charging",
+           "cable": "binary_sensor.kat_s_car_charge_cable",
+           "tracker": "device_tracker.kat_s_car_location",
+           "driving": "binary_sensor.kat_s_car_user_present",
+           "power": "sensor.kat_s_car_charger_power",
+           "range": "sensor.kat_s_car_battery_range",
+           "lock": "lock.kat_s_car_lock"
+          }
+         ]
+        },
+        {
+         "type": "cats",
+         "title": "Cats",
+         "subtitle": "Litter-Robot",
+         "navigate": "/house-hub/household",
+         "status": "sensor.litter_robot_status_code",
+         "drawer": "sensor.litter_robot_waste_drawer",
+         "litter": "sensor.litter_robot_litter_level",
+         "hopper": "sensor.litter_robot_hopper_status",
+         "weight": "sensor.litter_robot_pet_weight"
+        },
+        {
+         "type": "todo",
+         "title": "To-do",
+         "entity": "todo.house_alerts",
+         "max": 5,
+         "placeholder": "Add a to-do"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-stats",
+       "stats": [
+        {
+         "label": "Outside",
+         "icon": "mdi:weather-partly-cloudy",
+         "entity": "sensor.outside_nik_s_weather_station_temperature_1",
+         "unit": "\u00b0",
+         "sub_kind": "weather",
+         "sub_entity": "weather.forecast_home",
+         "tap": {
+          "more_info": "weather.forecast_home"
+         },
+         "forecast": "weather.forecast_home",
+         "spark": true,
+         "color": "#ff6b2c"
+        },
+        {
+         "label": "Inside",
+         "icon": "mdi:home-thermometer-outline",
+         "entity": "sensor.living_room_thermostat_temperature",
+         "unit": "\u00b0",
+         "sub_kind": "climate",
+         "sub_entity": "climate.living_room_thermostat",
+         "tap": {
+          "more_info": "climate.living_room_thermostat"
+         },
+         "spark": true,
+         "color": "#00a19a"
+        },
+        {
+         "label": "Power",
+         "icon": "mdi:lightning-bolt-outline",
+         "entity": "sensor.main_breaker_power_minute_average",
+         "scale": 0.001,
+         "precision": 1,
+         "unit": " kW",
+         "sub_kind": "number",
+         "sub_entity": "sensor.main_breaker_energy_today_cost",
+         "sub_prefix": "$",
+         "sub_precision": 2,
+         "sub_suffix": " today",
+         "tap": {
+          "navigate": "/house-hub/energy"
+         },
+         "spark": true,
+         "color": "#ffb81c"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Rooms",
+   "path": "rooms",
+   "icon": "mdi:floor-plan",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Rooms",
+       "eyebrow": "Every light, switch and screen",
+       "icon": "mdi:floor-plan",
+       "color": "#ff6b2c",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.living_room_living_room",
+          "light.kitchen_kitchen",
+          "light.bedroom_bedroom",
+          "light.game_room_game_room",
+          "light.race_room_race_room",
+          "light.guest_room_guest_room",
+          "light.pantry_lights",
+          "light.laundry_room_laundry_room",
+          "light.front_door_lights"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Rooms lit",
+         "count": [
+          "light.living_room_living_room",
+          "light.kitchen_kitchen",
+          "light.bedroom_bedroom",
+          "light.game_room_game_room",
+          "light.race_room_race_room",
+          "light.guest_room_guest_room",
+          "light.pantry_lights",
+          "light.laundry_room_laundry_room",
+          "light.front_door_lights"
+         ]
+        },
+        {
+         "label": "Inside",
+         "entity": "sensor.living_room_thermostat_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Outside",
+         "entity": "sensor.outside_nik_s_weather_station_temperature_1",
+         "unit": "\u00b0"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-heading",
+         "title": "Main",
+         "lights": [
+          "light.living_room_living_room",
+          "light.kitchen_kitchen",
+          "light.game_room_game_room",
+          "light.race_room_race_room",
+          "light.guest_room_guest_room",
+          "light.pantry_lights",
+          "light.guest_bathroom_fan"
+         ]
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Living room",
+         "icon": "mdi:sofa",
+         "color": "#ff6b2c",
+         "entities": [
+          {
+           "entity": "light.dining_table_lights",
+           "name": "Dining table"
+          },
+          {
+           "entity": "light.living_room_floor_lights",
+           "name": "Floor lights"
+          },
+          {
+           "entity": "light.living_room_ceiling_light",
+           "name": "Ceiling light"
+          },
+          {
+           "entity": "light.living_room_couch_light",
+           "name": "Couch light"
+          },
+          {
+           "entity": "light.living_room_kitchen_counter",
+           "name": "Kitchen counter"
+          },
+          {
+           "entity": "light.living_room_hallway_downlight",
+           "name": "Hallway downlight"
+          },
+          {
+           "entity": "switch.circle_light",
+           "name": "Circle light"
+          },
+          {
+           "entity": "media_player.living_room_living_room_apple_tv",
+           "name": "Apple TV"
+          }
+         ],
+         "toggle": "light.living_room_living_room",
+         "badges": [
+          {
+           "entity": "sensor.living_room_thermostat_temperature"
+          },
+          {
+           "entity": "binary_sensor.living_room_occupancy"
+          }
+         ],
+         "navigate": "/house-hub/room-living-room",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Kitchen",
+         "icon": "mdi:stove",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "light.kitchen_lights",
+           "name": "Kitchen lights"
+          },
+          {
+           "entity": "light.kitchen_light",
+           "name": "Kitchen light"
+          },
+          {
+           "entity": "binary_sensor.oven_left_on",
+           "name": "Oven",
+           "icon": "mdi:stove"
+          },
+          {
+           "entity": "binary_sensor.range_left_on",
+           "name": "Range",
+           "icon": "mdi:countertop"
+          },
+          {
+           "entity": "sensor.dishwasher_power_minute_average",
+           "name": "Dishwasher",
+           "icon": "mdi:dishwasher"
+          },
+          {
+           "entity": "switch.vestaboard_note_rotation",
+           "name": "Vestaboard notes"
+          }
+         ],
+         "toggle": "light.kitchen_kitchen",
+         "badges": [
+          {
+           "entity": "sensor.refrigerator_power_minute_average",
+           "icon": "mdi:fridge"
+          }
+         ],
+         "navigate": "/house-hub/room-kitchen",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Game room",
+         "icon": "mdi:gamepad-variant",
+         "color": "#ffb81c",
+         "entities": [
+          {
+           "entity": "light.game_room_pool_table",
+           "name": "Pool table"
+          },
+          {
+           "entity": "light.game_room_spotlights",
+           "name": "Spotlights"
+          },
+          {
+           "entity": "light.game_room_overhead_light",
+           "name": "Overhead light"
+          },
+          {
+           "entity": "light.game_room_lounge_light",
+           "name": "Lounge light"
+          },
+          {
+           "entity": "light.game_room_console_light",
+           "name": "Console light"
+          },
+          {
+           "entity": "lock.aqara_smart_lock_u100_2",
+           "name": "Door"
+          }
+         ],
+         "toggle": "light.game_room_game_room",
+         "badges": [
+          {
+           "entity": "sensor.game_room_temp_sensor_temperature"
+          },
+          {
+           "entity": "binary_sensor.game_room_motion_motion"
+          }
+         ],
+         "navigate": "/house-hub/room-game-room",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Race room",
+         "icon": "mdi:racing-helmet",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "light.race_room_key_light",
+           "name": "Key light"
+          },
+          {
+           "entity": "light.race_room_key_light_air",
+           "name": "Key light Air"
+          },
+          {
+           "entity": "light.race_room_desk_lightstrip",
+           "name": "Desk lightstrip"
+          },
+          {
+           "entity": "light.race_room_corner_light",
+           "name": "Corner light"
+          },
+          {
+           "entity": "light.race_room_side_light",
+           "name": "Side light"
+          },
+          {
+           "entity": "light.race_room_hue_go",
+           "name": "Hue Go"
+          }
+         ],
+         "toggle": "light.race_room_race_room",
+         "badges": [
+          {
+           "entity": "sensor.race_room_power_minute_average",
+           "icon": "mdi:flash"
+          }
+         ],
+         "navigate": "/house-hub/room-race-room",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Guest room",
+         "icon": "mdi:bed-queen",
+         "color": "#9cbf2b",
+         "entities": [
+          {
+           "entity": "scene.guest_room_relax",
+           "name": "Relax"
+          },
+          {
+           "entity": "scene.guest_room_nightlight",
+           "name": "Nightlight"
+          },
+          {
+           "entity": "switch.guest_room_guest_room_power_strip_guest_room_tv",
+           "name": "TV power"
+          },
+          {
+           "entity": "switch.guest_room_guest_room_power_strip_guest_room_lightstrip",
+           "name": "Lightstrip"
+          },
+          {
+           "entity": "media_player.guest_room_guest_room_apple_tv",
+           "name": "Apple TV"
+          }
+         ],
+         "toggle": "light.guest_room_guest_room",
+         "navigate": "/house-hub/room-guest-room",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Pantry and baths",
+         "icon": "mdi:cupboard",
+         "color": "#e8473b",
+         "entities": [
+          {
+           "entity": "light.pantry_lights",
+           "name": "Pantry lights"
+          },
+          {
+           "entity": "switch.pantry_motion_light_sensor_enabled",
+           "name": "Pantry motion light"
+          },
+          {
+           "entity": "light.bathroom_light",
+           "name": "Bathroom light"
+          },
+          {
+           "entity": "light.guest_bathroom_fan",
+           "name": "Guest bath fan"
+          },
+          {
+           "entity": "switch.guest_bathroom_plug",
+           "name": "Smart plug"
+          },
+          {
+           "entity": "sensor.bathroom_motion_temperature",
+           "name": "Bathroom temp"
+          }
+         ],
+         "navigate": "/house-hub/room-pantry",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-heading",
+         "title": "Bedroom suite",
+         "lights": [
+          "light.bedroom_bedroom",
+          "light.bathroom_bathroom",
+          "light.laundry_room_laundry_room"
+         ]
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Bedroom",
+         "icon": "mdi:bed",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "light.bedroom_front_light",
+           "name": "Front light"
+          },
+          {
+           "entity": "light.bedroom_reading_light",
+           "name": "Reading light"
+          },
+          {
+           "entity": "light.bedroom_front_downlights",
+           "name": "Front downlights"
+          },
+          {
+           "entity": "light.bedroom_back_downlights",
+           "name": "Back downlights"
+          },
+          {
+           "entity": "light.bedroom_fireplace",
+           "name": "Fireplace"
+          },
+          {
+           "entity": "scene.bedroom_chill",
+           "name": "Chill"
+          },
+          {
+           "entity": "media_player.bedroom_bedroom_apple_tv",
+           "name": "Apple TV"
+          }
+         ],
+         "toggle": "light.bedroom_bedroom",
+         "badges": [
+          {
+           "entity": "sensor.bedroom_temperature"
+          }
+         ],
+         "navigate": "/house-hub/room-bedroom",
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Laundry",
+         "icon": "mdi:hanger",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "light.laundry_room_laundry_room",
+           "name": "Laundry light"
+          },
+          {
+           "entity": "sensor.laundry_room_washer_current_status",
+           "name": "Washer",
+           "icon": "mdi:washing-machine"
+          },
+          {
+           "entity": "sensor.dryer_current_status",
+           "name": "Dryer",
+           "icon": "mdi:tumble-dryer"
+          },
+          {
+           "entity": "switch.laundry_room_washer_power",
+           "name": "Washer power"
+          },
+          {
+           "entity": "switch.dryer_power",
+           "name": "Dryer power"
+          }
+         ],
+         "navigate": "/house-hub/room-laundry",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-heading",
+         "title": "Outside",
+         "lights": [
+          "light.outside_outside"
+         ]
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Outside",
+         "icon": "mdi:tree",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "light.front_door_lights",
+           "name": "Front door lights"
+          },
+          {
+           "entity": "switch.outside_sprinklers_left_front",
+           "name": "Front left",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_right_front",
+           "name": "Front right",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_left_driveway",
+           "name": "Driveway left",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_right_driveway",
+           "name": "Driveway right",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_standby",
+           "name": "Sprinkler standby"
+          },
+          {
+           "entity": "sensor.pool_pump_power_minute_average",
+           "name": "Pool pump"
+          }
+         ],
+         "badges": [
+          {
+           "entity": "sensor.outside_nik_s_weather_station_temperature_1"
+          }
+         ],
+         "navigate": "/house-hub/room-outside",
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "theme": "Hearth"
+  },
+  {
+   "title": "Energy",
+   "path": "energy",
+   "icon": "mdi:lightning-bolt",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Energy",
+       "eyebrow": "Where the power goes",
+       "icon": "mdi:lightning-bolt",
+       "color": "#ffb81c",
+       "stats": [
+        {
+         "label": "Using now",
+         "entity": "sensor.main_breaker_power_minute_average",
+         "scale": 0.001,
+         "precision": 1,
+         "unit": "kW"
+        },
+        {
+         "label": "Today",
+         "entity": "sensor.main_breaker_energy_today",
+         "precision": 1
+        },
+        {
+         "label": "Cost today",
+         "entity": "sensor.main_breaker_energy_today_cost",
+         "precision": 2,
+         "prefix": "$",
+         "unit": ""
+        },
+        {
+         "label": "This month",
+         "entity": "sensor.main_breaker_energy_this_month",
+         "precision": 0
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-heading",
+         "title": "Right now"
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Power, last 24 hours",
+         "icon": "mdi:chart-bell-curve-cumulative",
+         "color": "#ffb81c",
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.main_breaker_power_minute_average",
+           "name": "Whole house",
+           "color": "#ffb81c"
+          },
+          {
+           "entity": "sensor.air_conditioner_power_minute_average",
+           "name": "AC",
+           "color": "#2ec4c6"
+          },
+          {
+           "entity": "sensor.pool_pump_power_minute_average",
+           "name": "Pool pump",
+           "color": "#00a19a"
+          },
+          {
+           "entity": "sensor.tesla_charger_power_minute_average",
+           "name": "Car charger",
+           "color": "#9cbf2b"
+          }
+         ],
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Where it's going",
+         "subtitle": "Right now",
+         "icon": "mdi:transmission-tower",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "sensor.air_conditioner_power_minute_average",
+           "name": "Air conditioner"
+          },
+          {
+           "entity": "sensor.pool_pump_power_minute_average",
+           "name": "Pool pump"
+          },
+          {
+           "entity": "sensor.kitchen_subpanel_power_minute_average",
+           "name": "Kitchen subpanel"
+          },
+          {
+           "entity": "sensor.mini_split_power_minute_average",
+           "name": "Mini split"
+          },
+          {
+           "entity": "sensor.living_room_1_power_minute_average",
+           "name": "Living room"
+          },
+          {
+           "entity": "sensor.air_handler_power_minute_average",
+           "name": "Air handler"
+          },
+          {
+           "entity": "sensor.tesla_charger_power_minute_average",
+           "name": "Car charger"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-heading",
+         "title": "History"
+        },
+        {
+         "type": "custom:hearth-chart",
+         "kind": "daily",
+         "title": "Daily energy, last 2 weeks",
+         "icon": "mdi:calendar-month",
+         "color": "#ff6b2c",
+         "days": 14,
+         "unit": "kWh",
+         "entities": [
+          {
+           "entity": "sensor.main_breaker_energy_today",
+           "name": "Whole house"
+          }
+         ],
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "This month by circuit",
+         "icon": "mdi:electric-switch",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "sensor.tesla_charger_energy_this_month",
+           "name": "Car charger"
+          },
+          {
+           "entity": "sensor.kitchen_subpanel_energy_this_month",
+           "name": "Kitchen subpanel"
+          },
+          {
+           "entity": "sensor.living_room_1_energy_this_month",
+           "name": "Living room"
+          },
+          {
+           "entity": "sensor.air_conditioner_energy_this_month",
+           "name": "Air conditioner"
+          },
+          {
+           "entity": "sensor.pool_pump_energy_this_month",
+           "name": "Pool pump"
+          },
+          {
+           "entity": "sensor.mini_split_energy_this_month",
+           "name": "Mini split"
+          },
+          {
+           "entity": "sensor.water_heater_1_energy_this_month",
+           "name": "Water heater"
+          },
+          "sensor.refrigerator_energy_this_month"
+         ],
+         "span": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "theme": "Hearth"
+  },
+  {
+   "title": "Household",
+   "path": "household",
+   "icon": "mdi:clipboard-check-outline",
+   "type": "sections",
+   "max_columns": 3,
+   "theme": "Hearth",
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Household",
+       "eyebrow": "Chores, cats and upkeep",
+       "icon": "mdi:home-heart",
+       "color": "#c2509a",
+       "stats": [
+        {
+         "label": "Washer",
+         "entity": "sensor.laundry_room_washer_current_status",
+         "text": true
+        },
+        {
+         "label": "Dryer",
+         "entity": "sensor.dryer_current_status",
+         "text": true
+        },
+        {
+         "label": "Curbside",
+         "entity": "input_select.curbside_pickup",
+         "text": true
+        },
+        {
+         "label": "Low batteries",
+         "count": [
+          "sensor.aqara_smart_lock_u100_battery",
+          "sensor.aqara_smart_lock_u100_battery_2",
+          "sensor.aqara_smart_lock_u50_battery",
+          "sensor.aqara_smart_lock_u50_battery_2",
+          "sensor.back_door_battery",
+          "sensor.bathroom_motion_battery",
+          "sensor.bathroom_temp_sensor_battery",
+          "sensor.bedroom_exterior_door_battery",
+          "sensor.bedroom_temp_sensor_battery",
+          "sensor.front_door_battery",
+          "sensor.game_room_motion_battery",
+          "sensor.game_room_temp_sensor_battery",
+          "sensor.guest_room_living_room_switch_battery",
+          "sensor.kitchen_guest_room_switch_battery",
+          "sensor.kitchen_window_battery",
+          "sensor.living_room_temp_sensor_battery",
+          "sensor.living_room_window_1_battery",
+          "sensor.living_room_window_2_battery",
+          "sensor.pantry_motion_battery",
+          "sensor.pantry_temp_sensor_battery",
+          "sensor.race_room_temp_sensor_battery"
+         ],
+         "below": 20
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-heading",
+         "title": "Chores"
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Laundry",
+         "icon": "mdi:washing-machine",
+         "color": "#2ec4c6",
+         "strip": "",
+         "entities": [
+          {
+           "entity": "sensor.laundry_room_washer_current_status",
+           "name": "Washer",
+           "icon": "mdi:washing-machine"
+          },
+          {
+           "entity": "sensor.dryer_current_status",
+           "name": "Dryer",
+           "icon": "mdi:tumble-dryer"
+          },
+          {
+           "entity": "sensor.laundry_room_washer_remaining_time",
+           "name": "Washer time left"
+          },
+          {
+           "entity": "sensor.dryer_remaining_time",
+           "name": "Dryer time left"
+          },
+          {
+           "entity": "input_boolean.wash_waiting_for_dryer",
+           "name": "Waiting for dryer"
+          }
+         ]
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Curbside",
+         "icon": "mdi:delete-variant",
+         "color": "#9cbf2b",
+         "entities": [
+          {
+           "entity": "input_select.curbside_pickup",
+           "name": "Pickup"
+          },
+          {
+           "entity": "schedule.recycling_out",
+           "name": "Recycling out"
+          },
+          {
+           "entity": "schedule.trash_out",
+           "name": "Trash out"
+          },
+          {
+           "entity": "input_button.curbside_taken_out",
+           "name": "Taken out"
+          }
+         ]
+        },
+        {
+         "type": "custom:hearth-panels",
+         "panels": [
+          {
+           "type": "todo",
+           "title": "To-do",
+           "entity": "todo.house_alerts",
+           "max": 8,
+           "placeholder": "Add a to-do"
+          }
+         ]
+        },
+        {
+         "type": "custom:hearth-heading",
+         "title": "Pets and upkeep"
+        },
+        {
+         "type": "custom:hearth-panels",
+         "panels": [
+          {
+           "type": "cats",
+           "title": "Cats",
+           "subtitle": "Litter-Robot",
+           "status": "sensor.litter_robot_status_code",
+           "drawer": "sensor.litter_robot_waste_drawer",
+           "litter": "sensor.litter_robot_litter_level",
+           "hopper": "sensor.litter_robot_hopper_status",
+           "weight": "sensor.litter_robot_pet_weight"
+          }
+         ]
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Batteries",
+         "icon": "mdi:battery-heart-variant",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "sensor.aqara_smart_lock_u100_battery",
+           "name": "Front door"
+          },
+          {
+           "entity": "sensor.aqara_smart_lock_u100_battery_2",
+           "name": "Game room door"
+          },
+          {
+           "entity": "sensor.aqara_smart_lock_u50_battery",
+           "name": "Bedroom door"
+          },
+          {
+           "entity": "sensor.aqara_smart_lock_u50_battery_2",
+           "name": "Pool bathroom door"
+          },
+          {
+           "entity": "sensor.back_door_battery",
+           "name": "Back door"
+          },
+          {
+           "entity": "sensor.bathroom_motion_battery",
+           "name": "Bathroom motion"
+          },
+          {
+           "entity": "sensor.bathroom_temp_sensor_battery",
+           "name": "Bathroom temp sensor"
+          },
+          {
+           "entity": "sensor.bedroom_exterior_door_battery",
+           "name": "Bedroom exterior door"
+          },
+          {
+           "entity": "sensor.bedroom_temp_sensor_battery",
+           "name": "Bedroom temp sensor"
+          },
+          {
+           "entity": "sensor.front_door_battery",
+           "name": "Front door"
+          },
+          {
+           "entity": "sensor.game_room_motion_battery",
+           "name": "Game room motion"
+          },
+          {
+           "entity": "sensor.game_room_temp_sensor_battery",
+           "name": "Game room temp sensor"
+          },
+          {
+           "entity": "sensor.guest_room_living_room_switch_battery",
+           "name": "Living room switch"
+          },
+          {
+           "entity": "sensor.kitchen_guest_room_switch_battery",
+           "name": "Guest room switch"
+          },
+          {
+           "entity": "sensor.kitchen_window_battery",
+           "name": "Kitchen window"
+          },
+          {
+           "entity": "sensor.living_room_temp_sensor_battery",
+           "name": "Living room temp sensor"
+          },
+          {
+           "entity": "sensor.living_room_window_1_battery",
+           "name": "Living room window 1"
+          },
+          {
+           "entity": "sensor.living_room_window_2_battery",
+           "name": "Living room window 2"
+          },
+          {
+           "entity": "sensor.pantry_motion_battery",
+           "name": "Pantry motion"
+          },
+          {
+           "entity": "sensor.pantry_temp_sensor_battery",
+           "name": "Pantry temp sensor"
+          },
+          {
+           "entity": "sensor.race_room_temp_sensor_battery",
+           "name": "Race room temp sensor"
+          }
+         ],
+         "filter": {
+          "below": 20
+         },
+         "empty": "Every battery is above 20%",
+         "span": 2
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Garage",
+   "path": "garage",
+   "icon": "mdi:car-electric",
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Garage",
+       "eyebrow": "Cars and comings and goings",
+       "icon": "mdi:car-electric",
+       "color": "#00a19a",
+       "stats": [
+        {
+         "label": "Nik's car",
+         "entity": "sensor.nik_s_car_battery_level",
+         "unit": "%"
+        },
+        {
+         "label": "Kat's car",
+         "entity": "sensor.kat_s_car_battery_level",
+         "unit": "%"
+        },
+        {
+         "label": "Charger",
+         "entity": "sensor.tesla_charger_power_minute_average",
+         "scale": 0.001,
+         "precision": 1,
+         "unit": "kW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-cars",
+       "cars": [
+        {
+         "name": "Nik's car",
+         "battery": "sensor.nik_s_car_battery_level",
+         "charging": "sensor.nik_s_car_charging",
+         "cable": "binary_sensor.nik_s_car_charge_cable",
+         "tracker": "device_tracker.nik_s_car_location",
+         "driving": "binary_sensor.nik_s_car_user_present",
+         "power": "sensor.nik_s_car_charger_power",
+         "range": "sensor.nik_s_car_battery_range",
+         "lock": "lock.nik_s_car_lock",
+         "color": "#ff6b2c",
+         "tap": {
+          "more_info": "sensor.nik_s_car_battery_level"
+         }
+        },
+        {
+         "name": "Kat's car",
+         "battery": "sensor.kat_s_car_battery_level",
+         "charging": "sensor.kat_s_car_charging",
+         "cable": "binary_sensor.kat_s_car_charge_cable",
+         "tracker": "device_tracker.kat_s_car_location",
+         "driving": "binary_sensor.kat_s_car_user_present",
+         "power": "sensor.kat_s_car_charger_power",
+         "range": "sensor.kat_s_car_battery_range",
+         "lock": "lock.kat_s_car_lock",
+         "color": "#3f6fd8",
+         "tap": {
+          "more_info": "sensor.kat_s_car_battery_level"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "columns": 2,
+       "cards": [
+        {
+         "type": "custom:hearth-heading",
+         "title": "Controls"
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Nik's car",
+         "icon": "mdi:car-sports",
+         "color": "#ff6b2c",
+         "strip": "Nik's Car",
+         "badges": [
+          {
+           "entity": "device_tracker.nik_s_car_location"
+          }
+         ],
+         "entities": [
+          {
+           "entity": "sensor.nik_s_car_charging",
+           "name": "Charging",
+           "icon": "mdi:ev-station"
+          },
+          {
+           "entity": "lock.nik_s_car_lock",
+           "name": "Lock"
+          },
+          {
+           "entity": "climate.nik_s_car_climate",
+           "name": "Climate"
+          },
+          {
+           "entity": "sensor.nik_s_car_inside_temperature",
+           "name": "Inside"
+          },
+          {
+           "entity": "switch.nik_s_car_sentry_mode",
+           "name": "Sentry mode"
+          }
+         ],
+         "badges_position": "top"
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Kat's car",
+         "icon": "mdi:car-side",
+         "color": "#3f6fd8",
+         "strip": "Kat's Car",
+         "badges": [
+          {
+           "entity": "device_tracker.kat_s_car_location"
+          }
+         ],
+         "entities": [
+          {
+           "entity": "sensor.kat_s_car_charging",
+           "name": "Charging",
+           "icon": "mdi:ev-station"
+          },
+          {
+           "entity": "lock.kat_s_car_lock",
+           "name": "Lock"
+          },
+          {
+           "entity": "climate.kat_s_car_climate",
+           "name": "Climate"
+          },
+          {
+           "entity": "sensor.kat_s_car_inside_temperature",
+           "name": "Inside"
+          },
+          {
+           "entity": "switch.kat_s_car_sentry_mode",
+           "name": "Sentry mode"
+          }
+         ],
+         "badges_position": "top"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-heading",
+       "title": "Where everyone is"
+      },
+      {
+       "type": "map",
+       "entities": [
+        "person.nikw",
+        "person.kat",
+        "device_tracker.nik_s_car_location",
+        "device_tracker.kat_s_car_location"
+       ],
+       "hours_to_show": 0,
+       "grid_options": {
+        "columns": "full",
+        "rows": 7
+       }
+      }
+     ]
+    }
+   ],
+   "theme": "Hearth"
+  },
+  {
+   "title": "Living room",
+   "path": "room-living-room",
+   "icon": "mdi:sofa",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Living room",
+       "eyebrow": "Room",
+       "icon": "mdi:sofa",
+       "color": "#ff6b2c",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.living_room_living_room"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.living_room_temp_sensor_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.living_room_temp_sensor_humidity",
+         "unit": "%"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#ff6b2c",
+         "entities": [
+          {
+           "entity": "light.living_room_hallway_downlight",
+           "name": "Hallway downlight"
+          },
+          {
+           "entity": "light.living_room_kitchen_counter",
+           "name": "Kitchen counter"
+          },
+          {
+           "entity": "light.living_room_couch_light",
+           "name": "Couch light"
+          },
+          {
+           "entity": "light.living_room_ceiling_light",
+           "name": "Ceiling light"
+          },
+          {
+           "entity": "light.dining_table_lights",
+           "name": "Dining table"
+          },
+          {
+           "entity": "light.living_room_floor_lights",
+           "name": "Floor lights"
+          }
+         ],
+         "toggle": "light.living_room_living_room",
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#ff6b2c",
+         "entities": [
+          {
+           "entity": "script.room_common_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_common_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_common_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_common_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          },
+          {
+           "entity": "script.lighting_evening",
+           "name": "Evening",
+           "icon": "mdi:weather-sunset-down"
+          },
+          {
+           "entity": "script.lighting_dinner",
+           "name": "Dinner",
+           "icon": "mdi:silverware-fork-knife"
+          },
+          {
+           "entity": "script.lighting_cooking",
+           "name": "Cooking",
+           "icon": "mdi:chef-hat"
+          },
+          {
+           "entity": "script.lighting_movie",
+           "name": "TV / Movie",
+           "icon": "mdi:television-classic"
+          },
+          {
+           "entity": "script.lighting_hosting",
+           "name": "Hosting",
+           "icon": "mdi:party-popper"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-climate",
+         "thermostats": [
+          {
+           "entity": "climate.living_room_thermostat",
+           "name": "Thermostat"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#ff6b2c",
+         "entities": [
+          {
+           "entity": "media_player.av_living_room_soundbar",
+           "name": "Soundbar"
+          },
+          {
+           "entity": "lock.aqara_smart_lock_u100",
+           "name": "Front door lock"
+          },
+          {
+           "entity": "media_player.living_room_living_room_apple_tv",
+           "name": "Apple TV"
+          },
+          {
+           "entity": "switch.circle_light",
+           "name": "Circle light"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#ff6b2c",
+         "entities": [
+          {
+           "entity": "sensor.living_room_thermostat_temperature",
+           "name": "Thermostat temp"
+          },
+          {
+           "entity": "sensor.living_room_temp_sensor_temperature",
+           "name": "Room temp"
+          },
+          {
+           "entity": "sensor.living_room_thermostat_humidity",
+           "name": "Thermostat humidity"
+          },
+          {
+           "entity": "sensor.living_room_temp_sensor_humidity",
+           "name": "Room humidity"
+          },
+          {
+           "entity": "binary_sensor.living_room_occupancy",
+           "name": "Occupancy"
+          },
+          {
+           "entity": "binary_sensor.front_door",
+           "name": "Front door"
+          },
+          {
+           "entity": "binary_sensor.living_room_window_1",
+           "name": "Window 1"
+          },
+          {
+           "entity": "binary_sensor.living_room_window_2",
+           "name": "Window 2"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#ff6b2c",
+         "entities": [
+          {
+           "entity": "sensor.dining_room_power_minute_average",
+           "name": "Dining room"
+          },
+          {
+           "entity": "sensor.living_room_1_power_minute_average",
+           "name": "Circuit 1"
+          },
+          {
+           "entity": "sensor.living_room_2_power_minute_average",
+           "name": "Circuit 2"
+          },
+          {
+           "entity": "sensor.circle_light_current_consumption",
+           "name": "Circle light"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#ff6b2c",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.living_room_thermostat_temperature",
+           "name": "Thermostat",
+           "color": "#ff6b2c"
+          },
+          {
+           "entity": "sensor.living_room_temp_sensor_temperature",
+           "name": "Sensor",
+           "color": "#ffb81c"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Kitchen",
+   "path": "room-kitchen",
+   "icon": "mdi:stove",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Kitchen",
+       "eyebrow": "Room",
+       "icon": "mdi:stove",
+       "color": "#00a19a",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.kitchen_kitchen"
+         ],
+         "expand": true
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "light.kitchen_light",
+           "name": "Kitchen light"
+          },
+          {
+           "entity": "light.kitchen_lights",
+           "name": "Kitchen lights"
+          }
+         ],
+         "toggle": "light.kitchen_kitchen",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "script.room_common_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_common_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_common_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_common_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          },
+          {
+           "entity": "script.lighting_evening",
+           "name": "Evening",
+           "icon": "mdi:weather-sunset-down"
+          },
+          {
+           "entity": "script.lighting_dinner",
+           "name": "Dinner",
+           "icon": "mdi:silverware-fork-knife"
+          },
+          {
+           "entity": "script.lighting_cooking",
+           "name": "Cooking",
+           "icon": "mdi:chef-hat"
+          },
+          {
+           "entity": "script.lighting_movie",
+           "name": "TV / Movie",
+           "icon": "mdi:television-classic"
+          },
+          {
+           "entity": "script.lighting_hosting",
+           "name": "Hosting",
+           "icon": "mdi:party-popper"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Appliances",
+         "icon": "mdi:stove",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "binary_sensor.oven_left_on",
+           "name": "Oven",
+           "icon": "mdi:stove"
+          },
+          {
+           "entity": "binary_sensor.range_left_on",
+           "name": "Range",
+           "icon": "mdi:countertop"
+          },
+          {
+           "entity": "sensor.refrigerator_power_minute_average",
+           "name": "Fridge",
+           "icon": "mdi:fridge"
+          },
+          {
+           "entity": "sensor.dishwasher_power_minute_average",
+           "name": "Dishwasher",
+           "icon": "mdi:dishwasher"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "media_player.kitchen_display",
+           "name": "Kitchen display"
+          },
+          {
+           "entity": "switch.vestaboard_note_rotation",
+           "name": "Vestaboard notes"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "binary_sensor.kitchen_window",
+           "name": "Window"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#00a19a",
+         "entities": [
+          {
+           "entity": "sensor.kitchen_subpanel_power_minute_average",
+           "name": "Subpanel"
+          },
+          {
+           "entity": "sensor.kitchen_gfi_1_power_minute_average",
+           "name": "GFI 1"
+          },
+          {
+           "entity": "sensor.range_hood_power_minute_average",
+           "name": "Range hood"
+          },
+          {
+           "entity": "sensor.oven_power_minute_average",
+           "name": "Oven"
+          },
+          {
+           "entity": "sensor.refrigerator_power_minute_average",
+           "name": "Refrigerator"
+          },
+          {
+           "entity": "sensor.kitchen_gfi_2_power_minute_average",
+           "name": "GFI 2"
+          },
+          {
+           "entity": "sensor.dishwasher_power_minute_average",
+           "name": "Dishwasher"
+          },
+          {
+           "entity": "sensor.range_power_minute_average",
+           "name": "Range"
+          },
+          {
+           "entity": "sensor.kitchen_gfci_3_power_minute_average",
+           "name": "GFCI 3"
+          }
+         ],
+         "span": 2
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Game room",
+   "path": "room-game-room",
+   "icon": "mdi:gamepad-variant",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Game room",
+       "eyebrow": "Room",
+       "icon": "mdi:gamepad-variant",
+       "color": "#ffb81c",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.game_room_game_room"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.game_room_temp_sensor_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.game_room_temp_sensor_humidity",
+         "unit": "%"
+        },
+        {
+         "label": "Power",
+         "entity": "sensor.game_room_power_minute_average",
+         "precision": 0,
+         "unit": "W"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#ffb81c",
+         "entities": [
+          {
+           "entity": "light.game_room_console_light",
+           "name": "Console light"
+          },
+          {
+           "entity": "light.game_room_lounge_light",
+           "name": "Lounge light"
+          },
+          {
+           "entity": "light.game_room_pool_table",
+           "name": "Pool table"
+          },
+          {
+           "entity": "light.game_room_console",
+           "name": "Console"
+          },
+          {
+           "entity": "light.game_room_overhead_light",
+           "name": "Overhead light"
+          },
+          {
+           "entity": "light.game_room_spotlights",
+           "name": "Spotlights"
+          }
+         ],
+         "toggle": "light.game_room_game_room",
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#ffb81c",
+         "entities": [
+          {
+           "entity": "script.room_game_room_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_game_room_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_game_room_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_game_room_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          },
+          {
+           "entity": "script.lighting_game_night",
+           "name": "Game night",
+           "icon": "mdi:billiards"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#ffb81c",
+         "entities": [
+          {
+           "entity": "media_player.game_room_speaker",
+           "name": "Speaker"
+          },
+          {
+           "entity": "lock.aqara_smart_lock_u100_2",
+           "name": "Door"
+          },
+          {
+           "entity": "lock.aqara_smart_lock_u50_2",
+           "name": "Pool bath door lock"
+          },
+          {
+           "entity": "switch.game_room_game_room_power_strip_litter_box",
+           "name": "Litter box"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#ffb81c",
+         "entities": [
+          {
+           "entity": "sensor.game_room_motion_temperature",
+           "name": "Motion sensor temp"
+          },
+          {
+           "entity": "sensor.game_room_temp_sensor_temperature",
+           "name": "Room temp"
+          },
+          {
+           "entity": "sensor.game_room_temp_sensor_humidity",
+           "name": "Humidity"
+          },
+          {
+           "entity": "binary_sensor.game_room_motion_motion",
+           "name": "Lounge motion"
+          },
+          {
+           "entity": "binary_sensor.back_door",
+           "name": "Back door"
+          },
+          {
+           "entity": "binary_sensor.game_room_game_room_motion",
+           "name": "Room motion"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#ffb81c",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.game_room_motion_temperature",
+           "name": "Motion sensor",
+           "color": "#ffb81c"
+          },
+          {
+           "entity": "sensor.game_room_temp_sensor_temperature",
+           "name": "Sensor",
+           "color": "#ffb81c"
+          }
+         ],
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#ffb81c",
+         "entities": [
+          {
+           "entity": "sensor.game_room_1_power_minute_average",
+           "name": "Circuit 1"
+          },
+          {
+           "entity": "sensor.game_room_2_power_minute_average",
+           "name": "Circuit 2"
+          },
+          {
+           "entity": "sensor.back_room_1_power_minute_average",
+           "name": "Back room 1"
+          },
+          {
+           "entity": "sensor.back_room_2_power_minute_average",
+           "name": "Back room 2"
+          },
+          {
+           "entity": "sensor.game_room_game_room_power_strip_current_consumption",
+           "name": "Power strip"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Race room",
+   "path": "room-race-room",
+   "icon": "mdi:racing-helmet",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Race room",
+       "eyebrow": "Room",
+       "icon": "mdi:racing-helmet",
+       "color": "#c2509a",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.race_room_race_room"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.race_room_temp_sensor_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.race_room_temp_sensor_humidity",
+         "unit": "%"
+        },
+        {
+         "label": "Power",
+         "entity": "sensor.race_room_power_minute_average",
+         "precision": 0,
+         "unit": "W"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "light.dig2go",
+           "name": "Dig2Go"
+          },
+          {
+           "entity": "light.race_room_rig_light",
+           "name": "Rig light"
+          },
+          {
+           "entity": "light.race_room_corner_light",
+           "name": "Corner light"
+          },
+          {
+           "entity": "light.race_room_desk_light",
+           "name": "Desk light"
+          },
+          {
+           "entity": "light.race_room_hue_go",
+           "name": "Hue Go"
+          },
+          {
+           "entity": "light.race_room_desk_lightstrip",
+           "name": "Desk lightstrip"
+          },
+          {
+           "entity": "light.race_room_side_light",
+           "name": "Side light"
+          },
+          {
+           "entity": "light.race_room_light",
+           "name": "Room light"
+          },
+          {
+           "entity": "light.race_room_key_light_air",
+           "name": "Key light Air"
+          },
+          {
+           "entity": "light.race_room_key_light",
+           "name": "Key light"
+          }
+         ],
+         "toggle": "light.race_room_race_room",
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "script.room_race_room_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_race_room_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_race_room_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_race_room_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          },
+          {
+           "entity": "script.lighting_race_mode",
+           "name": "Race mode",
+           "icon": "mdi:racing-helmet"
+          },
+          {
+           "entity": "script.lighting_race_streaming",
+           "name": "Streaming",
+           "icon": "mdi:video-wireless"
+          },
+          {
+           "entity": "script.lighting_race_focus",
+           "name": "Focus",
+           "icon": "mdi:head-lightbulb"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "switch.race_room_race_room_power_strip_racing_sim",
+           "name": "Racing sim"
+          },
+          {
+           "entity": "switch.race_room_race_room_power_strip_top_monitor",
+           "name": "Top monitor"
+          },
+          {
+           "entity": "switch.race_room_race_room_power_strip_bottom_monitor",
+           "name": "Bottom monitor"
+          },
+          {
+           "entity": "switch.race_room_race_room_power_strip_computer",
+           "name": "Computer"
+          },
+          {
+           "entity": "switch.race_room_race_room_power_strip_laptop_dock",
+           "name": "Laptop dock"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "sensor.race_room_temp_sensor_temperature",
+           "name": "Temperature"
+          },
+          {
+           "entity": "sensor.race_room_temp_sensor_humidity",
+           "name": "Humidity"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#c2509a",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.race_room_temp_sensor_temperature",
+           "name": "Temperature",
+           "color": "#c2509a"
+          }
+         ],
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "sensor.race_room_1_power_minute_average",
+           "name": "Circuit 1"
+          },
+          {
+           "entity": "sensor.race_room_2_power_minute_average",
+           "name": "Circuit 2"
+          },
+          {
+           "entity": "sensor.race_room_race_room_power_strip_current_consumption",
+           "name": "Power strip"
+          },
+          {
+           "entity": "sensor.race_room_racing_sim_current_consumption",
+           "name": "Racing sim"
+          },
+          {
+           "entity": "sensor.race_room_top_monitor_current_consumption",
+           "name": "Top monitor"
+          },
+          {
+           "entity": "sensor.race_room_bottom_monitor_current_consumption",
+           "name": "Bottom monitor"
+          },
+          {
+           "entity": "sensor.race_room_computer_current_consumption",
+           "name": "Computer"
+          },
+          {
+           "entity": "sensor.race_room_laptop_dock_current_consumption",
+           "name": "Laptop dock"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Guest room",
+   "path": "room-guest-room",
+   "icon": "mdi:bed-queen",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Guest room",
+       "eyebrow": "Room",
+       "icon": "mdi:bed-queen",
+       "color": "#9cbf2b",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.guest_room_guest_room"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Power",
+         "entity": "sensor.guest_room_power_minute_average",
+         "precision": 0,
+         "unit": "W"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#9cbf2b",
+         "entities": [
+          {
+           "entity": "light.guest_room_mirror",
+           "name": "Mirror"
+          },
+          {
+           "entity": "light.guest_room_lights",
+           "name": "Lights"
+          }
+         ],
+         "toggle": "light.guest_room_guest_room",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#9cbf2b",
+         "entities": [
+          {
+           "entity": "script.room_guest_room_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_guest_room_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_guest_room_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_guest_room_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          },
+          {
+           "entity": "scene.guest_room_concentrate",
+           "name": "Concentrate",
+           "icon": "mdi:palette"
+          },
+          {
+           "entity": "scene.guest_room_energize",
+           "name": "Energize",
+           "icon": "mdi:palette"
+          },
+          {
+           "entity": "scene.guest_room_nightlight",
+           "name": "Nightlight",
+           "icon": "mdi:palette"
+          },
+          {
+           "entity": "scene.guest_room_read",
+           "name": "Read",
+           "icon": "mdi:palette"
+          },
+          {
+           "entity": "scene.guest_room_relax",
+           "name": "Relax",
+           "icon": "mdi:palette"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#9cbf2b",
+         "entities": [
+          {
+           "entity": "media_player.guest_room_display",
+           "name": "Display"
+          },
+          {
+           "entity": "switch.guest_room_guest_room_power_strip_guest_room_tv",
+           "name": "TV power"
+          },
+          {
+           "entity": "switch.guest_room_guest_room_power_strip_guest_room_apple_tv",
+           "name": "Apple TV power"
+          },
+          {
+           "entity": "switch.guest_room_guest_room_power_strip_guest_room_lightstrip",
+           "name": "Lightstrip"
+          },
+          {
+           "entity": "media_player.guest_room_guest_room_apple_tv",
+           "name": "Apple TV"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#9cbf2b",
+         "entities": [
+          {
+           "entity": "sensor.guest_room_guest_room_apple_tv_current_consumption",
+           "name": "Apple TV"
+          },
+          {
+           "entity": "sensor.guest_room_guest_room_tv_current_consumption",
+           "name": "TV"
+          },
+          {
+           "entity": "sensor.guest_room_guest_room_power_strip_current_consumption",
+           "name": "Power strip"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Outside",
+   "path": "room-outside",
+   "icon": "mdi:tree",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Outside",
+       "eyebrow": "Room",
+       "icon": "mdi:tree",
+       "color": "#3f6fd8",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.outside_outside"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.outside_nik_s_weather_station_temperature_1",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.nik_s_weather_station_humidity",
+         "unit": "%"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "light.front_door_lights",
+           "name": "Front door lights"
+          }
+         ],
+         "toggle": "light.outside_outside",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "scene.outside_blood_moon",
+           "name": "Blood moon",
+           "icon": "mdi:palette"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "switch.outside_sprinklers_standby",
+           "name": "Sprinkler standby"
+          },
+          {
+           "entity": "switch.outside_sprinklers_rain_delay",
+           "name": "Rain delay"
+          },
+          {
+           "entity": "switch.outside_sprinklers_left_front",
+           "name": "Front left",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_right_front",
+           "name": "Front right",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_left_driveway",
+           "name": "Driveway left",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_right_driveway",
+           "name": "Driveway right",
+           "icon": "mdi:sprinkler-variant"
+          },
+          {
+           "entity": "switch.outside_sprinklers_standard_schedule",
+           "name": "Sprinkler schedule"
+          },
+          {
+           "entity": "switch.outside_hose",
+           "name": "Hose"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Weather",
+         "icon": "mdi:weather-partly-cloudy",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "sensor.outside_nik_s_weather_station_temperature_1",
+           "name": "Temperature"
+          },
+          {
+           "entity": "sensor.nik_s_weather_station_feels_like",
+           "name": "Feels like"
+          },
+          {
+           "entity": "sensor.nik_s_weather_station_humidity",
+           "name": "Humidity"
+          },
+          {
+           "entity": "sensor.nik_s_weather_station_wind_speed",
+           "name": "Wind"
+          },
+          {
+           "entity": "sensor.nik_s_weather_station_wind_gust",
+           "name": "Gusts"
+          },
+          {
+           "entity": "sensor.nik_s_weather_station_daily_rain",
+           "name": "Rain today"
+          },
+          {
+           "entity": "sensor.nik_s_weather_station_uv_index",
+           "name": "UV index"
+          },
+          {
+           "entity": "binary_sensor.outside_sprinklers_rain",
+           "name": "Rain sensor"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#3f6fd8",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.outside_nik_s_weather_station_temperature_1",
+           "name": "Temperature",
+           "color": "#3f6fd8"
+          }
+         ],
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "sensor.garage_power_minute_average",
+           "name": "Garage"
+          },
+          {
+           "entity": "sensor.garage_sprinkler_outlet_power_minute_average",
+           "name": "Garage sprinkler outlet"
+          },
+          {
+           "entity": "sensor.garage_light_power_minute_average",
+           "name": "Garage light"
+          },
+          {
+           "entity": "sensor.water_heater_1_power_minute_average",
+           "name": "Water heater 1"
+          },
+          {
+           "entity": "sensor.pool_pump_power_minute_average",
+           "name": "Pool pump"
+          },
+          {
+           "entity": "sensor.well_pump_power_minute_average",
+           "name": "Well pump"
+          },
+          {
+           "entity": "sensor.tesla_charger_power_minute_average",
+           "name": "Tesla charger"
+          },
+          {
+           "entity": "sensor.water_heater_2_power_minute_average",
+           "name": "Water heater 2"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Pantry",
+   "path": "room-pantry",
+   "icon": "mdi:cupboard",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Pantry",
+       "eyebrow": "Room",
+       "icon": "mdi:cupboard",
+       "color": "#e8473b",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.pantry_lights"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.pantry_temp_sensor_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.pantry_temp_sensor_humidity",
+         "unit": "%"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#e8473b",
+         "entities": [
+          {
+           "entity": "light.pantry_pantry_light_1",
+           "name": "Light 1"
+          },
+          {
+           "entity": "light.pantry_light_2",
+           "name": "Light 2"
+          },
+          {
+           "entity": "light.pantry_light_3",
+           "name": "Light 3"
+          },
+          {
+           "entity": "light.pantry_light_4",
+           "name": "Light 4"
+          },
+          {
+           "entity": "light.pantry_light_5",
+           "name": "Light 5"
+          }
+         ],
+         "toggle": "light.pantry_lights",
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#e8473b",
+         "entities": [
+          {
+           "entity": "script.room_pantry_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_pantry_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_pantry_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_pantry_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#e8473b",
+         "entities": [
+          {
+           "entity": "sensor.pantry_motion_temperature",
+           "name": "Motion sensor temp"
+          },
+          {
+           "entity": "sensor.pantry_temp_sensor_temperature",
+           "name": "Room temp"
+          },
+          {
+           "entity": "sensor.pantry_temp_sensor_humidity",
+           "name": "Humidity"
+          },
+          {
+           "entity": "binary_sensor.pantry_motion_motion",
+           "name": "Motion"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#e8473b",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.pantry_motion_temperature",
+           "name": "Motion sensor",
+           "color": "#e8473b"
+          },
+          {
+           "entity": "sensor.pantry_temp_sensor_temperature",
+           "name": "Sensor",
+           "color": "#ffb81c"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Guest bath",
+   "path": "room-guest-bath",
+   "icon": "mdi:shower",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Guest bath",
+       "eyebrow": "Room",
+       "icon": "mdi:shower",
+       "color": "#2ec4c6",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.guest_bathroom_light",
+          "light.guest_bathroom_fan"
+         ],
+         "expand": false
+        },
+        {
+         "label": "Power",
+         "entity": "sensor.guest_bathroom_plug_power",
+         "precision": 0,
+         "unit": "W"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "light.guest_bathroom_light",
+           "name": "Guest bath light"
+          },
+          {
+           "entity": "light.guest_bathroom_fan",
+           "name": "Guest bath fan"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "script.room_guest_bathroom_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_guest_bathroom_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_guest_bathroom_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_guest_bathroom_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "switch.guest_bathroom_plug",
+           "name": "Smart plug"
+          }
+         ],
+         "span": 2
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Bedroom",
+   "path": "room-bedroom",
+   "icon": "mdi:bed",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Bedroom",
+       "eyebrow": "Room",
+       "icon": "mdi:bed",
+       "color": "#3f6fd8",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.bedroom_bedroom"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.bedroom_temp_sensor_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.bedroom_temp_sensor_humidity",
+         "unit": "%"
+        },
+        {
+         "label": "Power",
+         "entity": "sensor.mini_split_power_minute_average",
+         "precision": 0,
+         "unit": "W"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "light.bedroom_fireplace",
+           "name": "Fireplace"
+          },
+          {
+           "entity": "light.bedroom_reading_light",
+           "name": "Reading light"
+          },
+          {
+           "entity": "light.bedroom_front_light",
+           "name": "Front light"
+          },
+          {
+           "entity": "light.bedroom_front_downlights",
+           "name": "Front downlights"
+          },
+          {
+           "entity": "light.bedroom_back_downlights",
+           "name": "Back downlights"
+          }
+         ],
+         "toggle": "light.bedroom_bedroom",
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-climate",
+         "thermostats": [
+          {
+           "entity": "climate.bedroom",
+           "name": "Mini split"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "script.room_bedroom_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_bedroom_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_bedroom_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_bedroom_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          },
+          {
+           "entity": "script.lighting_fireside",
+           "name": "Fireside",
+           "icon": "mdi:fireplace"
+          },
+          {
+           "entity": "script.lighting_reading",
+           "name": "Reading",
+           "icon": "mdi:book-open-variant"
+          },
+          {
+           "entity": "script.lighting_wake_up",
+           "name": "Wake up",
+           "icon": "mdi:weather-sunset-up"
+          },
+          {
+           "entity": "scene.bedroom_chill",
+           "name": "Chill",
+           "icon": "mdi:palette"
+          },
+          {
+           "entity": "scene.bedroom_palm_beach",
+           "name": "Palm beach",
+           "icon": "mdi:palette"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "media_player.bedroom_speaker",
+           "name": "Speaker"
+          },
+          {
+           "entity": "lock.aqara_smart_lock_u50",
+           "name": "Bedroom door lock"
+          },
+          {
+           "entity": "switch.bedroom_power",
+           "name": "Mini split power"
+          },
+          {
+           "entity": "media_player.bedroom_bedroom_apple_tv",
+           "name": "Apple TV"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#3f6fd8",
+         "entities": [
+          {
+           "entity": "sensor.bedroom_temperature",
+           "name": "Mini split temp"
+          },
+          {
+           "entity": "sensor.bedroom_temp_sensor_temperature",
+           "name": "Room temp"
+          },
+          {
+           "entity": "sensor.bedroom_temp_sensor_humidity",
+           "name": "Humidity"
+          },
+          {
+           "entity": "binary_sensor.bedroom_exterior_door",
+           "name": "Exterior door"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#3f6fd8",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.bedroom_temperature",
+           "name": "Mini split",
+           "color": "#3f6fd8"
+          },
+          {
+           "entity": "sensor.bedroom_temp_sensor_temperature",
+           "name": "Sensor",
+           "color": "#ffb81c"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Bathroom",
+   "path": "room-bathroom",
+   "icon": "mdi:bathtub",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Bathroom",
+       "eyebrow": "Room",
+       "icon": "mdi:bathtub",
+       "color": "#c2509a",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.bathroom_bathroom"
+         ],
+         "expand": true
+        },
+        {
+         "label": "Temperature",
+         "entity": "sensor.bathroom_temp_sensor_temperature",
+         "unit": "\u00b0"
+        },
+        {
+         "label": "Humidity",
+         "entity": "sensor.bathroom_temp_sensor_humidity",
+         "unit": "%"
+        },
+        {
+         "label": "Power",
+         "entity": "sensor.master_bathroom_gfi_power_minute_average",
+         "precision": 0,
+         "unit": "W"
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "light.bathroom_light",
+           "name": "Bathroom light"
+          }
+         ],
+         "toggle": "light.bathroom_bathroom",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "script.room_bathroom_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_bathroom_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_bathroom_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_bathroom_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Comfort and sensors",
+         "icon": "mdi:thermometer",
+         "color": "#c2509a",
+         "entities": [
+          {
+           "entity": "sensor.bathroom_motion_temperature",
+           "name": "Motion sensor temp"
+          },
+          {
+           "entity": "sensor.bathroom_temp_sensor_temperature",
+           "name": "Room temp"
+          },
+          {
+           "entity": "sensor.bathroom_temp_sensor_humidity",
+           "name": "Humidity"
+          },
+          {
+           "entity": "binary_sensor.bathroom_motion_motion",
+           "name": "Motion"
+          }
+         ],
+         "span": 2
+        },
+        {
+         "type": "custom:hearth-chart",
+         "title": "Temperature, last 24 hours",
+         "icon": "mdi:thermometer-lines",
+         "color": "#c2509a",
+         "fit": true,
+         "hours": 24,
+         "entities": [
+          {
+           "entity": "sensor.bathroom_motion_temperature",
+           "name": "Motion sensor",
+           "color": "#c2509a"
+          },
+          {
+           "entity": "sensor.bathroom_temp_sensor_temperature",
+           "name": "Sensor",
+           "color": "#ffb81c"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Laundry",
+   "path": "room-laundry",
+   "icon": "mdi:hanger",
+   "subview": true,
+   "type": "sections",
+   "max_columns": 3,
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-nav",
+       "tabs": [
+        {
+         "label": "Home",
+         "icon": "mdi:home-variant",
+         "path": "/house-hub/home",
+         "color": "#3f6fd8"
+        },
+        {
+         "label": "Rooms",
+         "icon": "mdi:floor-plan",
+         "path": "/house-hub/rooms",
+         "color": "#ff6b2c",
+         "match": "/house-hub/room-"
+        },
+        {
+         "label": "Energy",
+         "icon": "mdi:lightning-bolt",
+         "path": "/house-hub/energy",
+         "color": "#ffb81c"
+        },
+        {
+         "label": "Household",
+         "icon": "mdi:home-heart",
+         "path": "/house-hub/household",
+         "color": "#c2509a"
+        },
+        {
+         "label": "Garage",
+         "icon": "mdi:car-electric",
+         "path": "/house-hub/garage",
+         "color": "#00a19a"
+        }
+       ]
+      },
+      {
+       "type": "custom:hearth-banner",
+       "title": "Laundry",
+       "eyebrow": "Room",
+       "icon": "mdi:hanger",
+       "color": "#2ec4c6",
+       "stats": [
+        {
+         "label": "Lights on",
+         "count": [
+          "light.laundry_room_laundry_room"
+         ],
+         "expand": true
+        }
+       ],
+       "back": "/house-hub/rooms"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 3,
+     "cards": [
+      {
+       "type": "custom:hearth-grid",
+       "cards": [
+        {
+         "type": "custom:hearth-group",
+         "title": "Lights",
+         "icon": "mdi:lightbulb-group",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "light.laundry_room_lights",
+           "name": "Laundry lights"
+          }
+         ],
+         "toggle": "light.laundry_room_laundry_room",
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Scenes",
+         "icon": "mdi:palette",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "script.room_laundry_bright",
+           "name": "Bright",
+           "icon": "mdi:brightness-7"
+          },
+          {
+           "entity": "script.room_laundry_relax",
+           "name": "Relax",
+           "icon": "mdi:sofa-outline"
+          },
+          {
+           "entity": "script.room_laundry_dim",
+           "name": "Dim",
+           "icon": "mdi:brightness-4"
+          },
+          {
+           "entity": "script.room_laundry_night",
+           "name": "Night",
+           "icon": "mdi:weather-night"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Devices",
+         "icon": "mdi:power-plug",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "switch.dryer_power",
+           "name": "Dryer power"
+          },
+          {
+           "entity": "switch.laundry_room_washer_power",
+           "name": "Washer power"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-group",
+         "title": "Machines",
+         "icon": "mdi:washing-machine",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "sensor.dryer_current_status",
+           "name": "Dryer",
+           "icon": "mdi:tumble-dryer"
+          },
+          {
+           "entity": "sensor.dryer_remaining_time",
+           "name": "Dryer time left",
+           "icon": "mdi:tumble-dryer"
+          },
+          {
+           "entity": "sensor.laundry_room_washer_current_status",
+           "name": "Washer",
+           "icon": "mdi:washing-machine"
+          },
+          {
+           "entity": "sensor.laundry_room_washer_remaining_time",
+           "name": "Washer time left",
+           "icon": "mdi:washing-machine"
+          }
+         ],
+         "span": 1
+        },
+        {
+         "type": "custom:hearth-bars",
+         "title": "Power right now",
+         "icon": "mdi:flash",
+         "color": "#2ec4c6",
+         "entities": [
+          {
+           "entity": "sensor.washing_machine_power_minute_average",
+           "name": "Washing machine"
+          },
+          {
+           "entity": "sensor.dryer_power_minute_average",
+           "name": "Dryer"
+          }
+         ],
+         "span": 3
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
