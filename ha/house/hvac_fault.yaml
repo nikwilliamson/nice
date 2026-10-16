@@ -1,0 +1,290 @@
+template:
+- binary_sensor:
+  - name: AC Condenser Not Starting
+    unique_id: ac_condenser_not_starting
+    device_class: problem
+    icon: mdi:hvac-off
+    # 5 minutes covers the compressor's anti-short-cycle lockout (up to ~5 min
+    # on this Amana) plus the minute-average sensor's own lag. The condenser
+    # legitimately reads 0 W for one or two samples at the start of a call -
+    # seen at 11:15 and 12:13 on 2026-09-14 - so anything shorter than this
+    # alerts on every normal cycle.
+    delay_on:
+      minutes: 5
+    # Short off-delay so recovery is reported promptly once it does start.
+    delay_off:
+      minutes: 2
+    state: >-
+      {{ is_state_attr('climate.living_room_thermostat', 'hvac_action', 'cooling')
+         and states('sensor.air_handler_power_minute_average') | float(0) > 50
+         and states('sensor.air_conditioner_power_minute_average') | float(9999) < 100 }}
+    # The blower term is what makes this specific rather than merely true.
+    # hvac_action alone can read cooling for a moment before the equipment
+    # moves; requiring the handler to be pulling real current means the call
+    # reached the air handler and only the outdoor unit failed to answer it.
+    #
+    # Every float() default is chosen to fail SAFE, not to fail loud: an
+    # unavailable condenser sensor becomes 9999 W (reads as running), an
+    # unavailable handler becomes 0 W. A sensor outage is not an AC fault, and
+    # the recorder shows both of these drop to unavailable on every HA restart.
+
+  - name: AC Running Not Cooling
+    unique_id: ac_running_not_cooling
+    device_class: problem
+    icon: mdi:snowflake-off
+    # The second failure: the condenser IS drawing normal current and the house
+    # still is not getting cooler - low charge, an iced coil, a dead outdoor
+    # fan. Slower and softer evidence than the first fault, so it gets a much
+    # longer fuse.
+    delay_on:
+      minutes: 45
+    delay_off:
+      minutes: 10
+    state: >-
+      {{ is_state_attr('climate.living_room_thermostat', 'hvac_action', 'cooling')
+         and states('sensor.air_conditioner_power_minute_average') | float(0) > 500
+         and states('sensor.living_room_thermostat_temperature') | float(-99)
+             >= (state_attr('climate.living_room_thermostat', 'temperature') | float(999)) + 2.5
+         and states('sensor.living_room_temperature_trend') | float(-99) > -0.3 }}
+    # Three gates, and all three are load-bearing:
+    #
+    #   > 500 W    the condenser is genuinely running, which is what separates
+    #              this fault from the one above - they can never both be true.
+    #
+    #   >= setpoint + 2.5  a Florida afternoon can hold this house flat at the
+    #              setpoint for an hour with nothing wrong. On 2026-09-14 the
+    #              system ran from 12:29 with the temperature drifting between
+    #              73.27 and 73.65 against a 73 setpoint. That is a system
+    #              keeping up, not a broken one, and this gate is what stops it
+    #              being reported as a fault.
+    #
+    #   trend > -0.3 deg F/h  the setback case. Coming back from vacation the
+    #              house sits 7 degrees above setpoint and runs for hours -
+    #              but it is falling at -2 deg F/h while it does. Only a run
+    #              that is warm AND flat is broken.
+    #
+    # The trend comes from the Living Room Temperature Trend derivative helper
+    # (30 min window, 5 min max_sub_interval so a flat temperature decays the
+    # gradient toward zero instead of holding the last value).
+    # float(-99) on it means an unknown trend reads as strongly falling and
+    # never raises this fault.
+automation:
+# Every automation here starts with a condition on its own
+# input_boolean.*_enabled - that boolean is what the Automations dashboard
+# toggles. A condition rather than automation.turn_off is deliberate: a muted
+# automation still triggers and still writes a trace, showing "stopped by
+# condition", so you can see it was reached instead of wondering why nothing
+# happened.
+#
+# The board is not written to from here. The alert goes on
+# todo.house_alerts and Vestassistant decides what is displayed; the repeat
+# loop below therefore only repeats the phone push, because the list item
+# stays up on its own.
+- id: hvac_ac_fault_alert
+  alias: HVAC - AC fault alert
+  description: >-
+    Notifies the phone when either AC fault sensor latches, raises a house
+    alert, repeats the push every 30 minutes for as long as the fault stands,
+    and clears when it resolves. Detection, nagging and the all-clear are one
+    automation on purpose: they are three states of one incident, and splitting
+    them would need a helper to carry the fault between them.
+  mode: restart
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.ac_condenser_not_starting
+    - binary_sensor.ac_running_not_cooling
+    to: "on"
+    note: >-
+      No from: guard. Both sensors come up unknown after a restart, so
+      restricting the transition would swallow a fault that was already
+      standing when HA came back.
+  conditions:
+  - condition: state
+    entity_id: input_boolean.hvac_ac_fault_alert_enabled
+    state: "on"
+  actions:
+  - variables:
+      alert: >-
+        {% if is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
+        AC NOT COOLING. CONDENSER IS OFF.
+        {%- else -%}
+        AC IS ON BUT NOT COOLING.
+        {%- endif %}
+    note: >-
+      Captured once, up front. The clear at the end has to pass the SAME text
+      the raise used, and the sensor it is derived from may well have changed
+      state by then - reading it twice would leave the first alert stranded.
+  - action: script.house_alert_raise
+    data:
+      message: "{{ alert }}"
+  - repeat:
+      sequence:
+      - action: notify.mobile_app_niks_iphone_17
+        data:
+          title: >-
+            {% if is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
+            AC condenser is not starting
+            {%- else -%}
+            AC is running but not cooling
+            {%- endif %}
+          message: >-
+            {%- set ac = states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) -%}
+            {%- set ah = states('sensor.air_handler_power_minute_average') | float(0) | round(0) -%}
+            {%- set t = states('sensor.living_room_thermostat_temperature') | float(0) | round(1) -%}
+            {%- set sp = state_attr('climate.living_room_thermostat', 'temperature') | float(0) | round(0) -%}
+            {%- set tr = states('sensor.living_room_temperature_trend') -%}
+            {%- if is_state('binary_sensor.ac_condenser_not_starting', 'on') -%}
+            Thermostat is calling for cool and the blower is pulling {{ ah }} W,
+            but the condenser is only drawing {{ ac }} W. Inside {{ t }}F, set to {{ sp }}F.
+            {%- else -%}
+            Condenser has been drawing {{ ac }} W for 45 minutes and the house is
+            not getting cooler. Inside {{ t }}F, set to {{ sp }}F, trend {{ tr }} F/h.
+            {%- endif %}
+          data:
+            tag: hvac_fault
+            push:
+              interruption-level: critical
+              sound:
+                name: default
+                critical: 1
+                volume: 1.0
+        note: >-
+          Critical interruption level, so this breaks silent mode and Focus -
+          the 2am failure is the one worth catching. The shared tag means the
+          30-minute repeats replace the previous banner instead of stacking,
+          and the all-clear below replaces the last alert.
+      - wait_for_trigger:
+        - trigger: state
+          entity_id:
+          - binary_sensor.ac_condenser_not_starting
+          - binary_sensor.ac_running_not_cooling
+          to: "off"
+        timeout:
+          minutes: 30
+        continue_on_timeout: true
+        note: >-
+          This is the repeat interval and the escape hatch in one. Either a
+          sensor clears and the loop re-checks immediately, or 30 minutes pass
+          and it nags again. A time_pattern trigger would have fired on the
+          wall clock, so a fault raised at 10:29 would have re-notified at
+          10:30; waiting from the last notification keeps the gap honest.
+      while:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: binary_sensor.ac_condenser_not_starting
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.ac_running_not_cooling
+          state: "on"
+        note: >-
+          Checked before the first pass too, so a fault that clears inside the
+          delay_off window never reaches the notification.
+  - action: script.house_alert_clear
+    data:
+      message: "{{ alert }}"
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: sensor.air_conditioner_power_minute_average
+        above: 500
+      sequence:
+      - action: notify.mobile_app_niks_iphone_17
+        data:
+          title: AC is cooling again
+          message: >-
+            {%- set ac = states('sensor.air_conditioner_power_minute_average') | float(0) | round(0) -%}
+            {%- set t = states('sensor.living_room_thermostat_temperature') | float(0) | round(1) -%}
+            Condenser is drawing {{ ac }} W. Inside {{ t }}F.
+          data:
+            tag: hvac_fault
+        note: >-
+          Deliberately not critical. The all-clear is information, not an alarm.
+      - action: script.house_alert_raise
+        data:
+          message: AC IS COOLING AGAIN.
+        note: >-
+          The one alert that raises something on the way OUT. It is not a chore
+          and nothing clears it, so it carries a short life of its own - see
+          the expiry automation below. Recovery is worth saying once; it is not
+          worth saying all night.
+    default:
+    - action: notify.mobile_app_niks_iphone_17
+      data:
+        title: AC alert cleared
+        message: >-
+          The thermostat stopped calling for cool, so the fault no longer
+          applies - but the condenser never ran. Nothing has been proven fixed.
+        data:
+          tag: hvac_fault
+    note: >-
+      A fault sensor going off has two very different causes, and the condenser
+      is the only thing that tells them apart. Drawing current means it finally
+      started and the house is being cooled: say so. Still at zero means the
+      call simply ended - the thermostat gave up, or you switched the system
+      off after reading the alert - and claiming recovery there would be a lie
+      the board repeats all night. That branch says nothing on the board.
+# mode: restart means the second fault type latching mid-incident restarts
+# this run rather than queueing a second one. Correct: the messages read
+# current sensor state every pass, so the restarted run reports whatever is
+# wrong now. The cost is that a restart skips the clear above - which is what
+# the reconciler below is for.
+
+- id: hvac_ac_recovery_expire
+  alias: HVAC - Expire the recovery message
+  description: >-
+    AC IS COOLING AGAIN. has nothing to clear it, so it would sit on the list
+    until somebody ticked it off by hand. Half an hour is long enough to be
+    seen and short enough not to become furniture.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: state
+    entity_id: todo.house_alerts
+    note: >-
+      Any change to the list re-checks the age of this one item. Cheaper than a
+      time_pattern, and it settles within a rotation either way.
+  - trigger: time_pattern
+    minutes: /15
+  conditions:
+  - condition: template
+    value_template: >-
+      {{ (now() - states.automation.hvac_ac_fault_alert.attributes.last_triggered
+          | default(now(), true)).total_seconds() > 1800 }}
+  actions:
+  - action: script.house_alert_clear
+    data:
+      message: AC IS COOLING AGAIN.
+
+# RECONCILER. See the note in kitchen.yaml - a list item outlives the run that
+# created it, so an incident cut short by a restart or a reload would strand
+# its alert. Not gated behind an *_enabled boolean: muting it could only leave
+# a stale alert up, never silence a real one.
+- id: hvac_ac_alert_reconcile
+  alias: HVAC - Reconcile AC alerts
+  description: Clears both AC alerts whenever neither fault sensor is standing.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.ac_condenser_not_starting
+    - binary_sensor.ac_running_not_cooling
+    to: "off"
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.ac_condenser_not_starting
+    state: "off"
+  - condition: state
+    entity_id: binary_sensor.ac_running_not_cooling
+    state: "off"
+  actions:
+  - action: script.house_alert_clear
+    data:
+      message: AC NOT COOLING. CONDENSER IS OFF.
+  - action: script.house_alert_clear
+    data:
+      message: AC IS ON BUT NOT COOLING.

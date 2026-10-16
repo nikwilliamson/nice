@@ -1,0 +1,284 @@
+template:
+# Stove and oven left-on detection, off the two Emporia kitchen circuits:
+#
+#   sensor.range_power_minute_average  - the cooktop
+#   sensor.oven_power_minute_average   - the oven
+#
+# Neither circuit has a "running" signature in the recorder to calibrate
+# against: both read a flat 0.0 W across the whole 10-day retention window,
+# with the only state changes being integration reconnects. Monthly energy
+# (5.0 kWh oven, 5.8 kWh range as of 2026-09-14) proves they do get used, just
+# not recently enough to still be on disk. So 100 W is a reasoned threshold,
+# not a measured one - an electric burner is 1200-3000 W and a bake element
+# 2000-4000 W, and standby is a true zero (Energy Today reads 0.0 on a day
+# with no cooking), so 100 W sits in an enormous empty gap. Worth re-checking
+# against a real cooking session.
+#
+# THE DUTY CYCLE IS THE WHOLE PROBLEM. An electric oven holding 350F switches
+# its element on and off continuously, and a burner below full is doing the
+# same through its infinite switch. Tested against the raw minute-average
+# sensor, "power > 100" would flicker on and off every few minutes and a 3h
+# delay_on would never accumulate - the alert would simply never fire. Both
+# sensors below therefore read a 15-minute rolling mean (the Range/Oven power
+# 15m average statistics helpers) instead, which rides straight through the
+# cycling. A burner on low is roughly 15% duty of 1200 W, about 180 W averaged
+# - still clear of the 100 W line.
+- binary_sensor:
+  - name: Range Left On
+    unique_id: range_left_on
+    device_class: problem
+    icon: mdi:stove
+    # 90 minutes clears any normal cooking session including a long simmer.
+    delay_on:
+      minutes: 90
+    # Short off-delay: the 15-minute mean already lags about ten minutes on
+    # the way down, so piling more delay on top would make the all-clear feel
+    # broken. One minute is just debounce.
+    delay_off:
+      minutes: 1
+    state: >-
+      {{ states('sensor.range_power_15m_average') | float(0) > 40 }}
+    # float(0) means an unavailable statistics helper reads as OFF and stays
+    # silent. Deliberate: the Emporia integration drops out briefly on its own
+    # (seven reconnects in the last four days), and an alarm that cries wolf
+    # at 3am during an integration blip is one that gets muted and then is not
+    # there on the night it matters. The cost is that a stove left on during
+    # an outage goes unreported until the sensor returns.
+
+  - name: Oven Left On
+    unique_id: oven_left_on
+    device_class: problem
+    icon: mdi:toaster-oven
+    # 3 hours, because a roast, a brisket or anything low-and-slow is
+    # legitimately multi-hour and a shorter fuse would fire during real
+    # cooking. The 00:30 overnight check in the automation is what covers an
+    # oven switched on late that has not yet run out its three hours.
+    delay_on:
+      hours: 3
+    delay_off:
+      minutes: 1
+    state: >-
+      {{ states('sensor.oven_power_15m_average') | float(0) > 40 }}
+    # Same 40 W line as the cooktop, but NOT calibrated against a real bake -
+    # only the range was measured. An oven on Warm (about 170F) is the setting
+    # most likely to sit low enough to matter, so check
+    # sensor.oven_power_15m_average the next time one is running.
+automation:
+# Every automation here starts with a condition on its own
+# input_boolean.*_enabled - that boolean is what the Automations dashboard
+# toggles. A condition rather than automation.turn_off is deliberate: a muted
+# automation still triggers and still writes a trace, showing "stopped by
+# condition", so you can see it was reached instead of wondering why nothing
+# happened.
+#
+# THE BOARD IS NO LONGER WRITTEN TO FROM HERE. Each alert puts one item on
+# todo.house_alerts and takes it off again; Vestassistant owns what the board
+# shows. That also collapses the old repeat loop: the item sits on the list
+# for as long as the hazard stands, so the loop only has to repeat the phone
+# push. The board message used to be reposted every 30 minutes purely because
+# nothing else would have kept it up.
+- id: kitchen_range_left_on_alert
+  alias: Kitchen - Range left on alert
+  description: >-
+    Alerts when the cooktop has been drawing power for 90 minutes, or is still
+    drawing power at 00:30. Repeats the push every 30 minutes until it is
+    switched off, then clears the alert.
+  mode: restart
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.range_left_on
+    to: "on"
+    id: duration
+  - trigger: time
+    at: "00:30:00"
+    id: overnight
+    note: >-
+      The second path exists because the 90-minute fuse is measured from when
+      cooking started, not from bedtime. A burner lit at 23:15 would not latch
+      the sensor until 00:45; this fires at 00:30 on the fact that it is drawing
+      power right now, no matter how long it has been.
+  conditions:
+  - condition: state
+    entity_id: input_boolean.kitchen_range_left_on_alert_enabled
+    state: "on"
+  - condition: numeric_state
+    entity_id: sensor.range_power_15m_average
+    above: 40
+    note: >-
+      One condition serving two triggers. On the duration path it is already
+      implied by the sensor being on, so it costs nothing; on the overnight path
+      it IS the test, and without it 00:30 would alert every night of the year.
+  actions:
+  - action: script.house_alert_raise
+    data:
+      message: STOVE LEFT ON. GO CHECK IT.
+    note: >-
+      Raised once, not on every pass. The script is idempotent on the exact
+      text, so a restart of this automation does not stack duplicates.
+  - repeat:
+      sequence:
+      - action: notify.mobile_app_niks_iphone_17
+        data:
+          title: Stove left on
+          message: >-
+            {%- set w = states('sensor.range_power_15m_average') | float(0) | round(0) -%}
+            {%- set since = relative_time(states.binary_sensor.range_left_on.last_changed) -%}
+            The cooktop is drawing {{ w }} W averaged over the last 15 minutes.
+            {% if is_state('binary_sensor.range_left_on', 'on') %}It has been on
+            for over 90 minutes ({{ since }}).{% else %}It is still on after
+            midnight.{% endif %}
+          data:
+            tag: kitchen_range_left_on
+            push:
+              interruption-level: critical
+              sound:
+                name: default
+                critical: 1
+                volume: 1.0
+        note: >-
+          Critical, and unapologetically so. This is the one alert in the house
+          where waking you up is the entire point.
+      - wait_for_trigger:
+        - trigger: numeric_state
+          entity_id: sensor.range_power_15m_average
+          below: 40
+        timeout:
+          minutes: 30
+        continue_on_timeout: true
+      while:
+      - condition: numeric_state
+        entity_id: sensor.range_power_15m_average
+        above: 40
+        note: >-
+          The loop watches the 15m average rather than the binary sensor, so the
+          overnight path keeps nagging even though that sensor has not latched.
+  - action: script.house_alert_clear
+    data:
+      message: STOVE LEFT ON. GO CHECK IT.
+  - action: notify.mobile_app_niks_iphone_17
+    data:
+      title: Stove is off
+      message: The cooktop circuit has dropped back to zero.
+      data:
+        tag: kitchen_range_left_on
+    note: Not critical. The all-clear is information, not an alarm.
+
+- id: kitchen_oven_left_on_alert
+  alias: Kitchen - Oven left on alert
+  description: >-
+    Alerts when the oven has been drawing power for 3 hours, or is still drawing
+    power at 00:30. Repeats the push every 30 minutes until it is switched off,
+    then clears the alert.
+  mode: restart
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.oven_left_on
+    to: "on"
+    id: duration
+  - trigger: time
+    at: "00:30:00"
+    id: overnight
+  conditions:
+  - condition: state
+    entity_id: input_boolean.kitchen_oven_left_on_alert_enabled
+    state: "on"
+  - condition: numeric_state
+    entity_id: sensor.oven_power_15m_average
+    above: 40
+  actions:
+  - action: script.house_alert_raise
+    data:
+      message: OVEN LEFT ON. GO CHECK IT.
+  - repeat:
+      sequence:
+      - action: notify.mobile_app_niks_iphone_17
+        data:
+          title: Oven left on
+          message: >-
+            {%- set w = states('sensor.oven_power_15m_average') | float(0) | round(0) -%}
+            {%- set since = relative_time(states.binary_sensor.oven_left_on.last_changed) -%}
+            The oven is drawing {{ w }} W averaged over the last 15 minutes.
+            {% if is_state('binary_sensor.oven_left_on', 'on') %}It has been on
+            for over 3 hours ({{ since }}).{% else %}It is still on after
+            midnight.{% endif %}
+          data:
+            tag: kitchen_oven_left_on
+            push:
+              interruption-level: critical
+              sound:
+                name: default
+                critical: 1
+                volume: 1.0
+      - wait_for_trigger:
+        - trigger: numeric_state
+          entity_id: sensor.oven_power_15m_average
+          below: 40
+        timeout:
+          minutes: 30
+        continue_on_timeout: true
+      while:
+      - condition: numeric_state
+        entity_id: sensor.oven_power_15m_average
+        above: 40
+  - action: script.house_alert_clear
+    data:
+      message: OVEN LEFT ON. GO CHECK IT.
+  - action: notify.mobile_app_niks_iphone_17
+    data:
+      title: Oven is off
+      message: The oven circuit has dropped back to zero.
+      data:
+        tag: kitchen_oven_left_on
+
+# RECONCILERS. A list item outlives the run that created it, which a board
+# message never did - so a run that dies before reaching its clear (Home
+# Assistant restarting mid-incident, the automation being reloaded, mode:
+# restart cutting a run short) would strand the alert on the list forever.
+# These exist to make the invariant true rather than hoped for: if the circuit
+# is cold, the alert is not on the list.
+#
+# Deliberately not gated behind an *_enabled boolean, unlike everything above.
+# Muting a reconciler cannot stop an alert - it can only leave a stale one on
+# the board, which is the opposite of what a mute switch is for.
+- id: kitchen_range_alert_reconcile
+  alias: Kitchen - Reconcile range alert
+  description: Clears the range alert whenever the cooktop is demonstrably off.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.range_left_on
+    to: "off"
+  - trigger: homeassistant
+    event: start
+    note: >-
+      The restart path. A state trigger cannot fire for a transition that
+      happened while Home Assistant was down.
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.range_power_15m_average
+    below: 40
+  actions:
+  - action: script.house_alert_clear
+    data:
+      message: STOVE LEFT ON. GO CHECK IT.
+
+- id: kitchen_oven_alert_reconcile
+  alias: Kitchen - Reconcile oven alert
+  description: Clears the oven alert whenever the oven is demonstrably off.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.oven_left_on
+    to: "off"
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.oven_power_15m_average
+    below: 40
+  actions:
+  - action: script.house_alert_clear
+    data:
+      message: OVEN LEFT ON. GO CHECK IT.

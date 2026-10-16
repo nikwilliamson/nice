@@ -1,0 +1,349 @@
+# Litter-Robot 4 with the LitterHopper, Game Room. Two cats.
+#
+# Scope is deliberately narrow: empty the drawer, refill the hopper. The health
+# automations this device could support - a no-visit watchdog, a straining
+# counter, a weight trend - are not here, because two cats share one box and
+# every per-cat signal is therefore ambiguous. A 9.06 lb reading tells you a cat
+# went, not which one, and "nobody has been in 18 hours" cannot distinguish a
+# blocked cat from a cat who happened to go while the other one was in.
+#
+# THE TWO DRAWER SIGNALS ARE NOT THE SAME KIND OF THING.
+#
+#   sensor.litter_robot_waste_drawer  - a percentage Whisker models from cycle
+#                                       count and pet weight, not a measurement
+#                                       of anything in the drawer
+#   sensor.litter_robot_status_code   - df1 / df2 / dfs, which is what the
+#                                       machine will actually stop cycling for
+#
+# The percentage is the early warning and the status code is the deadline. The
+# drawer automation triggers on both and says different things, because being
+# told at 80% and being told the box has stopped are different messages that
+# deserve different levels of interruption.
+#
+# The df1/df2/dfs readings come from the integration's own enum: df1 is two
+# cycles left, df2 is one, dfs is full and stopped. Worth confirming against the
+# first real fill - if the ordering is reversed the messages below are wrong,
+# though the behaviour is not.
+automation:
+# Both automations here start with a condition on their own
+# input_boolean.*_enabled - a condition rather than automation.turn_off, so a
+# muted automation still triggers and still writes a trace showing "stopped by
+# condition".
+#
+# The board is not written to from here. Alerts go on todo.house_alerts and
+# Vestassistant decides what is shown. The old "NOT forced, a chore does not
+# override quiet hours" note now lives in the integration's quiet-hours policy
+# for the task tier, which is where it belongs.
+- id: litter_box_drawer_full_alert
+  alias: Litter Box - Drawer full alert
+  description: >-
+    Warns once when the waste drawer passes 80%, escalates when the Litter-Robot
+    itself reports the drawer full, and re-raises at 20:00 if it is still full at
+    bedtime. Repeats every three hours during waking hours until it is emptied.
+  mode: restart
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.litter_robot_waste_drawer
+    above: 80
+    for: "00:10:00"
+    id: filling
+    note: >-
+      80 rather than Whisker's own nudge point, because two cats fill the drawer
+      at roughly twice the rate the app's guidance assumes and a later warning
+      would arrive with no useful headroom. The ten minutes is settling time: the
+      percentage steps up on every clean cycle and the cloud can replay the same
+      step on a reconnect.
+  - trigger: state
+    entity_id: sensor.litter_robot_status_code
+    to:
+    - df1
+    - df2
+    - dfs
+    id: full
+  - trigger: time
+    at: "20:00:00"
+    id: bedtime
+    note: >-
+      A full drawer discovered at 07:00 is a small chore; discovered at 02:00
+      because a cat woke you up is not. This path exists to force the decision
+      while you are still awake and dressed.
+  conditions:
+  - condition: state
+    entity_id: input_boolean.litter_box_drawer_full_alert_enabled
+    state: "on"
+  - condition: numeric_state
+    entity_id: sensor.litter_robot_waste_drawer
+    above: 80
+    note: >-
+      One condition serving three triggers. On the filling path it is already
+      implied; on the bedtime path it IS the test, and without it 20:00 would
+      fire every night of the year.
+  actions:
+  - choose:
+    - alias: Heads-up - filling, but no deadline yet
+      conditions:
+      - condition: trigger
+        id: filling
+      - condition: not
+        conditions:
+        - condition: state
+          entity_id: sensor.litter_robot_status_code
+          state:
+          - df1
+          - df2
+          - dfs
+        note: >-
+          If the machine is already reporting a drawer code by the time the
+          percentage crosses 80, skip the gentle tier and fall through to the
+          deadline path - the early warning has been overtaken by events.
+      sequence:
+      - action: notify.mobile_app_niks_iphone_17
+        data:
+          title: Litter drawer filling
+          message: >-
+            Waste drawer at {{ states('sensor.litter_robot_waste_drawer') | int(0) }}%.
+            With two cats that is about a day of headroom.
+          data:
+            tag: litter_box_drawer
+      note: >-
+        One push, no repeat, nothing on the board, default interruption level.
+        This tier exists so you can empty it on your own schedule; nagging here
+        would train you to swipe away the tier that actually matters.
+    default:
+    - alias: Deadline - the box is about to stop, or already has
+      action: script.house_alert_raise
+      data:
+        message: EMPTY THE LITTER DRAWER.
+      note: >-
+        Raised once, outside the loop. The list keeps it up; the loop below only
+        has to repeat the push.
+    - repeat:
+        sequence:
+        - if:
+          - condition: time
+            after: "08:00:00"
+            before: "21:00:00"
+          then:
+          - action: notify.mobile_app_niks_iphone_17
+            data:
+              title: Empty the litter drawer
+              message: >-
+                {%- set code = states('sensor.litter_robot_status_code') -%}
+                {%- set pct = states('sensor.litter_robot_waste_drawer') | int(0) -%}
+                {% if code == 'dfs' %}The drawer is full and the box has stopped
+                cycling.{% elif code == 'df2' %}One cycle left before the box
+                stops.{% elif code == 'df1' %}Two cycles left before the box
+                stops.{% else %}Waste drawer at {{ pct }}%.{% endif %}
+              data:
+                tag: litter_box_drawer
+                push:
+                  interruption-level: time-sensitive
+            note: >-
+              time-sensitive, not critical. Two cats and nowhere to go is a real
+              problem, but it is not the stove: it should break through a Focus,
+              not override the ringer switch.
+          note: >-
+            NO else branch, and specifically no `stop:` - `stop` ends the entire
+            automation run, not the current iteration, so using it to skip the
+            overnight nag would kill the loop for good and the clear below would
+            never fire. Instead the loop keeps turning overnight and simply says
+            nothing until 08:00. Waking you at 03:00 for a chore you cannot
+            usefully do in the dark is how an alert earns itself a permanent
+            mute. The list item stays up either way - what it does overnight is
+            the integration's quiet-hours policy to decide, not this loop's.
+        - wait_for_trigger:
+          - trigger: numeric_state
+            entity_id: sensor.litter_robot_waste_drawer
+            below: 50
+          timeout:
+            hours: 3
+          continue_on_timeout: true
+          note: >-
+            Below 50, not below 80. Emptying the drawer and resetting drops the
+            percentage to near zero, so a 50% line cannot be crossed by anything
+            except a real empty-and-reset - no cycle-to-cycle jitter can fake it.
+        while:
+        - condition: numeric_state
+          entity_id: sensor.litter_robot_waste_drawer
+          above: 80
+      note: >-
+        Three hours, not the thirty minutes the stove and AC alerts use. Those
+        are hazards that want you moving now; this is a chore, and a chore that
+        buzzes twice an hour gets muted and is then not there on the day it
+        matters.
+    - action: script.house_alert_clear
+      data:
+        message: EMPTY THE LITTER DRAWER.
+    - action: notify.mobile_app_niks_iphone_17
+      data:
+        title: Litter drawer emptied
+        message: >-
+          Waste drawer back to {{ states('sensor.litter_robot_waste_drawer') | int(0) }}%.
+        data:
+          tag: litter_box_drawer
+      note: Same tag, so the all-clear replaces the nag in Notification Centre.
+
+- id: litter_box_litter_refill_alert
+  alias: Litter Box - Litter refill alert
+  description: >-
+    Pushes and puts cat litter on the shopping list when the LitterHopper runs
+    empty or the globe drops below 20% on its own, and pushes without a list item
+    when the hopper motor faults. Re-raises once a day at 18:00 while unresolved.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: state
+    entity_id: sensor.litter_robot_hopper_status
+    to: empty
+    id: hopper_empty
+  - trigger: state
+    entity_id: sensor.litter_robot_hopper_status
+    to:
+    - motor_fault_short
+    - motor_ot_amps
+    - motor_disconnected
+    id: hopper_fault
+  - trigger: numeric_state
+    entity_id: sensor.litter_robot_litter_level
+    below: 20
+    for: "00:30:00"
+    id: globe_low
+    note: >-
+      The backstop. With the hopper installed and working the globe should never
+      get this low, so this firing while hopper_status still reads "enabled"
+      means the hopper thinks it is dispensing and is not - a bridged bag, or
+      litter that has packed down around the auger.
+  - trigger: time
+    at: "18:00:00"
+    id: daily
+  conditions:
+  - condition: state
+    entity_id: input_boolean.litter_box_litter_refill_alert_enabled
+    state: "on"
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: sensor.litter_robot_hopper_status
+      state:
+      - empty
+      - motor_fault_short
+      - motor_ot_amps
+      - motor_disconnected
+    - condition: numeric_state
+      entity_id: sensor.litter_robot_litter_level
+      below: 20
+    note: >-
+      As with the drawer, this is what stops the 18:00 re-raise firing on the
+      364 days when nothing is wrong.
+  actions:
+  - variables:
+      hopper: "{{ states('sensor.litter_robot_hopper_status') }}"
+  - action: notify.mobile_app_niks_iphone_17
+    data:
+      title: >-
+        {{ 'Litter hopper fault' if hopper.startswith('motor') else 'Refill the litter hopper' }}
+      message: >-
+        {%- set level = states('sensor.litter_robot_litter_level') | int(0) -%}
+        {% if hopper == 'empty' %}The hopper is empty. The globe is at {{ level }}%
+        and will not be topped up until it is refilled.
+        {% elif hopper == 'motor_disconnected' %}The hopper motor reads
+        disconnected - check it is seated properly on the globe.
+        {% elif hopper.startswith('motor') %}The hopper motor faulted
+        ({{ hopper }}). It is not dispensing into the globe.
+        {% else %}Globe litter is down to {{ level }}% and the hopper is not
+        keeping up with it.{% endif %}
+      data:
+        tag: litter_box_litter
+  - action: script.house_alert_raise
+    data:
+      message: >-
+        {{ 'CHECK THE LITTER HOPPER.' if hopper.startswith('motor')
+           else 'REFILL THE LITTER HOPPER.' }}
+    note: >-
+      A jammed hopper and an empty one need different things from you - a
+      screwdriver versus a bag - so they say different things on the board. The
+      reconciler below clears both.
+  - if:
+    - condition: template
+      value_template: "{{ not hopper.startswith('motor') }}"
+    then:
+    - action: todo.get_items
+      target:
+        entity_id: todo.shopping_list
+      data:
+        status: needs_action
+      response_variable: shopping
+    - if:
+      - condition: template
+        value_template: >-
+          {{ shopping['todo.shopping_list']['items'] | map(attribute='summary')
+             | map('lower') | select('search', 'litter') | list | count == 0 }}
+        note: >-
+          The 18:00 re-raise fires every day the hopper stays empty, and the
+          local todo list happily accepts duplicates, so without this check a
+          week away would come home to seven identical list items. Matching on
+          "litter" rather than the exact string also respects a hand-written
+          "litter (the good clumping one)" already on the list.
+      then:
+      - action: todo.add_item
+        target:
+          entity_id: todo.shopping_list
+        data:
+          item: Cat litter
+    note: >-
+      No shopping-list item on a motor fault: a jammed or unseated hopper is a
+      screwdriver problem, not a shopping trip, and putting litter on the list
+      would send you to the store for something a five-minute fix solves.
+# Nothing here removes "Cat litter" from the shopping list. That is deliberate,
+# and it is the one place where the obvious automation is the wrong one -
+# refilling the hopper CONSUMES the bag you were being told to buy, so treating
+# hopper_status returning to "enabled" as "no longer needed" would delete the
+# reminder at the exact moment it became most true. The item comes off the list
+# when a human has actually bought litter.
+#
+# The BOARD alert is different: that one does track the hardware, because it is
+# telling you to go do something to the machine rather than to buy anything.
+
+# RECONCILERS. See the note in kitchen.yaml.
+- id: litter_box_drawer_reconcile
+  alias: Litter Box - Reconcile drawer alert
+  description: Clears the drawer alert once the drawer has actually been emptied.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: numeric_state
+    entity_id: sensor.litter_robot_waste_drawer
+    below: 50
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.litter_robot_waste_drawer
+    below: 80
+  actions:
+  - action: script.house_alert_clear
+    data:
+      message: EMPTY THE LITTER DRAWER.
+
+- id: litter_box_hopper_reconcile
+  alias: Litter Box - Reconcile hopper alert
+  description: Clears both hopper alerts once the hopper is dispensing again.
+  mode: single
+  max_exceeded: silent
+  triggers:
+  - trigger: state
+    entity_id: sensor.litter_robot_hopper_status
+    to: enabled
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - condition: state
+    entity_id: sensor.litter_robot_hopper_status
+    state: enabled
+  actions:
+  - action: script.house_alert_clear
+    data:
+      message: REFILL THE LITTER HOPPER.
+  - action: script.house_alert_clear
+    data:
+      message: CHECK THE LITTER HOPPER.
