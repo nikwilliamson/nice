@@ -5,6 +5,9 @@
     poll) it's Time's up! with a Stop button, and pushes if it's still ringing after four
     minutes: longer than a poll, so a timer stopped at the speaker never pushes. -#}
 
+{#- delete_timer needs skip_refresh given, though it's marked optional: without it the
+    integration stops the timer, then fails with KeyError 'skip_refresh'. -#}
+
 {#- "0:10:00" or "1 day, 0:10:00" in seconds -#}
 {%- macro secs(d) -%}
 {%- set p = (d | string).split(', ')[-1].split(':') -%}
@@ -32,14 +35,14 @@
     {%- set rang = ((ts - t.fire) / 60) if t.fire else 0 -%}
     {%- set ns.t = ns.t + [dict(id=id, tier=1, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='hazard',
         say="Time's up!", sub='', viz=none, entity=t.entity, tap=none,
-        act=dict(label='Stop', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id)),
+        act=dict(label='Stop', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id, skip_refresh=false)),
         push=(dict(level='time-sensitive', key=t.id, title=what ~ ' is going off', message="It's been ringing in the " ~ t.room | lower ~ ' for a few minutes.') if rang >= 4 else false))] -%}
   {%- else -%}
     {#- The say is the time left, counting down in the browser ({left}) -#}
     {%- set ns.t = ns.t + [dict(id=id, tier=1, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='timer', push=false,
         say=('Paused' if t.paused else '{left}'), sub='', big=true,
         ends=((t.fire * 1000) | int if t.fire and not t.paused else none), viz=none, entity=t.entity, tap=none,
-        act=dict(label='Cancel', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id), confirm=true))] -%}
+        act=dict(label='Cancel', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id, skip_refresh=false), confirm=true))] -%}
   {%- endif -%}
 {%- endfor -%}
 {{ ns.t | to_json }}
