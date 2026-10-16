@@ -19,7 +19,7 @@
 //     Scenes: { add: [script.lighting_race_mode], remove: [scene.x], all: false }
 //     Lights: { entities: [...] }        replace the list outright
 //     Motion: { hide: true }
-//     Stream lights: { after: Lights, entities: [...] }    a section of your own
+//     Stream lights: { after: Lights, entities: [...] }    a section of your own (or before:)
 //   cards: [ any card ]                  added after the sections
 //
 // Entities on the page come from the area at render time, so a device added to the room
@@ -43,24 +43,42 @@ export class NiceRoomPage extends NiceCard {
   // What's in the room, sorted into sections
   found() {
     const h = this.hass, area = this.config.area;
-    const ids = Object.keys(h.states).filter((id) => { const r = h.entities?.[id]; return r && !r.hidden && !r.entity_category && areaOf(h, id) === area; });
-    const groups = ids.filter((id) => domainOf(id) === "light" && Array.isArray(h.states[id].attributes.entity_id));
+    // What's usable in the room: not hidden, not a setting or diagnostic, not offline
+    const ids = Object.keys(h.states).filter((id) => {
+      const r = h.entities?.[id];
+      return r && !r.hidden && !r.entity_category && h.states[id].state !== "unavailable" && areaOf(h, id) === area;
+    });
+    const devOf = (id) => h.entities?.[id]?.device_id;
+    const onDevice = new Map();
+    for (const id of ids) { const dv = devOf(id); if (dv) onDevice.set(dv, [...(onDevice.get(dv) || []), id]); }
+    const siblings = (id) => onDevice.get(devOf(id)) || [];
+    const isGroup = (id) => Array.isArray(h.states[id].attributes.entity_id);
+    const lamps = ids.filter((id) => domainOf(id) === "light" && !isGroup(id));
+    // A group stands in for its members, unless it's the whole room (the header already
+    // switches the room); then the room's lights are listed one by one
+    const groups = ids.filter((id) => domainOf(id) === "light" && isGroup(id)).filter((g) => {
+      const members = h.states[g].attributes.entity_id.filter((m) => lamps.includes(m));
+      return members.length && members.length < lamps.length * 0.8;
+    });
     const grouped = new Set(groups.flatMap((g) => h.states[g].attributes.entity_id));
     const out = Object.fromEntries(ORDER.map((t) => [t, []]));
     for (const id of ids) {
       const s = h.states[id], d = domainOf(id), dc = s.attributes.device_class;
-      if (d === "light" && !grouped.has(id)) out.Lights.push(id);
+      const sib = siblings(id).map(domainOf);
+      if (d === "light" && (groups.includes(id) || (!isGroup(id) && !grouped.has(id)))) out.Lights.push(id);
       else if (d === "scene" || d === "script") out.Scenes.push(id);
       else if (d === "climate") out.Climate.unshift(id);
-      else if (d === "sensor" && (dc === "temperature" || dc === "humidity")) out.Climate.push(id);
+      // A room thermometer, not the one inside a thermostat, motion sensor or light
+      else if (d === "sensor" && (dc === "temperature" || dc === "humidity") && !sib.some((x) => ["climate", "light", "binary_sensor", "media_player"].includes(x))) out.Climate.push(id);
       else if (d === "media_player" && !/_s_car_/.test(id)) out.Playing.push(id);
       else if (d === "lock") out["Doors & windows"].unshift(id);
       else if (d === "binary_sensor" && SENSING[dc]) out[SENSING[dc]].push(id);
       else if (d === "sensor" && dc === "illuminance") out.Motion.push(id);
       else if ((d === "switch" && !/^switch\.adaptive_lighting_/.test(id)) || d === "fan") out["Plugs & more"].push(id);
-      else if (d === "sensor" && dc === "power") out.Power.push(id);
+      // A circuit's power, not a plug's (the plug's tile already says what it draws)
+      else if (d === "sensor" && dc === "power" && !sib.includes("switch")) out.Power.push(id);
     }
-    return { out, lights: ids.filter((id) => domainOf(id) === "light" && !groups.includes(id)) };
+    return { out, lights: lamps };
   }
 
   // The nice-controls configs for this room, overrides applied
@@ -77,13 +95,13 @@ export class NiceRoomPage extends NiceCard {
       if (!entities.length) return null;
       return { title, strip, room_tone: tone, all: ["Scenes", "Doors & windows", "Climate"].includes(title) ? false : undefined, ...o, entities };
     }).filter(Boolean);
-    // Sections of your own go after the one they name, or at the end
+    // Sections of your own go before or after the one they name, or at the end
     for (const [title, o] of Object.entries(ov)) {
       if (ORDER.includes(title) || o.hide) continue;
-      const at = o.after ? made.findIndex((m) => m.title === o.after) : -1;
-      made.splice(at >= 0 ? at + 1 : made.length, 0, { title, strip, room_tone: tone, ...o });
+      const before = o.before ? made.findIndex((m) => m.title === o.before) : -1, after = o.after ? made.findIndex((m) => m.title === o.after) : -1;
+      made.splice(before >= 0 ? before : after >= 0 ? after + 1 : made.length, 0, { title, strip, room_tone: tone, ...o });
     }
-    return made.map(({ add, remove, after, hide, ...cfg }) => cfg);
+    return made.map(({ add, remove, after, before, hide, ...cfg }) => cfg);
   }
 
   // Children are real cards, kept between renders and handed every hass update

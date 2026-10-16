@@ -7,7 +7,8 @@
 //   celebrate(el, big)          confetti from a ticked-off chore
 // Everything is skipped under prefers-reduced-motion.
 
-export const calm = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+// Also calm where the browser has no Web Animations
+export const calm = () => !Element.prototype.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 export const EASE_OUT = "cubic-bezier(.2, .8, .2, 1)";
 const SPRING = "cubic-bezier(.34, 1.56, .64, 1)";
 
