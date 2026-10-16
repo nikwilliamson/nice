@@ -98,6 +98,18 @@ template:
     state: nice
     attributes:
       tiles: "{% from 'nice/sports.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles services
+    unique_id: nice_tiles_services
+    icon: mdi:server-network
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/services.jinja' import tiles %}{{ tiles() | from_json }}"
+  - name: Nice tiles timers
+    unique_id: nice_tiles_timers
+    icon: mdi:timer-outline
+    state: nice
+    attributes:
+      tiles: "{% from 'nice/timers.jinja' import tiles %}{{ tiles() | from_json }}"
 
 # What needs attention, for the phone: every tile that should push (custom_templates/nice/
 # attention.jinja says which), and since when. Trigger-based so it can remember when each
@@ -117,6 +129,8 @@ template:
     - sensor.nice_tiles_plan
     - sensor.nice_tiles_health
     - sensor.nice_tiles_sports
+    - sensor.nice_tiles_services
+    - sensor.nice_tiles_timers
   - trigger: homeassistant
     event: start
   - trigger: event

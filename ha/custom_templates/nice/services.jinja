@@ -1,0 +1,49 @@
+{#- Nice - services, from Uptime Kuma. Nothing while everything's up.
+    A service the house runs on (core_services() in config.jinja) being down is act-now, and
+    pushes once it's been down 10 minutes. The rest are House health's little fixes (down()).
+    A service checked both at home and from outside ("Music Assistant" and "Music Assistant
+    (local)") is one service: down at home is down; up at home but not from outside is
+    "not reachable from outside". Pending (flapping) and paused monitors don't count. -#}
+{%- from 'nice/config.jinja' import core_services -%}
+{%- from 'nice/format.jinja' import at_clock -%}
+
+{#- Every service that's down: [{ key, name, core, outside (only from outside), since, entity }] -#}
+{%- macro down() -%}
+{%- set ns = namespace(rows=[], out=[]) -%}
+{%- set core = core_services() | from_json -%}
+{%- for e in integration_entities('uptime_kuma') | select('search', '_status$') -%}
+  {%- set local = e.endswith('_local_status') -%}
+  {%- set key = e | replace('sensor.', '') | regex_replace('(_local)?_status$', '') -%}
+  {%- set ns.rows = ns.rows + [dict(key=key, local=local, state=states(e), entity=e,
+      name=(device_attr(e, 'name') or key) | replace(' (local)', ''), since=states[e].last_changed if states[e] else now())] -%}
+{%- endfor -%}
+{%- for key in ns.rows | map(attribute='key') | unique -%}
+  {%- set home = ns.rows | selectattr('key', 'eq', key) | selectattr('local') | list | first | default(none) -%}
+  {%- set away = ns.rows | selectattr('key', 'eq', key) | rejectattr('local') | list | first | default(none) -%}
+  {%- set check = home or away -%}
+  {%- if check.state == 'down' -%}
+    {%- set ns.out = ns.out + [dict(key=key, name=check.name, core=key in core, outside=false, since=check.since.isoformat(), entity=check.entity)] -%}
+  {%- elif home and away and home.state == 'up' and away.state == 'down' -%}
+    {%- set ns.out = ns.out + [dict(key=key, name=away.name, core=key in core, outside=true, since=away.since.isoformat(), entity=away.entity)] -%}
+  {%- endif -%}
+{%- endfor -%}
+{{ ns.out | to_json }}
+{%- endmacro -%}
+
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[]) -%}
+{%- set all = down() | from_json -%}
+{%- set core = all | selectattr('core') | list -%}
+{%- if core -%}
+  {%- set first = core | sort(attribute='since') | first -%}
+  {%- set since = as_datetime(first.since) | as_local -%}
+  {%- set mins = ((now() - since).total_seconds() / 60) | int -%}
+  {%- set what = (first.name ~ (" isn't reachable from outside." if first.outside else ' is down.')) if core | count == 1
+      else core | count ~ ' services are down.' -%}
+  {%- set sub = ('Since ' ~ at_clock(since) if core | count == 1 else core | map(attribute='name') | join(', ')) -%}
+  {%- set ns.t = ns.t + [dict(id='services', tier=1, order=3, shape='S', label='Services', tone='act',
+      say=what, sub=sub, viz=none, act=none, tap=none, entity=first.entity,
+      push=(dict(level='active', key=core | map(attribute='key') | join(','), clear='Services are back up.') if mins >= 10 else false))] -%}
+{%- endif -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

@@ -19,6 +19,7 @@ import { bindPress, pressable, Confirm } from "../core/interaction.js";
 import { flood, countUp, arrive, wiggle, celebrate } from "../core/motion.js";
 import { sentence } from "../core/format.js";
 import { chart, layoutOf, chartStyles } from "../charts/index.js";
+import { clock } from "../charts/gauges.js";
 import { control, controlStyles } from "../controls/index.js";
 import { tileStyles, textStyles } from "./styles.js";
 import { extraStyles } from "./extra-styles.js";
@@ -65,10 +66,18 @@ export class NiceTile extends LitElement {
   }
 
   connectedCallback() { super.connectedCallback(); window.addEventListener("nice-highlight", this._hl); }
-  disconnectedCallback() { super.disconnectedCallback(); window.removeEventListener("nice-highlight", this._hl); }
+  disconnectedCallback() { super.disconnectedCallback(); window.removeEventListener("nice-highlight", this._hl); this._tick(0); }
+  // A chart that changes with the clock (a countdown) asks to be redrawn every so often
+  _tick(ms) {
+    if (ms === this._every) return;
+    clearInterval(this._timer);
+    this._every = ms;
+    this._timer = ms ? setInterval(() => this.requestUpdate(), ms) : null;
+  }
   firstUpdated() { if (!this.tile?.still) arrive(this); }
 
   updated() {
+    this._tick((this.isConnected && (this.tile?.ends ? 1000 : chart(this.tile?.viz?.type)?.tick)) || 0);
     // The new colour spills out from the finger, if you just tapped this tile
     if (this._from && this._from !== this._colors.bg && this._tap && performance.now() - this._tap.t < 4000) {
       flood(this, this._from, this._colors.bg, this._tap.x, this._tap.y);
@@ -128,12 +137,14 @@ export class NiceTile extends LitElement {
   }
 
   render() {
-    const t = this.tile;
+    let t = this.tile;
     if (!t) return nothing;
     const lay = t.layout || (t.picture ? "picture" : layoutOf(t.viz));
     this.setAttribute("lay", lay);
     const label = t.badge ? html`<div class="lblrow"><div class="lbl">${t.label}</div><span class="badge"><i></i>${t.badge}</span></div>` : t.label ? html`<div class="lbl">${t.label}</div>` : nothing;
     const act = this._act(t);
+    // A tile with `ends` says the time left in place of {left}
+    if (t.ends) { const left = (t.ends - Date.now()) / 1000; t = { ...t, say: String(t.say || "").replace("{left}", left > 0 ? clock(left) : "Time's up!") }; }
     const words = html`<div class="txt">${t.say ? html`<div class="say ${t.big ? "big" : ""}">${t.say}</div>` : nothing}${t.sub ? html`<div class="sub">${t.sub}</div>` : nothing}${lay === "after" || lay === "picture" ? nothing : act}</div>`;
     const viz = this._viz(t);
     const controls = t.controls?.length ? html`<div class="foot">${t.controls.map((c) => control(c, { confirm: this.confirm }))}</div>` : nothing;

@@ -2,6 +2,7 @@
     updates waiting, and no backup in three days. Packed last on the grid, whatever its
     tier; something offline makes it act-now. -#}
 {%- from 'nice/format.jinja' import name -%}
+{%- from 'nice/services.jinja' import down -%}
 {%- macro tiles() -%}
 {%- set ns = namespace(t=[], low=[], off=[]) -%}
 {%- for e in label_entities('battery') | select('is_state_attr', 'device_class', 'battery') -%}
@@ -17,15 +18,17 @@
 {%- set updates = states.update | selectattr('state', 'eq', 'on') | map(attribute='name') | list -%}
 {%- set bk = states('sensor.backup_last_successful_automatic_backup') -%}
 {%- set no_backup = bk in ['unknown', 'unavailable'] or (as_datetime(bk, none) is not none and (now() - as_datetime(bk)).days >= 3) -%}
-{%- set issues = (ns.low | count) + (ns.off | count) + (updates | count) + (1 if no_backup else 0) -%}
+{%- set minor = (down() | from_json) | rejectattr('core') | map(attribute='name') | list -%}
+{%- set issues = (minor | count) + (ns.low | count) + (ns.off | count) + (updates | count) + (1 if no_backup else 0) -%}
 {%- if issues > 0 -%}
   {%- set bits = ([(ns.low | count) ~ (' battery' if ns.low | count == 1 else ' batteries')] if ns.low else [])
       + ([ns.off[0] ~ ' offline'] if ns.off | count == 1 else [(ns.off | count) ~ ' offline'] if ns.off else [])
       + ([(updates | count) ~ (' update' if updates | count == 1 else ' updates')] if updates else [])
+      + ([minor | join(', ') ~ ' down'] if minor else [])
       + (['no recent backup'] if no_backup else []) -%}
   {%- set ns.t = ns.t + [dict(id='health', tier=(1 if ns.off else 4), order=(9 if ns.off else 1), shape='S', label='House health', tone='health',
       say=issues ~ (' little fix' if issues == 1 else ' little fixes'), sub=bits | join(', ') | capitalize,
-      viz=none, act=none, tap='health', detail=dict(batteries=ns.low, offline=ns.off, updates=updates, backup=not no_backup))] -%}
+      viz=none, act=none, tap='health', detail=dict(batteries=ns.low, offline=ns.off, updates=updates, services=minor, backup=not no_backup))] -%}
 {%- endif -%}
 {{ ns.t | to_json }}
 {%- endmacro -%}

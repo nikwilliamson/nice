@@ -1,0 +1,47 @@
+{#- Nice - timers on the Google speakers and displays (the Google Home integration, polled
+    every minute). One that's gone off is act-now with a Stop button, and pushes if it's still
+    ringing after two minutes: nobody's near the speaker. While it runs, the tile is just the
+    time left, ticking in the browser (say '{left}' with ends). "Ringing" is worked out from the fire
+    time too, so the tile doesn't wait for the next poll. -#}
+{#- Tier 0, both running and ringing: a timer is the most time-bound thing in the house. Tier 0
+    pushes by default, so each says when it pushes: running never; ringing after two minutes. -#}
+
+{#- "0:10:00" or "1 day, 0:10:00" in seconds -#}
+{%- macro secs(d) -%}
+{%- set p = (d | string).split(', ')[-1].split(':') -%}
+{{ (p[0] | int(0)) * 3600 + (p[1] | int(0)) * 60 + (p[2] | float(0)) | int if p | count == 3 else 0 }}
+{%- endmacro -%}
+
+{%- macro tiles() -%}
+{%- set ns = namespace(t=[], all=[]) -%}
+{%- set ts = as_timestamp(now()) -%}
+{%- for e in integration_entities('google_home') | select('search', '_timers$') -%}
+  {%- for tm in state_attr(e, 'timers') or [] -%}
+    {%- set fire = tm.fire_time | float(0) -%}
+    {%- set ringing = tm.status == 'ringing' or (tm.status == 'set' and fire and fire <= ts) -%}
+    {%- set ns.all = ns.all + [dict(entity=e, id=tm.timer_id, label=(tm.label or '') | trim, ringing=ringing, paused=tm.status == 'paused',
+        fire=fire, total=secs(tm.duration) | int, room=area_name(e) or '')] -%}
+  {%- endfor -%}
+{%- endfor -%}
+{#- One tile per timer, ringing first, then the next to go off, paused last; so cancelling
+    one takes its own tile away -#}
+{%- set order = (ns.all | selectattr('ringing') | list) + (ns.all | rejectattr('ringing') | rejectattr('paused') | sort(attribute='fire') | list) + (ns.all | selectattr('paused') | list) -%}
+{%- for t in order -%}
+  {%- set what = (t.label | capitalize ~ ' timer') if t.label else ((t.total // 60) ~ ' min timer' if t.total >= 60 else 'Timer') -%}
+  {%- set id = 'timer-' ~ t.id.split('/')[-1][:8] -%}
+  {%- if t.ringing -%}
+    {%- set rang = ((ts - t.fire) / 60) if t.fire else 0 -%}
+    {%- set ns.t = ns.t + [dict(id=id, tier=0, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='act',
+        say="Time's up!", sub='', viz=none, entity=t.entity, tap=none,
+        act=dict(label='Stop', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id)),
+        push=(dict(level='time-sensitive', key=t.id, title=what ~ ' is going off', message="It's been ringing in the " ~ t.room | lower ~ ' for a couple of minutes.') if rang >= 2 else false))] -%}
+  {%- else -%}
+    {#- The say is the time left, counting down in the browser ({left}) -#}
+    {%- set ns.t = ns.t + [dict(id=id, tier=0, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='today', push=false,
+        say=('Paused' if t.paused else '{left}'), sub='', big=true,
+        ends=((t.fire * 1000) | int if t.fire and not t.paused else none), viz=none, entity=t.entity, tap=none,
+        act=dict(label='Cancel', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id), confirm=true))] -%}
+  {%- endif -%}
+{%- endfor -%}
+{{ ns.t | to_json }}
+{%- endmacro -%}

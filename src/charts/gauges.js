@@ -42,6 +42,23 @@ export const ring = {
   styles: css`.ring { width: 60px; height: 60px; display: block; }`,
 };
 
+// A timer running down: { ends (ms since 1970; none while paused), total (seconds) }. The
+// ring drains and the minutes and seconds left sit inside; the tile redraws it every second.
+export const clock = (s) => {
+  s = Math.ceil(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${r}` : `${m}:${r}`;
+};
+export const countdown = {
+  render(v) {
+    const left = v.ends ? Math.max(0, (v.ends - Date.now()) / 1000) : null;
+    return ring.render({ value: left == null || !v.total ? 100 : (left / v.total) * 100, label: left == null ? "Paused" : left > 0 ? clock(left) : "Done" });
+  },
+  layout: "side",
+  tick: 1000,
+  styles: ring.styles,
+};
+
 // A battery: { value, label, charging }
 export const battery = {
   render: (v) => html`<div class="batt"><div class="body"><i class="${v.value < 50 ? "low" : ""} ${v.charging ? "charging" : ""}" style="width:${v.value}%"></i><span>${v.label}</span></div><b class="nub"></b></div>`,

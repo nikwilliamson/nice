@@ -8,7 +8,7 @@
 
 {#- Every rules sensor, for the attention sensor that gathers what to push -#}
 {%- macro tile_sensors() -%}
-{{ ['safety', 'security', 'cats', 'chores', 'cars', 'weather', 'energy', 'home', 'away', 'plan', 'health', 'sports'] | map('regex_replace', '^', 'sensor.nice_tiles_') | list | to_json }}
+{{ ['safety', 'security', 'cats', 'chores', 'cars', 'weather', 'energy', 'home', 'away', 'plan', 'health', 'sports', 'services', 'timers'] | map('regex_replace', '^', 'sensor.nice_tiles_') | list | to_json }}
 {%- endmacro -%}
 
 {#- Players whose "playing" shows on the Home tab -#}
@@ -47,3 +47,7 @@
 {%- for p in owned_prefixes() | from_json -%}{%- if s.startswith(p) -%}{%- set ns.hit = true -%}{%- endif -%}{%- endfor -%}
 {{ ns.hit }}
 {%- endmacro -%}
+
+{#- Uptime Kuma services the house runs on: down is act-now (services.jinja). The rest are
+    House health's little fixes. -#}
+{%- macro core_services() -%}{{ ['home_assistant', 'matter_server', 'node_red', 'music_assistant'] | to_json }}{%- endmacro -%}
