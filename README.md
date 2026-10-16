@@ -13,7 +13,7 @@ src/tokens.json                    every colour, size and timing; the cards and 
 dashboards/nice/*.json             the dashboards, as saved in Home Assistant
 scripts/                           build, deploy, and a small Home Assistant client
 tests/                             the packer, formatting, and every card rendered in jsdom
-ha/www, ha/themes, dashboards/*.json at the top level: bento as it was (tag v0-bento), until cutover
+ha/www, ha/themes, dashboards/*.json at the top level: bento and hearth as they were, retired (tag v0-bento)
 ```
 
 ## How it fits together
@@ -70,13 +70,8 @@ object in `src/charts/`, registered in `charts/index.js`.
 
 ## Cutover from bento
 
-Still to do, once house-nice has been looked over:
-
-1. ~~Make house-nice the default dashboard~~ (done 2026-10-16; titled House). ~~Remove hearth~~ (done: dashboards, resources, files, theme).
-2. `Theme - Follow the sun`: Bento Day/Night → Nice Day/Night.
-3. `Sports - Ask on phone`: import `at_clock` and `day_word` from `nice/format.jinja`.
-4. Move the shared sensors and automations in `packages/bento.yaml` (house chores, next event, rain
-   outlook, last door opened, away since, dishwasher, launch) into `packages/nice_house.yaml`, same
-   unique_ids; drop `sensor.bento_tiles`.
-5. Remove the bento resources and files, `custom_templates/bento*.jinja`, the bento
-   themes, and the house-bento and bento-library dashboards.
+Done 2026-10-16. house-nice is the default dashboard (House); hearth and bento are gone from Home
+Assistant: dashboards, resources, files, templates and themes. The sensors bento's package
+gathered (house chores, next event, rain outlook, last door opened, away since, the dishwasher
+automations, the launch feed) live on in `ha/packages/nice_house.yaml` with the same unique_ids.
+Everything removed is in `~/bento-retired-2026-10-16.tgz` and at tag v0-bento.
