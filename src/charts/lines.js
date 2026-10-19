@@ -7,6 +7,7 @@
 // fetches it and hands the result back as ctx.series.
 import { html, svg, css, nothing } from "lit";
 import { series, steps, daily } from "../data/history.js";
+import { CAT_TONES, tone } from "../core/tones.js";
 
 const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10);
 
@@ -47,7 +48,8 @@ export const spark = {
 };
 
 // Today, midnight to midnight, with a mark each time a counter stepped up
-const MARKS = ["#ff9a3d", "#8f74f0", "#2fbf8f", "#5ab8ff"];
+// The marks wear the cats' colours, so a cat looks the same here as on its own tiles
+const MARKS = CAT_TONES.map((n) => tone(n, false).accent);
 export const dayline = {
   data: (v) => ({ key: `dayline|${(v.series || []).map((s) => s.entity).join(",")}`, load: async (hass) => {
     const all = await Promise.all((v.series || []).map(async (s, si) => (await steps(hass, s.entity)).map((m) => ({ ...m, series: si, name: s.name }))));

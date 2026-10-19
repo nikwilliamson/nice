@@ -63,7 +63,7 @@
       {#- The question: on its own tile, from 48 h out until it's answered. Act now if
           it's still open within an hour of leaving -#}
       {%- set tier = 1 if to_leave <= 60 else 2 if mins <= 24 * 60 else 3 -%}
-      {%- set ns.t = ns.t + [dict(id='ask_' ~ s[0], tier=tier, order=(7 if tier == 1 else 2 if tier == 2 else 1), shape='W', label=s[2], tone='plan', color=color,
+      {%- set ns.t = ns.t + [dict(id='ask_' ~ s[0], tier=tier, order=(7 if tier == 1 else 2 if tier == 2 else 1), shape='W', label=s[2], tone='plans', color=color,
           say='Going to ' ~ s[1] ~ vs ~ ' ' ~ day_word(start) ~ '?',
           sub=(s[5] | capitalize) ~ ' at ' ~ at_clock(start),
           viz=dict(type='buttons', items=[dict(label='Going', service='input_text.set_value', entity_id='input_text.sports_rsvp', data=dict(value=say_yes), primary=true),
@@ -72,32 +72,32 @@
 
     {%- elif st == 'PRE' and start.date() == now().date() and going -%}
       {%- if at_arena -%}
-        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=3, order=0, shape='W', label=s[2], tone='plan', color=color,
+        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=3, order=0, shape='W', label=s[2], tone='plans', color=color,
             say=there | join(' and ') ~ (' is' if there | count == 1 else ' are') ~ ' at the ' ~ s[2] ~ ' game', sub='', viz=none, act=none, tap=none)] -%}
       {%- elif 0 < to_leave <= 30 -%}
-        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=1, order=7, shape='W', label=s[2], tone='plan', color=color,
+        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=1, order=7, shape='W', label=s[2], tone='plans', color=color,
             say='Head out in ' ~ to_leave ~ ' min for ' ~ s[5] ~ '.', sub=s[1] ~ vs ~ ' at ' ~ at_clock(start), viz=none, act=none, tap=none,
             push=dict(level='time-sensitive', key='headout'))] -%}
       {%- elif -60 < to_leave <= 0 and nik_home -%}
-        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=1, order=7, shape='W', label=s[2], tone='plan', color=color,
+        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=1, order=7, shape='W', label=s[2], tone='plans', color=color,
             say='Time to go.', sub=s[1] ~ vs, viz=none, act=none, tap=none)] -%}
       {%- else -%}
-        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=2, order=2, shape='W', label=s[2], tone='plan', color=color,
+        {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=2, order=2, shape='W', label=s[2], tone='plans', color=color,
             say=s[1] ~ vs ~ ' ' ~ day_word(start) ~ ', ' ~ at_clock(start) ~ '.',
             sub=('Leave by ' ~ at_clock(leave) if to_leave > 0 else ''), viz=none, act=none, tap=none)] -%}
       {%- endif -%}
 
     {%- elif st == 'PRE' and start.date() == now().date() and (not home_game or ans.endswith(':n')) -%}
       {#- Watching at home -#}
-      {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=(2 if mins <= 60 else 3), order=2, shape='W', label=s[2], tone='plan', color=color,
+      {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=(2 if mins <= 60 else 3), order=2, shape='W', label=s[2], tone='plans', color=color,
           say=s[1] ~ ' vs ' ~ a.opponent_name ~ ' at ' ~ short_time(start), sub='', viz=none, act=none, tap=none)] -%}
 
     {%- elif st == 'IN' and not (away and at_arena) -%}
-      {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=2, order=0, shape='W', label=s[2], badge='Live', tone='plan', color=color,
+      {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=2, order=0, shape='W', label=s[2], badge='Live', tone='plans', color=color,
           say=score_say(e, s[1], false), sub=(a.last_play or ''), score=a.team_score | int(0), viz=none, act=none, tap=none)] -%}
 
     {%- elif st == 'POST' and mins > -12 * 60 -%}
-      {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=3, order=1, shape='W', label=s[2], tone='plan', color=color,
+      {%- set ns.t = ns.t + [dict(id='sport_' ~ s[0], tier=3, order=1, shape='W', label=s[2], tone='plans', color=color,
           say=score_say(e, s[1], true), sub='', viz=none, act=none, tap=none)] -%}
     {%- endif -%}
   {%- endif -%}
@@ -115,13 +115,13 @@
     {%- set name = f[1] or ('IndyCar' if a.league == 'IRL' else a.league) -%}
     {%- set color = (a.team_colors or [none])[0] if not racing else none -%}
     {%- if st == 'IN' -%}
-      {%- set ns.t = ns.t + [dict(id='sport_' ~ f[0], tier=3, order=3, shape='W', label=name, badge='Live', tone='night', color=color,
+      {%- set ns.t = ns.t + [dict(id='sport_' ~ f[0], tier=3, order=3, shape='W', label=name, badge='Live', tone='plans', color=color,
           say=(a.team_name ~ ' leads' if racing else score_say(e, name, false)), sub=(a.event_name if racing else a.clock), viz=none, act=none, tap=none)] -%}
     {%- elif st == 'PRE' and 0 <= mins <= 180 -%}
-      {%- set ns.t = ns.t + [dict(id='sport_' ~ f[0], tier=3, order=98, shape='S', filler=true, label=name, tone='night', color=color,
+      {%- set ns.t = ns.t + [dict(id='sport_' ~ f[0], tier=3, order=98, shape='S', filler=true, label=name, tone='plans', color=color,
           say=name ~ ' at ' ~ at_clock(start), sub=(a.event_name if racing else 'vs ' ~ a.opponent_name), viz=none, act=none, tap=none)] -%}
     {%- elif st == 'POST' and mins > -6 * 60 -%}
-      {%- set ns.t = ns.t + [dict(id='sport_' ~ f[0], tier=3, order=98, shape='S', filler=true, label=name, tone='night', color=color,
+      {%- set ns.t = ns.t + [dict(id='sport_' ~ f[0], tier=3, order=98, shape='S', filler=true, label=name, tone='plans', color=color,
           say=(a.team_name ~ ' wins.' if racing else score_say(e, name, true)), sub=(a.event_name if racing else ''), viz=none, act=none, tap=none)] -%}
     {%- endif -%}
   {%- endif -%}

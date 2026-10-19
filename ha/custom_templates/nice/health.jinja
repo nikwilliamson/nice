@@ -26,7 +26,7 @@
       + ([(updates | count) ~ (' update' if updates | count == 1 else ' updates')] if updates else [])
       + ([minor | join(', ') ~ ' down'] if minor else [])
       + (['no recent backup'] if no_backup else []) -%}
-  {%- set ns.t = ns.t + [dict(id='health', tier=(1 if ns.off else 4), order=(9 if ns.off else 1), shape='S', label='House health', tone='health',
+  {%- set ns.t = ns.t + [dict(id='health', tier=(1 if ns.off else 4), order=(9 if ns.off else 1), shape='S', label='House health', tone='system',
       say=issues ~ (' little fix' if issues == 1 else ' little fixes'), sub=bits | join(', ') | capitalize,
       viz=none, act=none, tap='health', detail=dict(batteries=ns.low, offline=ns.off, updates=updates, services=minor, backup=not no_backup))] -%}
 {%- endif -%}

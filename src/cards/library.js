@@ -20,17 +20,18 @@ export class NiceDesign extends NiceCard {
     const kstops = Array.from({ length: 19 }, (_, i) => rgbCss(kelvinRgb(2000 + i * 250))).join(",");
     return html`<div class="wrap">
       <header><h1>Nice design system</h1><p class="lead">Drawn live from src/tokens.json, the file the cards and the theme are both built from.</p></header>
-      <section><h2>Tones</h2><p class="lead">A tile's colour says what kind of thing it is: a day and a night version, and an accent for charts.</p>
-        <div class="tones">${TONE_NAMES.map((n) => html`<div class="item"><b>${n}</b><div class="pair">${swatch(tone(n, false), n, "Aa 21°", "Day")}${swatch(tone(n, true), n, "Aa 21°", "Night")}</div>
-          <code>${T.tones[n].join(" · ")}</code></div>`)}</div></section>
+      <section><h2>Tones</h2><p class="lead">A tile's hue says what it's about; its tier says how loud it is: soft for most tiles, strong for soon (tier 1), solid for now (tier 0). Each comes in day and night, with an accent for charts.</p>
+        <div class="fams">${TONE_NAMES.map((n) => html`<div class="item"><b>${n}</b><div class="six">${[false, true].flatMap((night) => [3, 1, 0].map((tier) => swatch(tone(n, night, tier), n, "Aa 21°", `${tier === 3 ? "Soft" : tier === 1 ? "Strong" : "Solid"} · ${night ? "Night" : "Day"}`)))}</div>
+          <code>hue ${T.families[n][0]} · chroma ${T.families[n][1]}${T.alwaysSolid.includes(n) ? " · always solid" : ""}</code></div>`)}</div>
+        <p class="lead">Old names still work: ${Object.entries(T.aliases).filter(([k]) => k !== "_").map(([k, v]) => `${k} → ${v}`).join(", ")}.</p></section>
       <section><h2>Off and lights</h2><p class="lead">Anything off goes neutral. A light wears the colour it's showing.</p>
         <div class="pair">${swatch(offTone(false), "off", "Off", "Day")}${swatch(offTone(true), "off", "Off", "Night")}</div>
         <div class="six">${lights.map(([n, a]) => swatch(lightTone(a, false), "Light", n))}</div>
         <div class="six">${lights.map(([n, a]) => swatch(lightTone(a, true), "Light", n))}</div>
         <div class="kbar" style="background:linear-gradient(90deg,${kstops})"></div><div class="krow"><span>2000K</span><span>4250K</span><span>6500K</span></div></section>
       <section><h2>Status</h2>${Object.keys(T.status).map((k) => html`<div class="srow"><span class="dot" style="background:${status(k, false)}"></span><span class="dot" style="background:${status(k, true)}"></span><b>${k}</b><code>${T.status[k].join(" / ")}</code></div>`)}</section>
-      <section><h2>Rooms and cats</h2><p class="lead">A lit room wears its colour, in the order of nice-rooms' areas; each cat keeps one tone on every card.</p>
-        <div class="tones">${T.rooms.map((_, i) => html`<div class="pair">${swatch(roomTone(i, false), `Room ${i}`, "Lit")}${swatch(roomTone(i, true), `Room ${i}`, "Lit")}</div>`)}
+      <section><h2>Rooms and cats</h2><p class="lead">A lit room goes warm and a dark one grey, the same for every room; each cat keeps one tone on every card.</p>
+        <div class="tones"><div class="pair">${swatch(roomTone(0, false), "Room", "Lit")}${swatch(roomTone(0, true), "Room", "Lit")}</div>
           ${CAT_TONES.map((n, i) => html`<div class="pair">${swatch(tone(n, false), `Cat ${i + 1}`, n)}${swatch(tone(n, true), `Cat ${i + 1}`, n)}</div>`)}</div></section>
       <section><h2>Type</h2>
         <div class="trow"><div class="lbl">Living room</div><code>Eyebrow · Figtree ${T.type.label.size} · ${T.type.label.weight} · caps</code></div>
@@ -58,6 +59,7 @@ export class NiceDesign extends NiceCard {
     .lead { opacity: .7; margin: 0 0 var(--n-s-md); font-weight: 600; font-size: .92em; }
     code { font-family: ui-monospace, Menlo, monospace; font-size: .75em; opacity: .7; }
     .tones { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--n-s-lg); }
+    .fams { display: grid; gap: var(--n-s-lg); }
     .item { display: grid; gap: var(--n-s-sm); }
     .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--n-s-sm); }
     .six { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--n-s-sm); margin-top: var(--n-s-sm); }

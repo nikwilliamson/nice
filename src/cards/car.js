@@ -103,7 +103,7 @@ export class NiceCar extends NiceCard {
     const sedan = /^(3|s)$/i.test(String(this.config.model || dev?.model || "").replace(/^model\s*/i, "").trim());
     const svg = carOverhead({ d, w, frunk, trunk, port, vent, sedan, label: say, title: (p) => this.hass.states[p.eid]?.attributes?.friendly_name || p.eid });
     const tapPart = (ev) => { const p = ev.composedPath().find((x) => x.dataset?.more); if (p) { ev.stopPropagation(); this.more(p.dataset.more); } };
-    return { id: "body", shape: "L", label: "Doors & trunks", colors: open.length ? tone("act", n) : tone("health", n), say, sub,
+    return { id: "body", shape: "L", label: "Doors & trunks", colors: open.length ? tone("act", n) : tone("system", n), say, sub,
       picture: html`<div class="pic" @click=${tapPart}>${unsafeHTML(svg)}</div>`, tap: () => this.more(this.id("lock", "lock")), hold: () => this.more(this.id("lock", "lock")) };
   }
 
@@ -143,7 +143,7 @@ export class NiceCar extends NiceCard {
       this.stepTo(limId, { state: String(next) }, () => this._real.callService("number", "set_value", { entity_id: limId, value: next }));
     };
     const go = plugged && this.s("switch", "charge");
-    return { id: "chg", shape, label: "Charging · limit", colors: st === "charging" || st === "starting" ? tone("energy", n) : offTone(n), say, sub,
+    return { id: "chg", shape, label: "Charging · limit", colors: st === "charging" || st === "starting" ? tone("power", n) : offTone(n), say, sub,
       tap: () => this.more(this.id("sensor", "charging")), hold: () => this.more(this.id("sensor", "charging")),
       controls: [{ type: "between", items: [limit != null ? { type: "setpoint", value: Math.round(limit), unit: "%", step, less: "Lower limit", more: "Raise limit" } : null,
         go ? { type: "pills", items: [{ label: st === "charging" ? "Stop" : "Start charging", sel: st !== "charging", run: () => this.act("switch", st === "charging" ? "turn_off" : "turn_on", "charge") }] } : null].filter(Boolean) }] };
@@ -151,7 +151,7 @@ export class NiceCar extends NiceCard {
 
   sentry(shape) {
     const st = this.st("switch", "sentry_mode"), on = st === "on", id = this.id("switch", "sentry_mode"), ok = st && st !== "unavailable";
-    return { id: "sen", shape, label: "Sentry mode", colors: on ? tone("plan", this.night) : offTone(this.night),
+    return { id: "sen", shape, label: "Sentry mode", colors: on ? tone("plans", this.night) : offTone(this.night),
       say: !ok ? "Offline" : on ? "Watching" : "Off", sub: on ? "Recording" : "Not recording",
       tap: () => (ok ? this.act("switch", "toggle", "sentry_mode") : this.more(id)), hold: () => this.more(id),
       controls: shape === "S" ? [] : [{ type: "pills", items: [{ label: on ? "Turn off" : "Turn on", run: () => this.act("switch", "toggle", "sentry_mode") }] }] };
@@ -160,7 +160,7 @@ export class NiceCar extends NiceCard {
   music(shape) {
     const s = this.s("media_player", "media_player"), st = s?.state, a = s?.attributes || {}, id = this.id("media_player", "media_player");
     const playing = st === "playing", busy = playing || st === "paused";
-    return { id: "mus", shape, label: "Music", colors: playing ? tone("media", this.night) : offTone(this.night), cls: ["media", playing ? "on" : "off"],
+    return { id: "mus", shape, label: "Music", colors: playing ? tone("ambience", this.night) : offTone(this.night), cls: ["media", playing ? "on" : "off"],
       say: busy ? a.media_title || (playing ? "Playing" : "Paused") : st === "idle" ? "Idle" : "Off",
       sub: busy ? [a.media_artist, a.source].filter(Boolean).join(" · ") || (playing ? "" : "Paused") : "",
       tap: () => (busy ? this.act("media_player", "media_play_pause", "media_player") : this.more(id)), hold: () => this.more(id),

@@ -28,10 +28,12 @@ const only = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 const browser = await chromium.launch();
 const report = [];
 for (const [size, vp] of Object.entries(SIZES)) {
-  const ctx = await browser.newContext({ timezoneId: process.env.TZ_ID || "America/New_York", locale: "en-US", viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor || 1, isMobile: !!vp.isMobile, hasTouch: !!vp.hasTouch });
+  const ctx = await browser.newContext({ timezoneId: process.env.TZ_ID || "America/New_York", locale: "en-US", viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor || 1, isMobile: !!vp.isMobile, hasTouch: !!vp.hasTouch, serviceWorkers: process.env.LOCAL ? "block" : "allow" });
   await ctx.addInitScript(({ token, url }) => {
     localStorage.setItem("hassTokens", JSON.stringify({ access_token: token, token_type: "Bearer", expires_in: 315360000, hassUrl: url, clientId: `${url}/`, expires: Date.now() + 315360000000, refresh_token: "" }));
   }, { token: TOKEN, url: URL_ });
+  // LOCAL=1: draw with this checkout's build/ rather than what's deployed
+  if (process.env.LOCAL) await ctx.route(/\/local\/nice\/nice\.js/, (r) => r.fulfill({ path: "build/www/nice/nice.js", contentType: "text/javascript" }));
   for (const p of pages) {
     if (only && !only.test(p.name)) continue;
     const page = await ctx.newPage();

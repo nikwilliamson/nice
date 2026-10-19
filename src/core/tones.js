@@ -1,15 +1,14 @@
-// Colour roles. A tile's tone says what kind of thing it is; every tone has a day and a
-// night version and an accent for charts. Night is the sun, not the theme.
+// Colour roles. A tile's tone names its family (what it's about); its tier picks the weight
+// (how loud). Every weight has a day and a night version and an accent for charts. Night is the
+// sun, not the theme. The maths is in palette.js.
 import { TOKENS as T } from "./tokens.js";
+import { FAMILIES, paint, roomPaint } from "./palette.js";
 
-export const TONE_NAMES = Object.keys(T.tones).filter((k) => k !== "_");
+export const TONE_NAMES = FAMILIES;
 export const CAT_TONES = T.cats;
 export const status = (name, night) => (T.status[name] || T.status.muted)[night ? 1 : 0];
 
-export function tone(name, night) {
-  const t = T.tones[name] || T.tones.health;
-  return { bg: night ? t[2] : t[0], ink: night ? t[3] : t[1], accent: t[4] };
-}
+export const tone = (name, night, tier) => ({ ...paint(name, night, tier) });
 
 // Anything switched off, everywhere
 export function offTone(night) {
@@ -17,11 +16,9 @@ export function offTone(night) {
   return { bg: o[0], ink: o[1], accent: o[2] };
 }
 
-// A lit room wears its colour; a dark one goes neutral
+// A lit room goes warm, a dark one goes grey. Every room the same, so topic colours stand out
 export function roomTone(i, night, lit = true) {
-  if (!lit) return offTone(night);
-  const r = T.rooms[i % T.rooms.length];
-  return { bg: night ? r[1] : r[0], ink: night ? "#fff8f0" : "#1c2233" };
+  return lit ? roomPaint(night) : offTone(night);
 }
 
 // A team's own colour, with ink that reads on it
@@ -58,4 +55,4 @@ export const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b
 export const tint = (base, rgb, f) => { const b = hex(base); return `rgb(${b.map((v, i) => Math.round(v + (rgb[i] - v) * f)).join(",")})`; };
 
 // A tile's colours from whatever it carries: its own colours, a team colour, or a tone
-export const colorsOf = (t, night) => t.colors || (t.color ? colorTone(t.color) : t.tone === "off" ? offTone(night) : tone(t.tone, night));
+export const colorsOf = (t, night) => t.colors || (t.color ? colorTone(t.color) : t.tone === "off" ? offTone(night) : tone(t.tone, night, t.tier));

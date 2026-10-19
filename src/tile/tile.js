@@ -49,7 +49,7 @@ export class NiceTile extends LitElement {
     this.style.setProperty("--accent", c.accent || c.ink);
     this.setAttribute("shape", t.shape || "S");
     const lit = this.classList.contains("highlight");
-    this.className = [t.tier === 0 ? "p0" : "", this.night ? "night" : "", lit ? "highlight" : "", ...(t.cls || [])].filter(Boolean).join(" ");
+    this.className = [t.tier === 0 ? "p0" : t.tier === 1 && !t.colors && !t.color ? "soon" : "", this.night ? "night" : "", lit ? "highlight" : "", ...(t.cls || [])].filter(Boolean).join(" ");
     pressable(this, t.tap || t.hold);
     // A goal: our side's score went up since the last draw. The tile pulses for a minute
     if (typeof t.score === "number") {

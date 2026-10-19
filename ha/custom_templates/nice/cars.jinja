@@ -66,7 +66,7 @@
     {%- set eta_dt = as_datetime(eta, none) -%}
     {%- set mins = ((eta_dt - now()).total_seconds() / 60) | int if eta_dt else eta | int(0) -%}
     {%- if 0 < mins < 120 -%}
-      {%- set ns.t = ns.t + [dict(id='arrive_' ~ car[0], tier=3, order=6, shape='W', label='On the way', tone='plan',
+      {%- set ns.t = ns.t + [dict(id='arrive_' ~ car[0], tier=3, order=6, shape='W', label='On the way', tone='plans',
           say=who ~ "'s " ~ mins ~ (' minute' if mins == 1 else ' minutes') ~ ' from ' ~ dest | lower ~ '.',
           sub='Driving to ' ~ dest | lower ~ ' in ' ~ who ~ "'s car", viz=none, act=none, tap='garage')] -%}
     {%- endif -%}
@@ -78,7 +78,7 @@
     {%- if 0 < mins < 120 -%}
       {%- set front_locked = is_state('lock.aqara_smart_lock_u100', 'locked') -%}
       {#- Unlocking the front door takes two taps, like every other unlock -#}
-      {%- set ns.t = ns.t + [dict(id='arrive_' ~ car[0], tier=(1 if mins <= 3 else 2), order=6, shape='W', label='On the way', tone='plan',
+      {%- set ns.t = ns.t + [dict(id='arrive_' ~ car[0], tier=(1 if mins <= 3 else 2), order=6, shape='W', label='On the way', tone='plans',
           say=(who ~ "'s pulling in." if mins <= 3 else who ~ "'s " ~ mins ~ ' minutes away.'),
           sub=('Unlock the front door?' if mins <= 3 and front_locked else 'Driving home in ' ~ who ~ "'s car"),
           viz=none, act=(dict(label='Unlock', type='service', service='lock.unlock', entity_id='lock.aqara_smart_lock_u100', confirm=true) if mins <= 3 and front_locked else none), tap='garage')] -%}
@@ -112,7 +112,7 @@
   {%- if chg in ['starting', 'charging'] -%}
     {%- set full = as_datetime(states('sensor.' ~ car[0] ~ '_s_car_time_to_full_charge'), none) -%}
     {%- set hours = [[((now() - cable.last_changed).total_seconds() / 3600) if plugged else 2, 0.5] | max, 12] | min -%}
-    {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='today',
+    {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='car',
         say=(states('sensor.' ~ car[0] ~ '_s_car_battery_level') | int(0)) ~ '%',
         sub=('Full by ' ~ at_clock(full | as_local) if full else ''),
         viz=dict(type='spark', entity='sensor.' ~ car[0] ~ '_s_car_battery_level', hours=hours | round(2)),
@@ -120,7 +120,7 @@
   {%- elif chg == 'complete' and plugged -%}
     {%- set done = expand('sensor.' ~ car[0] ~ '_s_car_charging')[0].last_changed | as_local -%}
     {%- if (now() - done).total_seconds() < 12 * 3600 -%}
-      {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='today',
+      {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='car',
           say="Car's charged", sub='Finished at ' ~ at_clock(done), viz=none, act=none, tap='garage')] -%}
     {%- endif -%}
   {%- endif -%}

@@ -50,10 +50,10 @@ export function toneFor(s, on, ctx) {
   if (d === "light") return lightTone(s.attributes, n);
   if (c.room_tone != null && TOGGLE.has(d)) return { ...roomTone(c.room_tone, n, true), accent: tone("act", n).accent };
   if (c.tone) return tone(c.tone, n);
-  if (d === "media_player") return tone("media", n);
+  if (d === "media_player") return tone("ambience", n);
   if (d === "climate") return tone("climate", n);
   if (d === "lock" || d === "binary_sensor") return tone("act", n);
-  if (d === "scene" || d === "script") return tone("scenes", n);
-  if (d === "sensor") return tone(dc === "power" || dc === "energy" || dc === "humidity" ? "energy" : dc === "monetary" ? "money" : dc === "battery" ? "health" : "climate", n);
-  return tone("today", n);
+  if (d === "scene" || d === "script") return tone("ambience", n);
+  if (d === "sensor") return tone(dc === "power" || dc === "energy" || dc === "monetary" ? "power" : dc === "battery" ? "system" : "climate", n);
+  return tone("chores", n);
 }

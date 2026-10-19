@@ -1,9 +1,10 @@
-// Colour audit: which tone every tile wears, which colours are too close to tell apart,
+// Colour audit: which family every tile wears, which fills of one weight are too close to tell apart,
 // and which inks don't read on their fill. Run: scripts/node.sh scripts/tones-audit.mjs
-// tests/tones.test.mjs holds the same checks against tokens.json.
+// tests/tones.test.mjs holds the palette to these checks.
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import T from "../src/tokens.json" with { type: "json" };
+import { FAMILIES, paint, roomPaint, family } from "../src/core/palette.js";
 
 // #rrggbb → OKLab (Björn Ottosson)
 const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
@@ -25,34 +26,37 @@ export const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) 
 export const TOO_CLOSE = 0.02;
 export const MIN_CONTRAST = 4.5;
 
-// Every fill a tile can wear, by name, for one time of day
-export function fills(night) {
+export const WEIGHTS = { soft: 3, strong: 1, solid: 0 };
+
+// Every fill a tile can wear at one weight and time of day. Soft fills also sit next to rooms and off
+export function fills(night, weight) {
   const out = {};
-  for (const [k, t] of Object.entries(T.tones)) if (k !== "_") out[k] = t[night ? 2 : 0];
-  T.rooms.forEach((r, i) => (out[`room${i}`] = r[night ? 1 : 0]));
-  out.off = (night ? T.off.night : T.off.day)[0];
+  for (const f of FAMILIES) if (weight === "solid" || !T.alwaysSolid.includes(f)) out[f] = paint(f, night, WEIGHTS[weight]).bg;
+  if (weight === "soft") { out.room = roomPaint(night).bg; out.off = (night ? T.off.night : T.off.day)[0]; }
   return out;
 }
 
 export function closePairs(night) {
-  const f = Object.entries(fills(night)), out = [];
-  for (let i = 0; i < f.length; i++)
-    for (let j = i + 1; j < f.length; j++) {
-      const d = distance(f[i][1], f[j][1]);
-      if (d < TOO_CLOSE) out.push({ a: f[i][0], b: f[j][0], d: +d.toFixed(3) });
-    }
+  const out = [];
+  for (const w of Object.keys(WEIGHTS)) {
+    const f = Object.entries(fills(night, w));
+    for (let i = 0; i < f.length; i++)
+      for (let j = i + 1; j < f.length; j++) {
+        const d = distance(f[i][1], f[j][1]);
+        if (d < TOO_CLOSE) out.push({ w, a: f[i][0], b: f[j][0], d: +d.toFixed(3) });
+      }
+  }
   return out.sort((p, q) => p.d - q.d);
 }
 
 export function weakInk() {
   const out = [];
-  for (const [k, t] of Object.entries(T.tones)) {
-    if (k === "_") continue;
-    for (const [when, bg, ink] of [["day", t[0], t[1]], ["night", t[2], t[3]]]) {
-      const c = contrast(bg, ink);
-      if (c < MIN_CONTRAST) out.push({ tone: k, when, bg, ink, ratio: +c.toFixed(2) });
-    }
-  }
+  for (const f of FAMILIES)
+    for (const [w, tier] of Object.entries(WEIGHTS))
+      for (const night of [false, true]) {
+        const { bg, ink } = paint(f, night, tier), c = contrast(bg, ink);
+        if (c < MIN_CONTRAST) out.push({ tone: f, w, when: night ? "night" : "day", bg, ink, ratio: +c.toFixed(2) });
+      }
   return out;
 }
 
@@ -82,11 +86,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const byTone = {};
   for (const [tile, tones] of Object.entries(tileTones())) for (const t of tones) (byTone[t] ??= []).push(tile);
   console.log("Tiles by tone");
-  for (const k of Object.keys(T.tones).filter((k) => k !== "_")) console.log(`  ${k.padEnd(10)} ${(byTone[k] || ["(unused by rules)"]).join(", ")}`);
+  for (const [k, v] of Object.entries(byTone)) if (family(k) !== k) console.log(`  (old name) ${k} → ${family(k)}: ${v.join(", ")}`);
+  for (const k of FAMILIES) console.log(`  ${k.padEnd(10)} ${(byTone[k] || ["(unused)"]).join(", ")}`);
   for (const night of [false, true]) {
     console.log(`\nToo close (${night ? "night" : "day"}, OKLab < ${TOO_CLOSE})`);
-    for (const p of closePairs(night)) console.log(`  ${p.a} ~ ${p.b}  ${p.d}`);
+    for (const p of closePairs(night)) console.log(`  ${p.w}: ${p.a} ~ ${p.b}  ${p.d}`);
   }
   console.log(`\nInk under ${MIN_CONTRAST}:1`);
-  for (const w of weakInk()) console.log(`  ${w.tone} ${w.when}  ${w.ink} on ${w.bg}  ${w.ratio}`);
+  for (const w of weakInk()) console.log(`  ${w.tone} ${w.w} ${w.when}  ${w.ink} on ${w.bg}  ${w.ratio}`);
 }

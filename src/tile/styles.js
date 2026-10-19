@@ -43,6 +43,8 @@ export const tileStyles = css`
   /* The tile your pointer is over in the editor */
   :host(.highlight) { outline: 3px solid var(--primary-color, #ff6b4a); outline-offset: 3px; }
   /* Alarm and goal */
+  /* Soon: an edge in the tile's accent */
+  :host(.soon) { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
   :host(.p0) { animation: alarm 1.6s ease-out infinite; }
   @keyframes alarm { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--n-alert) 55%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
   :host(.goal) { animation: goal 1s ease-out 6; }

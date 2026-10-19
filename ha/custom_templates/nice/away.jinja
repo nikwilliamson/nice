@@ -30,7 +30,7 @@
   {%- set visits = states('sensor.zig_visits_today') | int(0) + states('sensor.donut_visits_today') | int(0) -%}
   {%- set ns.c = ns.c + [dict(label=('Cats fed, ' ~ visits ~ (' litter visit' if visits == 1 else ' litter visits') ~ ' today' if fed > 0 else 'Cats not fed yet today'), ok=(fed > 0 or now().hour < 9))] -%}
   {%- set bad = ns.c | rejectattr('ok') | list -%}
-  {%- set ns.t = ns.t + [dict(id='away', tier=2, order=0, shape='L', label="While you're out", tone='scenes',
+  {%- set ns.t = ns.t + [dict(id='away', tier=2, order=0, shape='L', label="While you're out", tone='system',
       say=('All quiet.' if not bad else 'One thing to look at.' if bad | count == 1 else (bad | count) ~ ' things to look at.'),
       sub='Since you left at ' ~ at_clock(left_at) ~ ('' if left_at.date() == now().date() else ' ' ~ left_at.strftime('%A')),
       viz=dict(type='checks', items=bad + (ns.c | selectattr('ok') | list)), act=none, tap=none)] -%}
