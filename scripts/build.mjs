@@ -24,11 +24,11 @@ writeFileSync("build/VERSION", version);
 // ── The theme: what the rest of Home Assistant wears, from the same tokens as the cards
 const T = JSON.parse(readFileSync("src/tokens.json", "utf8"));
 const th = T.theme, r = T.radius;
-// Meanings the theme needs that no single tile owns: a lit bulb (2700K), sun and solar (power's
-// yellow), status by level, and the climate modes
+// Meanings the theme needs that no single tile owns: a lit bulb (2700K), sun and solar (the bold
+// mustard), status by level, and the climate modes
 const hex2 = (n) => n.toString(16).padStart(2, "0");
 const lightOn = "#" + kelvinRgb(2700).map(hex2).join("");
-const sunny = paint("power").bg, lvl = chartColors(false).status;
+const sunny = color("mustard-200"), lvl = chartColors(false).status;
 const hvac = (m) => color(T.hvac[m][0]);
 const scale = (name, list) => list.map((c, i) => `  ha-color-${name}-${["05", "10", "20", "30", "40", "50", "60", "70", "80", "90", "95"][i]}: "${c}"`).join("\n");
 const shared = `  # Type

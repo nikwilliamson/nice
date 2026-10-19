@@ -9,7 +9,7 @@ const KNOWN_CLOSE = {
   day: ["health~muted", "car~litter", "health~off", "muted~off", "scenes~litter", "car~trash"],
   night: ["health~muted", "health~off", "muted~off"],
 };
-const KNOWN_WEAK = ["hazard day", "hazard night", "charging night", "plan day", "media day", "water day", "timer day", "sentry day"];
+const KNOWN_WEAK = ["hazard day", "hazard night", "power night", "plan day", "media day", "water day", "timer day", "sentry day"];
 
 test("colour maths", () => {
   assert.equal(contrast("#ffffff", "#000000").toFixed(0), "21");
