@@ -1,6 +1,7 @@
 {
   "name": "nice",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Nice: the house dashboard for Home Assistant. Cards, rules and theme.",
   "scripts": {

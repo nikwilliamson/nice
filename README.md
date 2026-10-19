@@ -13,7 +13,6 @@ src/tokens.json                    every colour, size and timing; the cards and 
 dashboards/nice/*.json             the dashboards, as saved in Home Assistant
 scripts/                           build, deploy, and a small Home Assistant client
 tests/                             the packer, formatting, and every card rendered in jsdom
-ha/www, ha/themes, dashboards/*.json at the top level: bento and hearth as they were, retired (tag v0-bento)
 ```
 
 ## How it fits together
@@ -78,4 +77,8 @@ Done 2026-10-16. house-nice is the default dashboard (House); hearth and bento a
 Assistant: dashboards, resources, files, templates and themes. The sensors bento's package
 gathered (house chores, next event, rain outlook, last door opened, away since, the dishwasher
 automations, the launch feed) live on in `ha/packages/nice_house.yaml` with the same unique_ids.
-Everything removed is in `~/bento-retired-2026-10-16.tgz` and at tag v0-bento.
+Bento and hearth themselves are no longer in the repo; they're at tag v0-bento.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
