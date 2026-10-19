@@ -95,11 +95,10 @@
   {%- endfor -%}
   {%- set here = ns5.home[0] if ns5.home else none -%}
   {%- set pct = states('sensor.' ~ here[0] ~ '_s_car_battery_level') | int(0) if here else 0 -%}
-  {%- set ns.t = ns.t + [dict(id='cars', tier=3, order=6, shape='W', label='Cars', tone='car',
+  {%- set ns.t = ns.t + [dict(id='cars', tier=3, order=6, shape='S', label='Cars', tone='car',
       say=(here[1] ~ ' car is home.' if here else 'Both cars are out.'),
       sub=(ns5.out | join(', ') ~ '.' if ns5.out and here else ''),
-      viz=(dict(type='battery', value=pct, label=pct ~ '% · ' ~ states('sensor.' ~ here[0] ~ '_s_car_battery_range') | float(0) | round(0) | int ~ ' mi',
-          charging=is_state('sensor.' ~ here[0] ~ '_s_car_charging', 'charging')) if here else none), act=none, tap='garage')] -%}
+      act=none, tap='garage')] -%}
 {%- endif -%}
 
 {#- Charging: a filler while a car charges, then for up to 12 h after it's full while it
@@ -112,7 +111,7 @@
   {%- if chg in ['starting', 'charging'] -%}
     {%- set full = as_datetime(states('sensor.' ~ car[0] ~ '_s_car_time_to_full_charge'), none) -%}
     {%- set hours = [[((now() - cable.last_changed).total_seconds() / 3600) if plugged else 2, 0.5] | max, 12] | min -%}
-    {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='today',
+    {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='charging',
         say=(states('sensor.' ~ car[0] ~ '_s_car_battery_level') | int(0)) ~ '%',
         sub=('Full by ' ~ at_clock(full | as_local) if full else ''),
         viz=dict(type='spark', entity='sensor.' ~ car[0] ~ '_s_car_battery_level', hours=hours | round(2)),
@@ -120,7 +119,7 @@
   {%- elif chg == 'complete' and plugged -%}
     {%- set done = expand('sensor.' ~ car[0] ~ '_s_car_charging')[0].last_changed | as_local -%}
     {%- if (now() - done).total_seconds() < 12 * 3600 -%}
-      {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='today',
+      {%- set ns.t = ns.t + [dict(id='charging_' ~ car[0], tier=3, order=97, shape='S', filler=true, label=car[1] ~ ' car', tone='charging',
           say="Car's charged", sub='Finished at ' ~ at_clock(done), viz=none, act=none, tap='garage')] -%}
     {%- endif -%}
   {%- endif -%}

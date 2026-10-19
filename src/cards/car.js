@@ -151,7 +151,7 @@ export class NiceCar extends NiceCard {
 
   sentry(shape) {
     const st = this.st("switch", "sentry_mode"), on = st === "on", id = this.id("switch", "sentry_mode"), ok = st && st !== "unavailable";
-    return { id: "sen", shape, label: "Sentry mode", colors: on ? tone("plan", this.night) : offTone(this.night),
+    return { id: "sen", shape, label: "Sentry mode", colors: on ? tone("sentry", this.night) : offTone(this.night),
       say: !ok ? "Offline" : on ? "Watching" : "Off", sub: on ? "Recording" : "Not recording",
       tap: () => (ok ? this.act("switch", "toggle", "sentry_mode") : this.more(id)), hold: () => this.more(id),
       controls: shape === "S" ? [] : [{ type: "pills", items: [{ label: on ? "Turn off" : "Turn on", run: () => this.act("switch", "toggle", "sentry_mode") }] }] };
