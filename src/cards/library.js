@@ -110,10 +110,12 @@ export class NiceViz extends NiceCard {
     this.renderRoot?.querySelectorAll?.("nice-grid").forEach((g) => { g.hass = this._fake(Number(g.dataset.i)); });
   }
   firstUpdated() { this._fed = 0; this.hassChanged(); }
+  // The examples are tier 1 so they always show; alert_charts keeps their charts, which the
+  // house grid leaves off alerts
   render() {
     return html`<div class="wrap"><header><h1>Visualizations</h1><p class="lead">Every chart the grid can draw, on example tiles drawn by the real grid. History charts read the real sensors; the buttons here do nothing.</p></header>
       ${VIZ_GROUPS.map((g, i) => html`<section><h2>${g.name}</h2><p class="lead">${g.note}</p>
-        <nice-grid data-i=${i} .config=${{ ...NiceCard.defaults, entities: [`sensor.nice_viz_${i}`], routes: {}, budget: 99, todo: "todo.none" }}></nice-grid>
+        <nice-grid data-i=${i} .config=${{ ...NiceCard.defaults, entities: [`sensor.nice_viz_${i}`], routes: {}, budget: 99, todo: "todo.none", alert_charts: true }}></nice-grid>
         <table>${g.rows.map(([t, f]) => html`<tr><td><b>${t}</b></td><td>${layoutOf({ type: t })}</td><td>${f}</td></tr>`)}</table></section>`)}</div>`;
   }
   getCardSize() { return 40; }
