@@ -57,7 +57,7 @@
 {%- from 'nice/config.jinja' import zones -%}
 {%- set watering = zones() | from_json | selectattr('0', 'is_state', 'on') | list -%}
 {%- if watering or is_state('switch.outside_sprinklers_rain_delay', 'on') -%}
-  {%- set ns.t = ns.t + [dict(id='sprink', tier=2, order=8, shape='S', label='Sprinklers', tone='today',
+  {%- set ns.t = ns.t + [dict(id='sprink', tier=2, order=8, shape='S', label='Sprinklers', tone='garden',
       say=('Watering the ' ~ watering[0][1] if watering else 'Skipping today.'), sub=('' if watering else 'Rain delay is on'),
       viz=none, act=none, tap=none)] -%}
 {%- endif -%}

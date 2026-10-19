@@ -5,7 +5,8 @@
 import { build } from "esbuild";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { paint } from "../src/core/palette.js";
+import { paint, color, chartColors } from "../src/core/palette.js";
+import { kelvinRgb } from "../src/core/tones.js";
 
 mkdirSync("build/www/nice", { recursive: true });
 mkdirSync("build/themes", { recursive: true });
@@ -23,6 +24,12 @@ writeFileSync("build/VERSION", version);
 // ── The theme: what the rest of Home Assistant wears, from the same tokens as the cards
 const T = JSON.parse(readFileSync("src/tokens.json", "utf8"));
 const th = T.theme, r = T.radius;
+// Meanings the theme needs that no single tile owns: a lit bulb (2700K), sun and solar (power's
+// yellow), status by level, and the climate modes
+const hex2 = (n) => n.toString(16).padStart(2, "0");
+const lightOn = "#" + kelvinRgb(2700).map(hex2).join("");
+const sunny = paint("power").bg, lvl = chartColors(false).status;
+const hvac = (m) => color(T.hvac[m][0]);
 const scale = (name, list) => list.map((c, i) => `  ha-color-${name}-${["05", "10", "20", "30", "40", "50", "60", "70", "80", "90", "95"][i]}: "${c}"`).join("\n");
 const shared = `  # Type
   ha-font-family-body: "Figtree, system-ui, -apple-system, Roboto, sans-serif"
@@ -62,10 +69,10 @@ ${scale("neutral", th.neutral)}
   label-badge-red: "${T.status.alert[0]}"
   label-badge-blue: "${T.status.busy[0]}"
   label-badge-green: "${T.status.ok[0]}"
-  label-badge-yellow: "${paint("today").accent}"
+  label-badge-yellow: "${sunny}"
   # Device states: the tiles' hue for each kind of thing
   state-active-color: "${th.primary[5]}"
-  state-light-active-color: "${paint("today").accent}"
+  state-light-active-color: "${lightOn}"
   state-switch-active-color: "${th.primary[5]}"
   state-input_boolean-active-color: "${th.primary[5]}"
   state-fan-active-color: "${paint("scenes").accent}"
@@ -81,22 +88,23 @@ ${scale("neutral", th.neutral)}
   state-binary_sensor-active-color: "${T.status.warn[1]}"
   state-device_tracker-home-color: "${T.status.ok[0]}"
   state-person-home-color: "${T.status.ok[0]}"
-  state-climate-cool-color: "${T.status.busy[0]}"
-  state-climate-heat-color: "${T.status.warn[1]}"
-  state-climate-auto-color: "${paint("plan").bg}"
-  state-climate-heat-cool-color: "${paint("plan").bg}"
-  state-climate-dry-color: "${paint("money").accent}"
-  state-climate-fan_only-color: "${paint("scenes").accent}"
+  state-climate-cool-color: "${hvac("cool")}"
+  state-climate-heat-color: "${hvac("heat")}"
+  state-climate-auto-color: "${hvac("auto")}"
+  state-climate-heat-cool-color: "${hvac("heat_cool")}"
+  state-climate-dry-color: "${hvac("dry")}"
+  state-climate-fan_only-color: "${hvac("fan_only")}"
+  state-climate-off-color: "${hvac("off")}"
   state-lock-locked-color: "${T.status.ok[0]}"
   state-lock-unlocked-color: "${T.status.alert[0]}"
   state-lock-open-color: "${T.status.alert[0]}"
   state-lock-jammed-color: "${T.status.alert[0]}"
-  state-lock-locking-color: "${paint("today").accent}"
-  state-lock-unlocking-color: "${paint("today").accent}"
-  state-sensor-battery-high-color: "${T.status.ok[0]}"
-  state-sensor-battery-medium-color: "${paint("today").accent}"
-  state-sensor-battery-low-color: "${T.status.alert[0]}"
-  state-sun-above_horizon-color: "${paint("today").accent}"
+  state-lock-locking-color: "${lvl.warning}"
+  state-lock-unlocking-color: "${lvl.warning}"
+  state-sensor-battery-high-color: "${lvl.good}"
+  state-sensor-battery-medium-color: "${lvl.warning}"
+  state-sensor-battery-low-color: "${lvl.critical}"
+  state-sun-above_horizon-color: "${sunny}"
   state-sun-below_horizon-color: "${paint("plan", true).bg}"
   state-alarm_control_panel-armed_home-color: "${T.status.ok[0]}"
   state-alarm_control_panel-armed_away-color: "${T.status.ok[0]}"
@@ -105,7 +113,7 @@ ${scale("neutral", th.neutral)}
   # Energy dashboard
   energy-grid-consumption-color: "${T.status.busy[0]}"
   energy-grid-return-color: "${paint("plan").bg}"
-  energy-solar-color: "${paint("today").accent}"
+  energy-solar-color: "${sunny}"
   energy-non-fossil-color: "${paint("money").accent}"
   energy-battery-out-color: "${T.status.ok[0]}"
   energy-battery-in-color: "${paint("scenes").accent}"

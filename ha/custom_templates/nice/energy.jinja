@@ -8,7 +8,7 @@
   {%- set kw = states('sensor.main_breaker_power_minute_average') | float(0) / 1000 -%}
   {%- set big = state_attr('sensor.biggest_load', 'max_entity_id') -%}
   {%- set big_name = (state_attr(big, 'friendly_name') or '') | replace(' Power Minute Average', '') if big else '' -%}
-  {%- set ns.t = ns.t + [dict(id='power', tier=3, order=2, shape='L', label='Power', tone='energy',
+  {%- set ns.t = ns.t + [dict(id='power', tier=3, order=2, shape='L', label='Power', tone='power',
       say=kw | round(1) ~ ' kW now', sub=('Mostly the ' ~ big_name | lower ~ '. ' if big_name else '') ~ '$' ~ '%.2f' | format(states('sensor.electricity_cost_today') | float(0)) ~ ' so far today.',
       viz=dict(type='spark', entity='sensor.main_breaker_power_minute_average', since='midnight', peak=true, unit='kW', scale=0.001), act=none, tap='energy')] -%}
 {%- endif -%}
