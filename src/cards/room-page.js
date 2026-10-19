@@ -13,18 +13,19 @@
 //       all: false
 //       entities: [{ entity: script.room_race_room_bright, name: Bright }]
 //   cards: [ any card ]        after the sections
+//   room_lights: false         leave out the card that switches all the room's lights
 import { html, css } from "lit";
 import { NiceCard } from "../core/base.js";
 import { tokens } from "../core/tokens.js";
-import { roomList, roomName } from "../data/entities.js";
-import { normalize } from "./room-sections.js";
+import { roomList, roomName, readRoom } from "../data/entities.js";
+import { normalize, withRoomLights } from "./room-sections.js";
 import "./rooms.js";
 import "./controls.js";
 import "./footer.js";
 
 export class NiceRoomPage extends NiceCard {
   static required = ["area"];
-  static defaults = { base_path: null, back: "home", sections: [], cards: [], areas: null, footer: true };
+  static defaults = { base_path: null, back: "home", sections: [], cards: [], areas: null, footer: true, room_lights: true };
   static getConfigElement() { return document.createElement("nice-room-page-editor"); }
   static getStubConfig(hass) { return { area: Object.keys(hass?.areas || {})[0] || "", sections: [] }; }
   constructor() { super(); this._els = new Map(); this._helpers = window.loadCardHelpers?.(); }
@@ -34,7 +35,7 @@ export class NiceRoomPage extends NiceCard {
   sections(list) {
     const strip = [roomName(this.hass, this.config.area)];
     const tone = Math.max(0, (list?.areas || []).indexOf(this.config.area));
-    return normalize(this.config.sections).map((s) => ({ strip, room_tone: tone, ...s }));
+    return withRoomLights(normalize(this.config.sections), this.config, readRoom(this.hass, this.config.area).lights.length).map((s) => ({ strip, room_tone: tone, ...s }));
   }
 
   // Children are real cards, kept between renders and handed every hass update

@@ -82,7 +82,7 @@ export function choose(tiles, budget = 20, min = 0) {
   return out;
 }
 
-// Which landing tiles fit a cell budget: hazards and act-now always; today folds into
+// Which landing tiles fit a cell budget: hazards, act-now and tiles marked always; today folds into
 // "N more"; ambient fills what's left, one large tile at a time; house health takes the
 // last slot even when it escalates. A tall list with one item gets a wide tile instead.
 function fit(tiles, budget) {
@@ -91,8 +91,9 @@ function fit(tiles, budget) {
   const health = tiles.find((x) => x.id === "health");
   let used = health ? 1 : 0;
   const fillers = tiles.filter((x) => x.filler);
-  const by = (t) => tiles.filter((x) => x.tier === t && x !== health && !x.filler);
-  for (const t of [...by(0), ...by(1)]) { shown.push(t); used += cells(t.shape); }
+  const by = (t) => tiles.filter((x) => x.tier === t && x !== health && !x.filler && !x.always);
+  const always = tiles.filter((x) => x.always && x !== health && !x.filler);
+  for (const t of [...by(0), ...by(1), ...always]) { shown.push(t); used += cells(t.shape); }
   const today = by(2);
   for (let i = 0; i < today.length; i++) {
     const t = today[i], need = cells(t.shape), left = today.length - i - 1;

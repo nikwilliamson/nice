@@ -65,3 +65,10 @@ test("fillers become tiles when nothing else is left to reach min", () => {
   const out = choose([t("a", "S"), t("f1", "S", 3, { filler: true }), t("f2", "S", 3, { filler: true })], 20, 3);
   assert.equal(out.filter((x) => !x.filler).length, 3);
 });
+
+test("choose always shows a tile marked always, however full the grid", () => {
+  const amb = Array.from({ length: 12 }, (_, i) => ({ id: `a${i}`, tier: 3, shape: "W" }));
+  const out = choose([...amb, { id: "lights", tier: 3, shape: "S", always: true }], 8).map((t) => t.id);
+  assert.ok(out.includes("lights"));
+  assert.ok(out.length < 13, "the budget still holds the ambient tiles back");
+});

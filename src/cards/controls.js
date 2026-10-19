@@ -37,7 +37,9 @@ export class NiceControls extends NiceCard {
     this.entries = this.config.entities.map((e) => (typeof e === "string" ? { entity: e } : e)).map((e) => ({ e, ...adapterFor(e) }));
   }
   watch() {
-    const ctx = { config: this.config };
+    // hass is the last one seen (none before the first): enough for forms that look up which
+    // entities they cover
+    const ctx = { config: this.config, hass: this.hass };
     return this.entries.flatMap(({ e, form, adapter }) => (adapter?.watch ? adapter.watch(e, ctx) : form === "entity" ? [e.entity] : []));
   }
 

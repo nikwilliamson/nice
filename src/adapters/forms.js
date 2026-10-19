@@ -1,10 +1,10 @@
 // Adapters for config entries that aren't one entity: power bars, Adaptive Lighting, the
-// Vestaboard, and LED strips.
+// Vestaboard, LED strips, and a room's lights all at once.
 import { html, nothing } from "lit";
 import { registerForm } from "./registry.js";
 import { tone, offTone, kelvinRgb, rgbCss, kelvinWord, tint } from "../core/tones.js";
 import { power } from "../core/format.js";
-import { nameOf } from "../data/entities.js";
+import { nameOf, readRoom } from "../data/entities.js";
 import { stripLook, ledAt, ledGradient } from "../data/led.js";
 
 // Ranked bars: what is drawing power right now, biggest first. Rows under a sliver of the
@@ -28,6 +28,24 @@ registerForm("bars", {
       controls: [{ type: "custom", render: () => html`<div class="bars">${shown.map((r) => html`<div class="bar" data-own @click=${() => ctx.card.more(r.id)}>
           <span class="bn">${r.name}</span><span class="bt"><i style="width:${Math.max(2, (r.v / max) * 100)}%"></i></span><b>${r.v < 5 ? "—" : power(r.v)}</b></div>`)}
         ${rows.length > top ? html`<button class="pill more-bars" @click=${(ev) => { ev.stopPropagation(); ctx.card.barsAll = !all; ctx.card.requestUpdate(); }}>${all ? "Show fewer" : `Show all ${rows.length}`}</button>` : nothing}</div>` }],
+    };
+  },
+});
+
+// A room's lights all at once: how many are on, with All on and All off
+//   { room_lights: living_room, name }
+registerForm("room_lights", {
+  shape: () => "S",
+  watch: (e, ctx) => (ctx.hass ? readRoom(ctx.hass, e.room_lights).lights : []),
+  build(e, _s, ctx) {
+    const { lights, on } = readRoom(ctx.hass, e.room_lights);
+    if (!lights.length) return null;
+    const any = on.length > 0, n = ctx.night;
+    const all = (up) => ctx.hass.callService("light", up ? "turn_on" : "turn_off", {}, { area_id: e.room_lights });
+    return {
+      id: `room-lights-${e.room_lights}`, label: e.name || "Lights", colors: tone("lights", n), cls: [any ? "on" : "off"],
+      say: !any ? "All off" : on.length === lights.length ? (lights.length === 1 ? "On" : `All ${lights.length} on`) : `${on.length} of ${lights.length} on`,
+      controls: [{ type: "pills", items: [{ label: "All on", sel: !any, run: () => all(true) }, { label: "All off", sel: any, run: () => all(false) }] }],
     };
   },
 });

@@ -103,3 +103,13 @@ test("the grid draws every rule tile it has room for, in order", async () => {
   assert.deepEqual(calls.at(-1), ["todo", "update_item", { item: "a", status: "completed" }, { entity_id: "todo.house_alerts" }]);
   el.remove();
 });
+
+test("every room page opens its Lights section with the room's lights card", async () => {
+  const { withRoomLights } = await import("../src/cards/room-sections.js");
+  const c = { area: "kitchen" };
+  const lights = { title: "Lights", entities: ["light.a"] }, scenes = { title: "Scenes", entities: ["scene.x"] };
+  assert.deepEqual(withRoomLights([lights, scenes], c, 2)[0], { title: "Lights", all: false, entities: [{ room_lights: "kitchen" }, "light.a"] });
+  assert.deepEqual(withRoomLights([scenes], c, 1)[0], { title: "Lights", all: false, entities: [{ room_lights: "kitchen" }] });
+  assert.deepEqual(withRoomLights([scenes], c, 0), [scenes]);
+  assert.deepEqual(withRoomLights([lights], { ...c, room_lights: false }, 2), [lights]);
+});

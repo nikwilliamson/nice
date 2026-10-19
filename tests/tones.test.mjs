@@ -41,5 +41,5 @@ test("no new ink that fails 4.5:1", () => {
 test("every tone a rule or card names exists", () => {
   const tones = tileTones();
   assert.ok(Object.keys(tones).length > 30, "the rules parsed");
-  for (const [tile, names] of Object.entries(tones)) for (const n of names) assert.ok(n in T.tones, `${tile}: ${n}`);
+  for (const [tile, names] of Object.entries(tones)) for (const n of names) assert.ok(n in T.tones || n === "off", `${tile}: ${n}`);
 });

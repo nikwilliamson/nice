@@ -26,6 +26,16 @@ export function normalize(sections) {
   return made;
 }
 
+// Every room page opens its Lights section with a card for all the room's lights (it takes
+// over the section's All on/off pill); a page without a Lights section gets one
+export function withRoomLights(sections, c, lights) {
+  if (c.room_lights === false || !lights) return sections;
+  const card = { room_lights: c.area };
+  const i = sections.findIndex((s) => s.title === "Lights");
+  if (i < 0) return [{ title: "Lights", all: false, entities: [card] }, ...sections];
+  return sections.map((s, j) => (j === i ? { ...s, all: false, entities: [card, ...s.entities] } : s));
+}
+
 // Every entity id a section list names, for "what's already on this page"
 export function entityIds(sections) {
   const out = new Set();
