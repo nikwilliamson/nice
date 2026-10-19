@@ -5,7 +5,7 @@
 // Logs in with HA_TOKEN from .env (the frontend accepts a long-lived token as its access
 // token). Runs in the Playwright image; see scripts/shots.sh.
 import { chromium } from "playwright";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const URL_ = (process.env.HA_URL || "http://localhost:8123").replace(/\/$/, "");
 const TOKEN = process.env.HA_TOKEN;
@@ -33,7 +33,12 @@ for (const [size, vp] of Object.entries(SIZES)) {
     localStorage.setItem("hassTokens", JSON.stringify({ access_token: token, token_type: "Bearer", expires_in: 315360000, hassUrl: url, clientId: `${url}/`, expires: Date.now() + 315360000000, refresh_token: "" }));
   }, { token: TOKEN, url: URL_ });
   // LOCAL=1: draw with this checkout's build/ rather than what's deployed
-  if (process.env.LOCAL) await ctx.route(/\/local\/nice\/nice\.js/, (r) => r.fulfill({ path: "build/www/nice/nice.js", contentType: "text/javascript" }));
+  // NIGHT=1 with it: the cards see the sun down, whatever the time
+  if (process.env.LOCAL) await ctx.route(/\/local\/nice\/nice\.js/, (r) => {
+    let js = readFileSync("build/www/nice/nice.js", "utf8");
+    if (process.env.NIGHT) js = js.replace('?.state==="below_horizon"', '?.state!=="nice-never"');
+    return r.fulfill({ body: js, contentType: "text/javascript" });
+  });
   for (const p of pages) {
     if (only && !only.test(p.name)) continue;
     const page = await ctx.newPage();

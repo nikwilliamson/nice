@@ -106,14 +106,14 @@
             {
              "entity": "todo.house_alerts",
              "label": "To-do",
-             "tone": "health",
+             "tone": "system",
              "placeholder": "Add a to-do",
              "upper": true
             },
             {
              "entity": "todo.shopping_list",
              "label": "Shopping",
-             "tone": "today",
+             "tone": "chores",
              "placeholder": "Add to the list",
              "get": true
             }
@@ -737,6 +737,9 @@
           },
           {
            "entity": "light.kitchen_light"
+          },
+          {
+           "strip": "light.living_room_kitchen_counter"
           },
           {
            "adaptive": "switch.adaptive_lighting_living_spaces",
