@@ -65,9 +65,12 @@ export function readRoom(hass, areaId) {
   });
   const of = (d) => ids.filter((e) => e.startsWith(d + "."));
   const usable = (e) => hass.states[e].state !== "unavailable";
-  let lights = of("light").filter((e) => !isLightGroup(hass, e) && usable(e));
+  // Lights count bulbs: a group's own bulbs are often hidden behind it, so hidden lights count
+  // here and groups don't
+  const roomLights = Object.keys(hass.states).filter((e) => e.startsWith("light.") && hass.entities?.[e] && !hass.entities[e].entity_category && areaOf(hass, e) === areaId);
+  let lights = roomLights.filter((e) => !isLightGroup(hass, e) && usable(e));
   // Some rooms only expose their lights as a group; count the group rather than nothing
-  if (!lights.length) lights = of("light").filter((e) => isLightGroup(hass, e) && usable(e));
+  if (!lights.length) lights = roomLights.filter((e) => isLightGroup(hass, e) && usable(e));
   const on = lights.filter((e) => hass.states[e].state === "on");
   const temps = of("sensor").filter((e) => hass.states[e].attributes.device_class === "temperature" && !/inside|target/.test(e) && !Number.isNaN(parseFloat(hass.states[e].state)));
   temps.sort((a, b) => (/_temp_sensor_/.test(b) ? 1 : 0) - (/_temp_sensor_/.test(a) ? 1 : 0));

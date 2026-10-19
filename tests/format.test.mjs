@@ -22,3 +22,20 @@ test("bucket carries the last value forward and averages within a bucket", () =>
   assert.deepEqual(bucket(rows, 0, 40, 4), [15, 20, 40, 40]);
   assert.deepEqual(smoothed([0, 3, 0]), [1, 1, 1]);
 });
+
+test("a room's lights count bulbs, hidden ones too, not the groups over them", async () => {
+  const { readRoom } = await import("../src/data/entities.js");
+  const st = (state, attributes = {}) => ({ state, attributes });
+  const hass = {
+    states: { "light.k1": st("on"), "light.k2": st("on"), "light.k3": st("off"), "light.lamp": st("on"),
+      "light.k_group": st("on", { entity_id: ["light.k1", "light.k2", "light.k3"] }), "light.hue_room": st("on", { is_hue_group: true }),
+      "light.gone": st("unavailable"), "light.elsewhere": st("on") },
+    entities: { "light.k1": { area_id: "kitchen", hidden: true }, "light.k2": { area_id: "kitchen", hidden: true }, "light.k3": { area_id: "kitchen", hidden: true },
+      "light.lamp": { area_id: "kitchen" }, "light.k_group": { area_id: "kitchen" }, "light.hue_room": { area_id: "kitchen" },
+      "light.gone": { area_id: "kitchen" }, "light.elsewhere": { area_id: "bedroom" } },
+  };
+  const r = readRoom(hass, "kitchen");
+  assert.deepEqual(r.lights.sort(), ["light.k1", "light.k2", "light.k3", "light.lamp"]);
+  assert.equal(r.on.length, 3);
+  assert.ok(!r.ids.includes("light.k1"), "hidden bulbs still stay off the room's other lists");
+});
