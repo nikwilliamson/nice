@@ -74,7 +74,7 @@ registerForm("board", {
   build(e, _s, ctx) {
     const lines = ctx.hass.states[e.board]?.attributes?.board;
     if (!Array.isArray(lines)) return null;
-    return { id: e.board, label: e.name || "Vestaboard", colors: tone("ambience", ctx.night), cls: ["on"], viz: { type: "board", lines }, layout: "foot", hold: () => ctx.card.more(e.board) };
+    return { id: e.board, label: e.name || "Vestaboard", colors: tone("night", ctx.night), cls: ["on"], viz: { type: "board", lines }, layout: "foot", hold: () => ctx.card.more(e.board) };
   },
 });
 

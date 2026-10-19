@@ -63,7 +63,7 @@ export class NiceLitter extends NiceCard {
 
   hero(st) {
     const n = this.night, { kind, drawer, drawerFull } = st;
-    const colors = kind === "bad" ? tone("hazard", n) : kind === "off" ? offTone(n) : kind === "busy" ? tone("power", n) : drawerFull || kind === "warn" ? tone("act", n) : tone("cats", n);
+    const colors = kind === "bad" ? tone("hazard", n) : kind === "off" ? offTone(n) : kind === "busy" ? tone("energy", n) : drawerFull || kind === "warn" ? tone("act", n) : tone("litter", n);
     const wait = num(this.st("select", "clean_cycle_wait_time_minutes"));
     const cycling = st.status === "ccp" || st.status === "ec";
     return { id: "hero", shape: "L", label: [this.config.place, "Litter box"].filter(Boolean).join(" · "), colors, say: st.say,
@@ -87,7 +87,7 @@ export class NiceLitter extends NiceCard {
     const svg = lrRobot({ litter, drawer: st.drawer, kind, cycling: st.status === "ccp" || st.status === "ec", lit: this.st("select", "globe_light") !== "off", locked: this.st("switch", "panel_lockout") === "on" });
     const parts = { litter: this.id("sensor", "litter_level"), drawer: this.id("sensor", "waste_drawer") };
     const tapPart = (ev) => { const p = ev.composedPath().find((x) => x.dataset?.part); if (p) { ev.stopPropagation(); this.more(parts[p.dataset.part]); } };
-    return { id: "bot", shape: "L", label: "Litter-Robot 4", colors: lowLitter ? tone("act", n) : kind === "cat" ? tone("cats", n) : tone("system", n), say, sub,
+    return { id: "bot", shape: "L", label: "Litter-Robot 4", colors: lowLitter ? tone("act", n) : kind === "cat" ? tone("litter", n) : tone("health", n), say, sub,
       picture: html`<div class="pic" @click=${tapPart}>${unsafeHTML(svg)}</div>`, tap: () => this.more(parts.litter), hold: () => this.more(parts.litter) };
   }
 
@@ -108,7 +108,7 @@ export class NiceLitter extends NiceCard {
   globe() {
     const g = this.st("select", "globe_light"), b = this.st("select", "globe_brightness"), id = this.id("select", "globe_light");
     const opt = (v, l) => ({ label: l, sel: g === v, run: () => this.callEntity("select.select_option", id, { option: v }) });
-    return { id: "glb", shape: "W", label: "Globe light", colors: g === "off" || quiet(g) ? offTone(this.night) : tone("chores", this.night),
+    return { id: "glb", shape: "W", label: "Globe light", colors: g === "off" || quiet(g) ? offTone(this.night) : tone("today", this.night),
       say: { auto: "Comes on in the dark", on: "Always on", off: "Off" }[g] || "Globe light", sub: b && !quiet(b) ? `Brightness ${b}` : "",
       tap: () => this.more(id), hold: () => this.more(id), controls: [{ type: "pills", seg: true, items: [opt("auto", "Auto"), opt("on", "On"), opt("off", "Off")] }] };
   }
@@ -118,7 +118,7 @@ export class NiceLitter extends NiceCard {
     const ws = this.s("select", "clean_cycle_wait_time_minutes"), wait = ws?.state, opts = ["3", "7", "15"];
     if (wait && !quiet(wait) && !opts.includes(wait)) opts.push(wait);
     const toggle = () => this.callEntity("switch.toggle", lockId);
-    return { id: "opt", shape: "W", label: "Panel & timing", colors: locked ? tone("cats", this.night) : offTone(this.night),
+    return { id: "opt", shape: "W", label: "Panel & timing", colors: locked ? tone("litter", this.night) : offTone(this.night),
       say: locked ? "Buttons locked" : "Buttons unlocked", sub: "Wait before cleaning",
       tap: () => (quiet(this.st("switch", "panel_lockout")) ? this.more(lockId) : toggle()), hold: () => this.more(lockId),
       controls: [{ type: "between", items: [ws ? { type: "pills", seg: true, items: opts.map((m) => ({ label: `${m} min`, sel: wait === m, run: () => this.callEntity("select.select_option", ws.entity_id, { option: m }) })) } : null,

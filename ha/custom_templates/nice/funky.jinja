@@ -31,7 +31,7 @@
         service='script.activate_lighting_scene', data=dict(scenes=[s.id], transition=3))] -%}
   {%- endfor -%}
   {%- set lines = ["Make it weird tonight?", "Paint the house.", "Lights, but louder.", "Feeling colourful?", "Turn it up a notch?"] -%}
-  {%- set ns.t = ns.t + [dict(id='funky', tier=2, order=6, shape='L', label='Funky lights', tone='ambience', cls=['funky-tile', 'dark'],
+  {%- set ns.t = ns.t + [dict(id='funky', tier=2, order=6, shape='L', label='Funky lights', tone='night', cls=['funky-tile', 'dark'],
       say=(ns.on.name ~ ', everywhere.' if ns.on else lines[day % lines | count]), sub='', viz=dict(type='funky', items=items.l),
       act=(dict(label='Back to normal', type='service', service='script.lighting_evening') if ns.on else none), tap=none)] -%}
 {%- endif -%}

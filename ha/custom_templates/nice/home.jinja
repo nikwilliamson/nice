@@ -15,7 +15,7 @@
 {%- if playing and not away -%}
   {%- set p = playing[0] -%}
   {%- set title = state_attr(p, 'media_title') or state_attr(p, 'app_name') or 'Something' -%}
-  {%- set ns.t = ns.t + [dict(id='playing', tier=3, order=1, shape='S', label='Now playing', tone='ambience',
+  {%- set ns.t = ns.t + [dict(id='playing', tier=3, order=1, shape='S', label='Now playing', tone='media',
       say=title ~ (' + ' ~ (playing | count - 1) ~ ' more' if playing | count > 1 else ''), sub=state_attr(p, 'friendly_name'),
       viz=dict(type='eq'), act=none, tap=none, entity=p)] -%}
 {%- endif -%}
@@ -45,7 +45,7 @@
   {%- for s in scene_list -%}
     {%- set ns.b = ns.b + [dict(label=(state_attr(s, 'friendly_name') or s).split(' - ')[-1], service='script.turn_on', entity_id=s, primary=loop.first)] -%}
   {%- endfor -%}
-  {%- set ns.t = ns.t + [dict(id='scenes', tier=3, order=5, shape='W', label='Scenes', tone='ambience',
+  {%- set ns.t = ns.t + [dict(id='scenes', tier=3, order=5, shape='W', label='Scenes', tone='scenes',
       say=scene_q.get(suggested, 'Set the mood?'),
       sub=("The TV's on and it's getting dark" if suggested == 'script.lighting_movie' else ''),
       viz=dict(type='buttons', items=ns.b + [dict(label='All off', service='light.turn_off', entity_id='light.zone_home', primary=false)]),
@@ -53,7 +53,7 @@
 {%- endif -%}
 
 {%- if states('sensor.audiobookshelf_open_sessions') | int(0) > 0 -%}
-  {%- set ns.t = ns.t + [dict(id='listen', tier=3, order=8, shape='S', label='Audiobooks', tone='ambience',
+  {%- set ns.t = ns.t + [dict(id='listen', tier=3, order=8, shape='S', label='Audiobooks', tone='plan',
       say="Someone's listening", sub='Audiobookshelf', viz=none, act=none, tap=none)] -%}
 {%- endif -%}
 
@@ -67,7 +67,7 @@
   {%- set k = state_attr(al, 'color_temp_kelvin') | int(0) -%}
   {%- set warmth = 'Warm' if k < 2700 else 'Soft white' if k < 3600 else 'Neutral' if k < 4600 else 'Daylight' -%}
   {%- set al_sub = 'Sleep mode is on' if al_on and al_sleep else (warmth ~ ', following the sun') if al_on and k else '' -%}
-  {%- set ns.t = ns.t + [dict(id='lights', tier=3, order=9, shape=('W' if al_on and k else 'S'), label='Lights', tone='ambience',
+  {%- set ns.t = ns.t + [dict(id='lights', tier=3, order=9, shape=('W' if al_on and k else 'S'), label='Lights', tone='night',
       say=('Still ' ~ lit ~ ' on. All off?' if night else lit ~ ' lights on'), sub=al_sub,
       viz=(dict(type='kelvin', value=k, min=2200, max=5000) if al_on and k and not al_sleep else none),
       act=dict(label='All off', type='service', service='light.turn_off', entity_id='light.zone_home'), tap=none)] -%}
@@ -76,12 +76,12 @@
 {#- The board as it is: Vestassistant reads the wall back every minute -#}
 {%- set vb = state_attr('sensor.vestaboard_note_current_message', 'board') -%}
 {%- if vb is list and vb | select | list | count -%}
-  {%- set ns.t = ns.t + [dict(id='board', tier=3, order=11, shape='W', label='Vestaboard', tone='ambience',
+  {%- set ns.t = ns.t + [dict(id='board', tier=3, order=11, shape='W', label='Vestaboard', tone='night',
       say='', sub='', viz=dict(type='board', lines=vb), act=none, tap=none)] -%}
 {%- endif -%}
 
 {%- if is_state('switch.garland', 'on') -%}
-  {%- set ns.t = ns.t + [dict(id='garland', tier=3, order=12, shape='S', label='Seasonal', tone='ambience',
+  {%- set ns.t = ns.t + [dict(id='garland', tier=3, order=12, shape='S', label='Seasonal', tone='festive',
       say="Garland's twinkling", sub='', viz=dict(type='garland'),
       act=dict(label='Turn off', type='service', service='switch.turn_off', entity_id='switch.garland'), tap=none)] -%}
 {%- endif -%}

@@ -7,7 +7,7 @@
 {%- if nxt_min is number and nxt_min <= 36 * 60 -%}
   {%- set st = as_datetime(state_attr('sensor.next_event', 'start')) | as_local -%}
   {%- set clock = st.strftime('%-I:%M') -%}
-  {%- set ns.t = ns.t + [dict(id='next', tier=(1 if nxt_min < 60 else 2), order=5, shape='S', label='Next up', tone='plans',
+  {%- set ns.t = ns.t + [dict(id='next', tier=(1 if nxt_min < 60 else 2), order=5, shape='S', label='Next up', tone='plan',
       say=('Leaving in ' ~ nxt_min | int ~ ' min?' if nxt_min < 60 else (('Today' if st.date() == now().date() else st.strftime('%a')) ~ (' · all day' if state_attr('sensor.next_event', 'all_day') else ' ' ~ clock))),
       sub=states('sensor.next_event'), big=(nxt_min >= 60), viz=none, act=none, tap=none)] -%}
 {%- endif -%}
@@ -26,7 +26,7 @@
   {%- set l_parts = (state_attr('sensor.next_florida_launch', 'name') or '').split(' | ') -%}
   {%- set rocket = l_parts[0] | regex_replace('\\s+(Block\\s*\\d+|[A-Z]{2,}\\d+[A-Z]*)$', '') -%}
   {%- set payload = (l_parts[1] if l_parts | count > 1 else '') | regex_replace('\\s*\\(.*\\)$', '') -%}
-  {%- set ns.t = ns.t + [dict(id='launch', tier=3, order=98, shape='S', filler=true, label='Launch', tone='plans',
+  {%- set ns.t = ns.t + [dict(id='launch', tier=3, order=98, shape='S', filler=true, label='Launch', tone=('plan' if l_go and timed else 'climate'),
       say=((l_day ~ (', ' if l_days >= 7 else ' ') ~ at_clock(l_at)) if timed else l_day if prec in ['Day', 'Morning', 'Afternoon'] else l_at.strftime('%B')),
       sub=rocket ~ (' · ' ~ payload if payload else ''), viz=none, act=none, tap=none)] -%}
 {%- endif -%}

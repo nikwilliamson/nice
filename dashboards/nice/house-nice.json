@@ -106,14 +106,14 @@
             {
              "entity": "todo.house_alerts",
              "label": "To-do",
-             "tone": "system",
+             "tone": "health",
              "placeholder": "Add a to-do",
              "upper": true
             },
             {
              "entity": "todo.shopping_list",
              "label": "Shopping",
-             "tone": "chores",
+             "tone": "today",
              "placeholder": "Add to the list",
              "get": true
             }

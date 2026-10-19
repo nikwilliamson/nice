@@ -9,7 +9,7 @@
 {%- set alert_text = state_attr(c, 'alert_text') or '' -%}
 
 {%- set chores = state_attr('sensor.house_chores', 'chores') or [] -%}
-{%- set ns.t = ns.t + [dict(id='chores', tier=(2 if chores else 3), order=(1 if chores else 30), shape='T', label='Chores', tone='chores',
+{%- set ns.t = ns.t + [dict(id='chores', tier=(2 if chores else 3), order=(1 if chores else 30), shape='T', label='Chores', tone='health',
     say=('Nothing to do. Add something?' if not chores else 'Just one thing' if chores | count == 1 else (chores | count) ~ ' little things'),
     sub='', viz=dict(type='list', items=chores[:4]),
     act=dict(label='+ Add', type='todo_add', entity_id='todo.house_alerts'), tap=none)] -%}
@@ -40,7 +40,7 @@
   {%- set tot = states('sensor.dryer_total_time' if dry in running else 'sensor.laundry_room_washer_total_time') | float(0) -%}
   {%- set parts = rem_raw.split(':') -%}
   {%- set rem = (parts[0] | int(0)) * 60 + (parts[1] | int(0)) if parts | count >= 2 else rem_raw | int(0) -%}
-  {%- set ns.t = ns.t + [dict(id='laundry', tier=2, order=4, shape='S', label='Laundry', tone='chores',
+  {%- set ns.t = ns.t + [dict(id='laundry', tier=2, order=4, shape='S', label='Laundry', tone='today',
       say=("Laundry's done." if wash not in running and dry not in running else who ~ "'s " ~ ('tumbling.' if who == 'Dryer' else 'going.')),
       sub=('Fold when you can' if wash not in running and dry not in running else ('Washer is free' if who == 'Dryer' and wash not in running else '')),
       viz=(dict(type='ring', value=((rem / tot * 100) if tot > 0 else 0) | round(0), label=rem ~ 'm') if rem > 0 else none), act=none, tap='laundry')] -%}
@@ -49,7 +49,7 @@
 {%- set dish_w = states('sensor.dishwasher_power_minute_average') | float(0) -%}
 {%- set dish_done = 'UNLOAD THE DISHWASHER' in alert_text or 'UNLOAD DISHWASHER' in alert_text -%}
 {%- if dish_w > 5 or dish_done -%}
-  {%- set ns.t = ns.t + [dict(id='dish', tier=2, order=7, shape='S', label='Dishwasher', tone='chores',
+  {%- set ns.t = ns.t + [dict(id='dish', tier=2, order=7, shape='S', label='Dishwasher', tone='today',
       say=("Dishwasher's running." if dish_w > 5 else "Dishwasher's done."), sub=('' if dish_w > 5 else 'Unload when you can'),
       viz=none, act=(none if dish_w > 5 else dict(label='Done', type='service', service='script.turn_on', entity_id='script.kitchen_dishwasher_unloaded')), tap=none)] -%}
 {%- endif -%}
@@ -57,7 +57,7 @@
 {%- from 'nice/config.jinja' import zones -%}
 {%- set watering = zones() | from_json | selectattr('0', 'is_state', 'on') | list -%}
 {%- if watering or is_state('switch.outside_sprinklers_rain_delay', 'on') -%}
-  {%- set ns.t = ns.t + [dict(id='sprink', tier=2, order=8, shape='S', label='Sprinklers', tone='water',
+  {%- set ns.t = ns.t + [dict(id='sprink', tier=2, order=8, shape='S', label='Sprinklers', tone='today',
       say=('Watering the ' ~ watering[0][1] if watering else 'Skipping today.'), sub=('' if watering else 'Rain delay is on'),
       viz=none, act=none, tap=none)] -%}
 {%- endif -%}
@@ -65,7 +65,7 @@
 {%- set shopping = state_attr('sensor.house_chores', 'shopping') or [] -%}
 {%- if shopping -%}
   {%- set first = sentence(shopping[0].summary) -%}
-  {%- set ns.t = ns.t + [dict(id='shop', tier=(2 if away else 3), order=(9 if away else 20), shape='S', label='Shopping', tone='chores',
+  {%- set ns.t = ns.t + [dict(id='shop', tier=(2 if away else 3), order=(9 if away else 20), shape='S', label='Shopping', tone='today',
       say=("Grab " ~ first | lower ~ " while you're out." if away else first),
       sub=('The only thing on the list' if shopping | count == 1 else '+ ' ~ (shopping | count - 1) ~ ' more'),
       viz=none, act=none, tap=none)] -%}

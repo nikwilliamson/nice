@@ -1,14 +1,14 @@
-// Colour roles. A tile's tone names its family (what it's about); its tier picks the weight
-// (how loud). Every weight has a day and a night version and an accent for charts. Night is the
-// sun, not the theme. The maths is in palette.js.
+// Colour roles. A tile's tone says what kind of thing it is; every tone has a day and a
+// night version and an accent for charts. Night is the sun, not the theme. The colours come
+// from the palette's ramps (palette.js).
 import { TOKENS as T } from "./tokens.js";
-import { FAMILIES, paint, roomPaint } from "./palette.js";
+import { TONES, paint, roomPaint } from "./palette.js";
 
-export const TONE_NAMES = FAMILIES;
+export const TONE_NAMES = TONES;
 export const CAT_TONES = T.cats;
 export const status = (name, night) => (T.status[name] || T.status.muted)[night ? 1 : 0];
 
-export const tone = (name, night, tier) => ({ ...paint(name, night, tier) });
+export const tone = (name, night) => ({ ...paint(name, night) });
 
 // Anything switched off, everywhere
 export function offTone(night) {
@@ -55,4 +55,4 @@ export const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b
 export const tint = (base, rgb, f) => { const b = hex(base); return `rgb(${b.map((v, i) => Math.round(v + (rgb[i] - v) * f)).join(",")})`; };
 
 // A tile's colours from whatever it carries: its own colours, a team colour, or a tone
-export const colorsOf = (t, night) => t.colors || (t.color ? colorTone(t.color) : t.tone === "off" ? offTone(night) : tone(t.tone, night, t.tier));
+export const colorsOf = (t, night) => t.colors || (t.color ? colorTone(t.color) : t.tone === "off" ? offTone(night) : tone(t.tone, night));

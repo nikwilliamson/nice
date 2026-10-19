@@ -93,7 +93,7 @@ export class NiceFeeder extends NiceCard {
     const locked = this.st(f, "switch", "child_lock") === "on", led = this.st(f, "switch", "led_indicator") === "on";
     const meals = [...(this.config.meals || [])].sort((a, b) => a.at.localeCompare(b.at));
     const sw = (key) => () => this.callEntity("switch.toggle", this.id(f, "switch", key));
-    return { id: `s-${i}`, shape: "W", label: [f.name, "Schedule"].filter(Boolean).join(" · "), colors: !off && on ? tone("chores", n) : offTone(n),
+    return { id: `s-${i}`, shape: "W", label: [f.name, "Schedule"].filter(Boolean).join(" · "), colors: !off && on ? tone("today", n) : offTone(n),
       say: on ? (meals.length ? meals.map((m) => fdClock(m.at)).join(" & ") : "On schedule") : "Schedule paused",
       sub: meals.length ? meals.map((m) => `${fdClock(m.at)} × ${m.portions}`).join(" · ") + (this.config.feeders.length > 1 ? " · both cats" : "") : `${locked ? "Buttons locked" : "Buttons unlocked"} · light ${led ? "on" : "off"}`,
       tap: () => moreInfo(this, id), hold: () => moreInfo(this, id),
@@ -138,7 +138,7 @@ export class NiceSnack extends NiceCard {
       this._doneT = setTimeout(() => { this._sent = false; this.refresh(); }, 5000);
     };
     const tile = { id: "snack", shape: "F", cls: ["snack"], label: c.names.length ? c.names.join(" & ") : "Snack", still: true,
-      colors: missing || allOff ? offTone(this.night) : tone("chores", this.night), say: c.title,
+      colors: missing || allOff ? offTone(this.night) : tone("today", this.night), say: c.title,
       sub: missing ? "Can't find the feeding script" : offline.length ? `${allOff ? "The feeders are" : "A feeder is"} offline` : `Give ${c.names.length ? c.names.join(" and ") : "everyone"} a treat`,
       tap: () => moreInfo(this, c.script), hold: () => moreInfo(this, c.script),
       controls: [{ type: "pills", items: [{ label: busy ? "Serving…" : "Serve", sel: true, disabled: missing || allOff || busy, confirm: "snack", run: serve }] }] };

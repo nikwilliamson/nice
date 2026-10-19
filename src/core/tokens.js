@@ -3,12 +3,21 @@
 // font_scale scales a whole card.
 import { css, unsafeCSS } from "lit";
 import T from "../tokens.json" with { type: "json" };
+import { chartColors } from "./palette.js";
 
 export { T as TOKENS };
 
 const px = (o, prefix) => Object.entries(o).map(([k, v]) => `--n-${prefix}-${k}: ${v}px;`).join(" ");
 const status = (night) => Object.entries(T.status).map(([k, v]) => `--n-${k}: ${v[night ? 1 : 0]};`).join(" ");
 const chrome = (c) => `--n-chrome-bg: ${c.bg}; --n-chrome-ink: ${c.ink}; --n-chrome-ink-strong: ${c.inkStrong}; --n-chrome-sel-bg: ${c.selBg}; --n-chrome-sel-ink: ${c.selInk}; --n-pill-bg: ${c.pill};`;
+// Chart colours: --n-chart-series-1…8, -seq-1…8, -div-1…7, -good/-warning/-serious/-critical, -grid, -axis
+const chart = (night) => {
+  const c = chartColors(night), v = [];
+  for (const k of ["series", "seq", "div"]) c[k].forEach((x, i) => v.push(`--n-chart-${k}-${i + 1}: ${x};`));
+  for (const [k, x] of Object.entries(c.status)) v.push(`--n-chart-${k}: ${x};`);
+  v.push(`--n-chart-grid: ${c.grid};`, `--n-chart-axis: ${c.axis};`);
+  return v.join(" ");
+};
 const t = T.type;
 
 export const tokens = css`
@@ -30,9 +39,10 @@ export const tokens = css`
     --n-t-quick: ${unsafeCSS(T.motion.quick)}; --n-t-tile: ${unsafeCSS(T.motion.tile)}; --n-t-bar: ${unsafeCSS(T.motion.bar)}; --n-t-fill: ${unsafeCSS(T.motion.fill)};
     --n-spring: cubic-bezier(.34, 1.56, .64, 1);
     ${unsafeCSS(status(false))}
+    ${unsafeCSS(chart(false))}
     ${unsafeCSS(chrome(T.chrome.day))}
   }
-  :host(.is-night) { ${unsafeCSS(status(true))} ${unsafeCSS(chrome(T.chrome.night))} }
+  :host(.is-night) { ${unsafeCSS(status(true))} ${unsafeCSS(chart(true))} ${unsafeCSS(chrome(T.chrome.night))} }
   @supports (transition-timing-function: linear(0, 1)) {
     :host { --n-spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.067, 1.099 24.3%, 1.108 26%, 1.104, 1.092 30.6%, 1.035 39.5%, 1.007 46.2%, 0.996 51%, 0.993 56%, 1.001 72.6%, 1); }
   }

@@ -28,7 +28,7 @@
   {%- set clears = ('Should clear by ' ~ at_clock(r_stop) if r_stop else 'Settling in for a while') -%}
   {%- set urgent = bits and r_sure and rain_min <= 120 -%}
   {%- set inches = state_attr('sensor.rain_outlook', 'inches') | float(0) -%}
-  {%- set ns.t = ns.t + [dict(id='rain', tier=(1 if urgent else 3), order=(6 if urgent else 0), shape='W', label=('Rain coming' if urgent else 'Rain'), tone='climate',
+  {%- set ns.t = ns.t + [dict(id='rain', tier=(1 if urgent else 3), order=(6 if urgent else 0), shape='W', label=('Rain coming' if urgent else 'Rain'), tone='water',
       say=(when ~ ', and ' ~ bits | join(' and ') ~ '.' if urgent
           else ('Raining now.' if rain_min == 0 else (('Rain' if r_sure else 'Maybe a shower') ~ ' around ' ~ at_clock(r_start) ~ '.'))),
       sub=(clears if urgent

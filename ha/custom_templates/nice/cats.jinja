@@ -23,7 +23,7 @@
 {%- if hopper == 'empty' or hopper.startswith('motor') or globe < 20 -%}
   {%- set shopping = state_attr('sensor.house_chores', 'shopping') or [] -%}
   {%- set listed = shopping | map(attribute='summary') | map('lower') | select('search', 'litter') | list | count > 0 -%}
-  {%- set ns.t = ns.t + [dict(id='hopper', tier=(1 if hopper.startswith('motor') else 2), order=2, shape='S', label='Litter hopper', tone='cats',
+  {%- set ns.t = ns.t + [dict(id='hopper', tier=(1 if hopper.startswith('motor') else 2), order=2, shape='S', label='Litter hopper', tone='today',
       say=("Hopper's jammed." if hopper.startswith('motor') else "Hopper's empty." if hopper == 'empty' else 'Globe is down to ' ~ globe | round(0) | int ~ '%.'),
       sub=('Grab a screwdriver, not a bag.' if hopper.startswith('motor') else "Litter's on the list." if listed else 'Add litter to the list?'),
       viz=none, act=none, tap='cats', push=dict(level='active', key=('motor' if hopper.startswith('motor') else 'empty'), repeat=1440))] -%}

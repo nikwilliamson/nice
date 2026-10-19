@@ -5,12 +5,15 @@
 import { html, css } from "lit";
 import { NiceCard } from "../core/base.js";
 import { tokens, TOKENS as T } from "../core/tokens.js";
+import { RAMPS, STEPS, color, chartColors } from "../core/palette.js";
 import { TONE_NAMES, tone, offTone, roomTone, lightTone, kelvinRgb, rgbCss, status, CAT_TONES } from "../core/tones.js";
 import { controlStyles } from "../controls/index.js";
 import { SHAPES } from "../layout/pack.js";
 import { CHARTS, layoutOf } from "../charts/index.js";
 import { VIZ_GROUPS } from "./viz-examples.js";
 
+// How a token names its colour, for the captions
+const ref = (r) => (Array.isArray(r) ? `oklch(${(r[0] * 100).toFixed(1)}% ${r[1]} ${r[2]})` : r);
 const swatch = (c, eyebrow, say, sub = "") => html`<div class="sw" style="--bg:${c.bg};--ink:${c.ink};--accent:${c.accent || c.ink}"><div class="lbl">${eyebrow}</div><div class="say">${say}</div>${sub ? html`<div class="sub">${sub}</div>` : ""}<i class="acc"></i></div>`;
 
 export class NiceDesign extends NiceCard {
@@ -20,10 +23,15 @@ export class NiceDesign extends NiceCard {
     const kstops = Array.from({ length: 19 }, (_, i) => rgbCss(kelvinRgb(2000 + i * 250))).join(",");
     return html`<div class="wrap">
       <header><h1>Nice design system</h1><p class="lead">Drawn live from src/tokens.json, the file the cards and the theme are both built from.</p></header>
-      <section><h2>Tones</h2><p class="lead">A tile's hue says what it's about; its tier says how loud it is: soft for most tiles, strong for soon (tier 1), solid for now (tier 0). Each comes in day and night, with an accent for charts.</p>
-        <div class="fams">${TONE_NAMES.map((n) => html`<div class="item"><b>${n}</b><div class="six">${[false, true].flatMap((night) => [3, 1, 0].map((tier) => swatch(tone(n, night, tier), n, "Aa 21°", `${tier === 3 ? "Soft" : tier === 1 ? "Strong" : "Solid"} · ${night ? "Night" : "Day"}`)))}</div>
-          <code>hue ${T.families[n][0]} · chroma ${T.families[n][1]}${T.alwaysSolid.includes(n) ? " · always solid" : ""}</code></div>`)}</div>
-        <p class="lead">Old names still work: ${Object.entries(T.aliases).filter(([k]) => k !== "_").map(([k, v]) => `${k} → ${v}`).join(", ")}.</p></section>
+      <section><h2>Tones</h2><p class="lead">A tile's colour says what kind of thing it is: a day and a night version, and an accent for charts. Each names a colour from the palette below.</p>
+        <div class="tones">${TONE_NAMES.map((n) => html`<div class="item"><b>${n}</b><div class="pair">${swatch(tone(n, false), n, "Aa 21°", "Day")}${swatch(tone(n, true), n, "Aa 21°", "Night")}</div>
+          <code>${["day", "night"].map((w) => T.tones[n][w].map(ref).join(" · ")).join(" / ")}</code></div>`)}</div></section>
+      <section><h2>Palette</h2><p class="lead">The primitive ramps, OKLCH and sRGB-safe, from ${STEPS[0]} to ${STEPS[STEPS.length - 1]}.</p>
+        <div class="ramps">${RAMPS.map((r) => html`<div class="ramp"><b>${r}</b>${STEPS.map((st) => html`<i title="${r}-${st}" style="background:${color(`${r}-${st}`)}"></i>`)}</div>`)}</div></section>
+      <section><h2>Chart colours</h2><p class="lead">Series, sequential and diverging scales, and status, by day and by night.</p>
+        ${[false, true].map((night) => { const c = chartColors(night); return html`<div class="chartrow"><b>${night ? "Night" : "Day"}</b>
+          ${["series", "seq", "div"].map((k) => html`<div class="ramp"><span>${k}</span>${c[k].map((x) => html`<i style="background:${x}"></i>`)}</div>`)}
+          <div class="ramp"><span>status</span>${Object.entries(c.status).map(([k, x]) => html`<i title=${k} style="background:${x}"></i>`)}<i title="grid" style="background:${c.grid}"></i><i title="axis" style="background:${c.axis}"></i></div></div>`; })}</section>
       <section><h2>Off and lights</h2><p class="lead">Anything off goes neutral. A light wears the colour it's showing.</p>
         <div class="pair">${swatch(offTone(false), "off", "Off", "Day")}${swatch(offTone(true), "off", "Off", "Night")}</div>
         <div class="six">${lights.map(([n, a]) => swatch(lightTone(a, false), "Light", n))}</div>
@@ -59,7 +67,10 @@ export class NiceDesign extends NiceCard {
     .lead { opacity: .7; margin: 0 0 var(--n-s-md); font-weight: 600; font-size: .92em; }
     code { font-family: ui-monospace, Menlo, monospace; font-size: .75em; opacity: .7; }
     .tones { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--n-s-lg); }
-    .fams { display: grid; gap: var(--n-s-lg); }
+    .ramps { display: grid; gap: 4px; }
+    .ramp { display: grid; grid-template-columns: 96px repeat(13, 1fr); gap: 3px; align-items: center; font-size: .8em; }
+    .ramp i { height: 22px; border-radius: 4px; }
+    .chartrow { display: grid; gap: 4px; margin-bottom: var(--n-s-md); }
     .item { display: grid; gap: var(--n-s-sm); }
     .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--n-s-sm); }
     .six { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--n-s-sm); margin-top: var(--n-s-sm); }

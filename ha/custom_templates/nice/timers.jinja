@@ -39,7 +39,7 @@
         push=(dict(level='time-sensitive', key=t.id, title=what ~ ' is going off', message="It's been ringing in the " ~ t.room | lower ~ ' for a few minutes.') if rang >= 4 else false))] -%}
   {%- else -%}
     {#- The say is the time left, counting down in the browser ({left}) -#}
-    {%- set ns.t = ns.t + [dict(id=id, tier=1, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='act', push=false,
+    {%- set ns.t = ns.t + [dict(id=id, tier=1, order=loop.index, shape='S', label=[t.room, what] | select | join(' · '), tone='timer', push=false,
         say=('Paused' if t.paused else '{left}'), sub='', big=true,
         ends=((t.fire * 1000) | int if t.fire and not t.paused else none), viz=none, entity=t.entity, tap=none,
         act=dict(label='Cancel', type='service', service='google_home.delete_timer', entity_id=t.entity, data=dict(timer_id=t.id, skip_refresh=false), confirm=true))] -%}

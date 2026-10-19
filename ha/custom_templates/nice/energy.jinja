@@ -8,7 +8,7 @@
   {%- set kw = states('sensor.main_breaker_power_minute_average') | float(0) / 1000 -%}
   {%- set big = state_attr('sensor.biggest_load', 'max_entity_id') -%}
   {%- set big_name = (state_attr(big, 'friendly_name') or '') | replace(' Power Minute Average', '') if big else '' -%}
-  {%- set ns.t = ns.t + [dict(id='power', tier=3, order=2, shape='L', label='Power', tone='power',
+  {%- set ns.t = ns.t + [dict(id='power', tier=3, order=2, shape='L', label='Power', tone='energy',
       say=kw | round(1) ~ ' kW now', sub=('Mostly the ' ~ big_name | lower ~ '. ' if big_name else '') ~ '$' ~ '%.2f' | format(states('sensor.electricity_cost_today') | float(0)) ~ ' so far today.',
       viz=dict(type='spark', entity='sensor.main_breaker_power_minute_average', since='midnight', peak=true, unit='kW', scale=0.001), act=none, tap='energy')] -%}
 {%- endif -%}
@@ -23,12 +23,12 @@
   {%- set ac = states('sensor.air_conditioner_energy_this_month') | float(0) + states('sensor.air_handler_energy_this_month') | float(0) -%}
   {%- set pool = states('sensor.pool_pump_energy_this_month') | float(0) -%}
   {%- set other = [kwh - ev - ac - pool, 0] | max -%}
-  {%- set ns.t = ns.t + [dict(id='month', tier=3, order=7, shape='W', label='This month', tone='power',
+  {%- set ns.t = ns.t + [dict(id='month', tier=3, order=7, shape='W', label='This month', tone='money',
       say='About $' ~ cost | round(0) | int ~ ' so far in ' ~ now().strftime('%B'), sub='On pace for about $' ~ (pace / 10) | round(0) | int * 10,
       viz=dict(type='stack', segments=[dict(name='EV ' ~ (ev / kwh * 100) | round(0) | int ~ '%', value=ev | round(0), tone='car', show=true),
           dict(name='AC ' ~ (ac / kwh * 100) | round(0) | int ~ '%', value=ac | round(0), tone='climate', show=true),
-          dict(name='Pool', value=pool | round(0), tone='plans', show=false),
-          dict(name='Everything else', value=other | round(0), tone='system', show=true)]),
+          dict(name='Pool', value=pool | round(0), tone='plan', show=false),
+          dict(name='Everything else', value=other | round(0), tone='muted', show=true)]),
       act=none, tap='energy')] -%}
 {%- endif -%}
 
@@ -53,7 +53,7 @@
       ['Litter visits', visits | string]]
       + ([['Dishwasher', 'ran']] if states('sensor.dishwasher_energy_today') | float(0) > 0.3 else [])
       + ([['Laundry', 'washed and dried' if dried else 'washed']] if washed else ([['Laundry', 'dried']] if dried else [])) -%}
-  {%- set ns.t = ns.t + [dict(id='recap', tier=3, order=0, shape='L', label='Today', tone='system',
+  {%- set ns.t = ns.t + [dict(id='recap', tier=3, order=0, shape='L', label='Today', tone='night',
       say=('A quiet day.' if doors < 8 else 'A busy day.' if doors >= 20 else 'A regular day.'),
       sub=('' if vs is none else 'Power ran about usual' if -10 < vs < 10 else 'Power ran ' ~ vs | abs ~ '% ' ~ ('under' if vs < 0 else 'over') ~ ' usual'),
       viz=dict(type='receipt', rows=rows), act=none, tap='energy')] -%}
